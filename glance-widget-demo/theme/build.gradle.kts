@@ -38,7 +38,9 @@ android {
         kotlinCompilerExtensionVersion = "1.5.3"
     }
 }
-
+kotlin {
+    jvmToolchain(17) // Specify the desired Java version for the toolchain
+}
 dependencies {
     implementation(libs.androidx.core)
     implementation(platform(libs.compose.bom))

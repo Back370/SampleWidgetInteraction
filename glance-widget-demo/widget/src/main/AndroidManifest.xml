@@ -3,11 +3,13 @@
 
     <application>
         <receiver
-            android:name=".CounterWidgetReceiver"
+            android:name=".CounterWidgetProvider"
             android:exported="true"
             android:label="@string/widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.seo4d696b75.android.glance_widget_demo.widget.ACTION_INCREMENT" />
+                <action android:name="com.seo4d696b75.android.glance_widget_demo.widget.ACTION_DECREMENT" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

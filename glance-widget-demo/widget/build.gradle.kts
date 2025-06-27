@@ -2,8 +2,6 @@
 plugins {
     alias(libs.plugins.com.android.library)
     alias(libs.plugins.org.jetbrains.kotlin.android)
-    alias(libs.plugins.hilt)
-    alias(libs.plugins.ksp)
 }
 
 android {
@@ -33,24 +31,16 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
-    }
+
+}
+kotlin {
+    jvmToolchain(17) // Specify the desired Java version for the toolchain
 }
 
 dependencies {
 
     implementation(libs.androidx.core)
 
-    implementation(libs.androidx.glance)
-    implementation(libs.androidx.glance.material3)
-
-    implementation(project(":theme"))
     implementation(project(":domain"))
-
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.android.compiler)
+    implementation(project(":data"))
 }

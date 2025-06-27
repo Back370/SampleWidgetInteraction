@@ -51,6 +51,9 @@ android {
         }
     }
 }
+kotlin {
+    jvmToolchain(17) // Specify the desired Java version for the toolchain
+}
 
 dependencies {
 
