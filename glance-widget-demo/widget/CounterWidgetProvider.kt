@@ -70,9 +70,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int,
         @Suppress("UNUSED_PARAMETER") repository: CountRepository
     ) {
-        //本来は数字を変えるウィジェットだが背景を切り替える
-        //val views = RemoteViews(context.packageName, R.layout.widget_layout)
-        val views = RemoteViews(context.packageName, R.layout.widget_layout_wall)
+        val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
         // カウント値を取得して表示
         val count = getCount(context, appWidgetId)
