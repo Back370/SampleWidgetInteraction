@@ -10,15 +10,10 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.widget.RemoteViews
 import java.io.File
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
 class CounterWidgetProvider : AppWidgetProvider() {
     
@@ -26,8 +21,9 @@ class CounterWidgetProvider : AppWidgetProvider() {
         const val ACTION_WIDGET_UPDATE = "com.seo4d696b75.android.glance_widget_demo.WIDGET_UPDATE"
         const val ACTION_START_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.START_ANIMATION"
         const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
+        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
         
-        private const val ANIMATION_INTERVAL_MS = 16L // 60fps - ゲームレベルの滑らかさ
+        private const val ANIMATION_INTERVAL_MS = 500L // 2fps - AlarmManagerで実現可能な間隔
         private const val TOTAL_FRAMES = 50
         
         // ウィジェットに最適化されたサイズ
@@ -43,19 +39,19 @@ class CounterWidgetProvider : AppWidgetProvider() {
         private var maxFrameTime = 0L
         private var minFrameTime = Long.MAX_VALUE
         
-        // 高精度タイマーシステム
-        private var scheduledExecutor: ScheduledExecutorService? = null
+        // 2fpsタイマーシステム（AlarmManagerベース）
         private var expectedTriggerTime = 0L
         private var actualTriggerTime = 0L
         private var triggerDelayTotal = 0L
         private var triggerDelayCount = 0
+        private var lastFrameScheduleTime = 0L
         
-        // 自動再開システム
+        // 自動再開システム (AlarmManagerベース)
         private var autoRestartEnabled = true
-        private var autoRestartExecutor: ScheduledExecutorService? = null
+        private var autoRestartPendingIntent: PendingIntent? = null
         private var lastSuccessfulFrameTime = 0L
         private var autoRestartCount = 0
-        private const val AUTO_RESTART_DELAY_MS = 3000L // 3秒後に自動再開
+        private const val AUTO_RESTART_DELAY_MS = 1000L // 1秒間隔で監視（2fpsアニメーションに適応）
         private const val MAX_AUTO_RESTART_COUNT = 10 // 最大再開回数
         
         private val imageFilePaths = mutableListOf<String>()
@@ -74,57 +70,91 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 handleAlarmManagerUpdate(context)
             }
             ACTION_START_ANIMATION -> {
-                android.util.Log.d("WidgetProvider", "▶️ Start animation command received")
-                startAlarmBasedAnimation(context)
+                android.util.Log.d("WidgetProvider", "▶️ Start animation command received (manual)")
+                // フォアグラウンドServiceでアニメーション開始
+                startForegroundAnimation(context)
             }
             ACTION_STOP_ANIMATION -> {
                 android.util.Log.d("WidgetProvider", "⏹️ Stop animation command received")
-                stopAlarmBasedAnimation(context)
+                // フォアグラウンドServiceでアニメーション停止
+                stopForegroundAnimation(context)
+            }
+            ACTION_AUTO_RESTART_CHECK -> {
+                android.util.Log.d("WidgetProvider", "🔍 Auto-restart check triggered")
+                handleAutoRestartCheck(context)
             }
         }
     }
     
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        android.util.Log.d("WidgetProvider", "🚀 Widget enabled - Starting AlarmManager animation")
-        initializeImagePaths(context)
-        startAlarmBasedAnimation(context)
+        android.util.Log.d("WidgetProvider", "🚀 Widget enabled - Starting foreground 5fps animation (400x500 resolution)")
+        startForegroundAnimation(context)
     }
     
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
-        android.util.Log.d("WidgetProvider", "🛑 Widget disabled - Stopping AlarmManager animation")
-        stopAlarmBasedAnimation(context)
-        cleanupImageCache()
+        android.util.Log.d("WidgetProvider", "🛑 Widget disabled - Stopping foreground animation")
+        stopForegroundAnimation(context)
     }
     
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         android.util.Log.d("WidgetProvider", "🔄 onUpdate called for ${appWidgetIds.size} widgets")
         
-        // 画像パスの初期化
-        if (imageFilePaths.isEmpty()) {
-            initializeImagePaths(context)
-        }
-        
         // すべてのウィジェットを更新
         updateAllWidgets(context, appWidgetManager, appWidgetIds)
         
-        // アニメーションが停止している場合は開始
-        if (!isAnimationRunning && imageFilePaths.size >= TOTAL_FRAMES) {
-            android.util.Log.d("WidgetProvider", "🔄 Restarting animation from onUpdate")
-            startAlarmBasedAnimation(context)
+        // フォアグラウンドアニメーションを開始
+        android.util.Log.d("WidgetProvider", "🔄 Starting foreground animation from onUpdate")
+        startForegroundAnimation(context)
+    }
+    
+    private fun startForegroundAnimation(context: Context) {
+        try {
+            android.util.Log.d("WidgetProvider", "🚀 Starting foreground animation service")
+            
+            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                action = "START_ANIMATION"
+            }
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+            
+            android.util.Log.d("WidgetProvider", "✅ Foreground animation service started")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Failed to start foreground animation service", e)
         }
     }
     
-    private fun startAlarmBasedAnimation(context: Context) {
-        android.util.Log.d("WidgetProvider", "🎬 === STARTING HIGH-PRECISION ANIMATION ===")
+    private fun stopForegroundAnimation(context: Context) {
+        try {
+            android.util.Log.d("WidgetProvider", "🛑 Stopping foreground animation service")
+            
+            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                action = "STOP_ANIMATION"
+            }
+            context.startService(serviceIntent)
+            
+            android.util.Log.d("WidgetProvider", "✅ Foreground animation service stop requested")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Failed to stop foreground animation service", e)
+        }
+    }
+    
+    private fun startAlarmBasedAnimation(context: Context, resetAutoRestartCounter: Boolean = false) {
+        android.util.Log.d("WidgetProvider", "🎬 === STARTING 2FPS ANIMATION ===")
         
         try {
             // 既存のアニメーションを停止
             stopAlarmBasedAnimation(context)
             
-            // 高精度タイマーシステムの初期化
-            scheduledExecutor = Executors.newSingleThreadScheduledExecutor()
+            // AlarmManagerのみを使用（バックグラウンド制約完全回避）
+            alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             
             // アニメーション状態の初期化
             isAnimationRunning = true
@@ -134,101 +164,125 @@ class CounterWidgetProvider : AppWidgetProvider() {
             expectedTriggerTime = System.currentTimeMillis() + ANIMATION_INTERVAL_MS
             triggerDelayTotal = 0L
             triggerDelayCount = 0
+            lastFrameScheduleTime = System.currentTimeMillis()
             
             // 自動再開システムの初期化
             lastSuccessfulFrameTime = System.currentTimeMillis()
-            autoRestartCount = 0
+            if (resetAutoRestartCounter) {
+                autoRestartCount = 0
+                autoRestartEnabled = true
+                android.util.Log.d("WidgetProvider", "🔄 Auto-restart counter reset")
+            }
             startAutoRestartMonitoring(context)
             
-            // AlarmManagerをバックアップとして初期化
-            initializeAlarmManagerBackup(context)
+            // AlarmManagerメインシステムの初期化
+            initializeAlarmManagerMain(context)
             
-            // 高精度タイマーでアニメーション開始
-            scheduleHighPrecisionFrame(context)
+            // AlarmManagerでアニメーション開始
+            scheduleAlarmManagerFrame(context)
             
-            android.util.Log.d("WidgetProvider", "✅ High-precision animation started successfully")
-            android.util.Log.d("WidgetProvider", "  - Frame interval: ${ANIMATION_INTERVAL_MS}ms")
+            android.util.Log.d("WidgetProvider", "✅ AlarmManager-only animation started successfully")
+            android.util.Log.d("WidgetProvider", "  - Frame interval: ${ANIMATION_INTERVAL_MS}ms (2fps)")
             android.util.Log.d("WidgetProvider", "  - Total frames: $TOTAL_FRAMES")
             android.util.Log.d("WidgetProvider", "  - Available images: ${imageFilePaths.size}")
-            android.util.Log.d("WidgetProvider", "  - Using ScheduledExecutorService for precision")
+            android.util.Log.d("WidgetProvider", "  - Primary: AlarmManager (background-constraint-free)")
+            android.util.Log.d("WidgetProvider", "  - Auto-restart: ${if (autoRestartEnabled) "ENABLED" else "DISABLED"} (${AUTO_RESTART_DELAY_MS}ms)")
+            android.util.Log.d("WidgetProvider", "  - Max restarts: ${MAX_AUTO_RESTART_COUNT}, Current: $autoRestartCount")
             
         } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to start high-precision animation", e)
+            android.util.Log.e("WidgetProvider", "❌ Failed to start AlarmManager-only animation", e)
             isAnimationRunning = false
         }
     }
     
     private fun stopAlarmBasedAnimation(context: Context) {
-        android.util.Log.d("WidgetProvider", "⏹️ Stopping high-precision animation")
+        android.util.Log.d("WidgetProvider", "⏹️ Stopping AlarmManager-only animation")
         
         try {
-            // 高精度タイマーを停止
-            scheduledExecutor?.shutdown()
-            scheduledExecutor = null
-            
             // 自動再開システムを停止
             stopAutoRestartMonitoring()
             
-            // AlarmManagerバックアップを停止
+            // AlarmManagerメインシステムを停止
             animationPendingIntent?.let { pendingIntent ->
                 alarmManager?.cancel(pendingIntent)
                 pendingIntent.cancel()
-                android.util.Log.d("WidgetProvider", "✅ AlarmManager backup stopped")
+                android.util.Log.d("WidgetProvider", "✅ AlarmManager main system stopped")
             }
             
             isAnimationRunning = false
             animationPendingIntent = null
             
-            android.util.Log.d("WidgetProvider", "✅ High-precision animation stopped")
+            android.util.Log.d("WidgetProvider", "✅ AlarmManager-only animation stopped")
             
         } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error stopping high-precision animation", e)
+            android.util.Log.e("WidgetProvider", "❌ Error stopping AlarmManager-only animation", e)
         }
     }
     
-    private fun scheduleHighPrecisionFrame(context: Context) {
+    private fun scheduleAlarmManagerFrame(context: Context) {
         try {
             if (!isAnimationRunning) {
                 android.util.Log.v("WidgetProvider", "⚠️ Animation stopped, not scheduling next frame")
                 return
             }
             
-            scheduledExecutor?.schedule({
-                // 実際のトリガー時間を記録
-                actualTriggerTime = System.currentTimeMillis()
-                val delay = actualTriggerTime - expectedTriggerTime
-                
-                if (delay > 0) {
-                    triggerDelayTotal += delay
-                    triggerDelayCount++
-                    android.util.Log.v("WidgetProvider", "⏱️ Trigger delay: ${delay}ms")
+            lastFrameScheduleTime = System.currentTimeMillis()
+            expectedTriggerTime = System.currentTimeMillis() + ANIMATION_INTERVAL_MS
+            
+            val nextTriggerTime = SystemClock.elapsedRealtime() + ANIMATION_INTERVAL_MS
+            val pendingIntent = animationPendingIntent
+            
+            if (pendingIntent != null && alarmManager != null) {
+                // Android 12+ での権限チェック
+                val canScheduleExactAlarms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    alarmManager!!.canScheduleExactAlarms()
+                } else {
+                    true
                 }
                 
-                // フレーム更新を実行
-                handleHighPrecisionUpdate(context)
-                
-                // 次のフレームの期待時間を設定
-                expectedTriggerTime = System.currentTimeMillis() + ANIMATION_INTERVAL_MS
-                
-                // 次のフレームをスケジュール
-                scheduleHighPrecisionFrame(context)
-                
-            }, ANIMATION_INTERVAL_MS, TimeUnit.MILLISECONDS)
+                if (canScheduleExactAlarms) {
+                    // 最高精度のアラーム（バッテリー最適化を無視）
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        alarmManager!!.setExactAndAllowWhileIdle(
+                            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                            nextTriggerTime,
+                            pendingIntent
+                        )
+                        android.util.Log.v("WidgetProvider", "⚡ AlarmManager frame scheduled (exact+idle) in ${ANIMATION_INTERVAL_MS}ms")
+                } else {
+                        alarmManager!!.setExact(
+                            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                            nextTriggerTime,
+                            pendingIntent
+                        )
+                        android.util.Log.v("WidgetProvider", "⚡ AlarmManager frame scheduled (exact) in ${ANIMATION_INTERVAL_MS}ms")
+                    }
+                } else {
+                    // 近似アラームを使用
+                    alarmManager!!.set(
+                        AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                        nextTriggerTime,
+                        pendingIntent
+                    )
+                    android.util.Log.v("WidgetProvider", "⚡ AlarmManager frame scheduled (inexact) in ${ANIMATION_INTERVAL_MS}ms")
+            }
+        } else {
+                android.util.Log.e("WidgetProvider", "❌ PendingIntent or AlarmManager is null, cannot schedule frame")
+                isAnimationRunning = false
+            }
             
-            android.util.Log.v("WidgetProvider", "⚡ High-precision frame scheduled in ${ANIMATION_INTERVAL_MS}ms")
-            
+        } catch (e: SecurityException) {
+            android.util.Log.e("WidgetProvider", "❌ Security exception - missing alarm permission", e)
+            handlePermissionError(context)
         } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to schedule high-precision frame", e)
-            // フォールバックでAlarmManagerを使用
-            fallbackToAlarmManager(context)
+            android.util.Log.e("WidgetProvider", "❌ Failed to schedule AlarmManager frame", e)
+            isAnimationRunning = false
         }
     }
     
-    private fun initializeAlarmManagerBackup(context: Context) {
+    private fun initializeAlarmManagerMain(context: Context) {
         try {
-            // AlarmManagerをバックアップとして初期化
-            alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            
+            // AlarmManagerメインシステムの初期化
             val intent = Intent(context, CounterWidgetProvider::class.java).apply {
                 action = ACTION_WIDGET_UPDATE
             }
@@ -240,49 +294,14 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             
-            android.util.Log.d("WidgetProvider", "✅ AlarmManager backup initialized")
+            android.util.Log.d("WidgetProvider", "✅ AlarmManager main system initialized")
             
         } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to initialize AlarmManager backup", e)
+            android.util.Log.e("WidgetProvider", "❌ Failed to initialize AlarmManager main system", e)
         }
     }
     
-    private fun fallbackToAlarmManager(context: Context) {
-        android.util.Log.w("WidgetProvider", "⚠️ Falling back to AlarmManager due to ScheduledExecutor failure")
-        
-        try {
-            val nextTriggerTime = SystemClock.elapsedRealtime() + ANIMATION_INTERVAL_MS
-            val pendingIntent = animationPendingIntent
-            
-            if (pendingIntent != null && alarmManager != null) {
-                val canScheduleExactAlarms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    alarmManager!!.canScheduleExactAlarms()
-                } else {
-                    true
-                }
-                
-                if (canScheduleExactAlarms) {
-                    alarmManager!!.setExact(
-                        AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                        nextTriggerTime,
-                        pendingIntent
-                    )
-                    android.util.Log.v("WidgetProvider", "⚡ AlarmManager fallback scheduled (exact)")
-                } else {
-                    alarmManager!!.set(
-                        AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                        nextTriggerTime,
-                        pendingIntent
-                    )
-                    android.util.Log.v("WidgetProvider", "⚡ AlarmManager fallback scheduled (inexact)")
-                }
-            }
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ AlarmManager fallback failed", e)
-            isAnimationRunning = false
-        }
-    }
+
     
     private fun handlePermissionError(context: Context) {
         android.util.Log.w("WidgetProvider", "⚠️ Exact alarm permission not available, stopping animation")
@@ -303,18 +322,47 @@ class CounterWidgetProvider : AppWidgetProvider() {
     }
     
     private fun handleAlarmManagerUpdate(context: Context) {
-        android.util.Log.v("WidgetProvider", "🔄 === AlarmManager Backup Update Frame $currentFrame ===")
-        handleHighPrecisionUpdate(context)
+        android.util.Log.v("WidgetProvider", "🔄 === AlarmManager Main Update Frame $currentFrame ===")
         
-        // AlarmManagerバックアップの場合は次のフレームをスケジュール
-        fallbackToAlarmManager(context)
+        val startTime = System.currentTimeMillis()
+        
+        try {
+            // アニメーション状態を確認・修正
+            if (!isAnimationRunning) {
+                android.util.Log.w("WidgetProvider", "⚠️ Animation state was false, resetting to true")
+                isAnimationRunning = true
+            }
+            
+            // 実際のトリガー時間を記録
+            actualTriggerTime = System.currentTimeMillis()
+            val delay = actualTriggerTime - expectedTriggerTime
+            
+            if (delay > 0) {
+                triggerDelayTotal += delay
+                triggerDelayCount++
+                android.util.Log.v("WidgetProvider", "⏱️ AlarmManager delay: ${delay}ms")
+            }
+            
+            // フレーム更新を実行
+            handleHighPrecisionUpdate(context)
+            
+            // 次のフレームをAlarmManagerでスケジュール
+            scheduleAlarmManagerFrame(context)
+            
+            val frameTime = System.currentTimeMillis() - startTime
+            android.util.Log.v("WidgetProvider", "⚡ AlarmManager frame completed in ${frameTime}ms")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error in AlarmManager main update", e)
+            stopAlarmBasedAnimation(context)
+        }
     }
     
     private fun handleHighPrecisionUpdate(context: Context) {
         val startTime = System.currentTimeMillis()
         
         try {
-            android.util.Log.v("WidgetProvider", "⚡ === High-Precision Update Frame $currentFrame ===")
+            android.util.Log.v("WidgetProvider", "⚡ === 2fps Update Frame $currentFrame ===")
             
             // WakeLockを取得して確実な実行を保証
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -328,9 +376,9 @@ class CounterWidgetProvider : AppWidgetProvider() {
             try {
                 if (!isAnimationRunning) {
                     android.util.Log.w("WidgetProvider", "⚠️ Animation stopped, skipping update")
-                    return
-                }
-                
+                            return
+                        }
+
                 // 画像の確認
                 if (imageFilePaths.isEmpty()) {
                     android.util.Log.w("WidgetProvider", "⚠️ No images available, reinitializing")
@@ -358,7 +406,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     // 自動再開システム用の成功時間更新
                     lastSuccessfulFrameTime = System.currentTimeMillis()
                     
-                    // 超高速アニメーション用パフォーマンス監視
+                    // 2fpsアニメーション用パフォーマンス監視
                     val frameTime = System.currentTimeMillis() - startTime
                     updatePerformanceMetrics(frameTime)
                     
@@ -366,10 +414,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     if (triggerDelayCount > 0) {
                         val avgDelay = triggerDelayTotal / triggerDelayCount
                         android.util.Log.v("WidgetProvider", "⚡ Frame completed in ${frameTime}ms (avg: ${averageFrameTime}ms, delay: ${avgDelay}ms)")
-                    } else {
+                        } else {
                         android.util.Log.v("WidgetProvider", "⚡ Frame completed in ${frameTime}ms (avg: ${averageFrameTime}ms)")
-                    }
-                } else {
+                        }
+                    } else {
                     android.util.Log.w("WidgetProvider", "⚠️ No active widgets, stopping animation")
                     stopAlarmBasedAnimation(context)
                 }
@@ -379,7 +427,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             }
             
         } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Critical error in high-precision update", e)
+            android.util.Log.e("WidgetProvider", "❌ Critical error in 2fps update", e)
             stopAlarmBasedAnimation(context)
         }
     }
@@ -526,10 +574,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
         try {
             // 既存のキャッシュをクリア
             optimizedImageCache.forEach { bitmap ->
-                if (!bitmap.isRecycled) {
-                    bitmap.recycle()
-                }
+            if (!bitmap.isRecycled) {
+                bitmap.recycle()
             }
+        }
             optimizedImageCache.clear()
             isCacheReady = false
             
@@ -551,10 +599,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     if (optimizedBitmap != null) {
                         optimizedImageCache.add(optimizedBitmap)
                         android.util.Log.v("WidgetProvider", "✅ Cached image $index: ${optimizedBitmap.width}x${optimizedBitmap.height}")
-                    } else {
+                } else {
                         android.util.Log.w("WidgetProvider", "⚠️ Failed to create scaled bitmap for: $imagePath")
                     }
-                } else {
+                    } else {
                     android.util.Log.w("WidgetProvider", "⚠️ Image file not found: $imagePath")
                 }
             }
@@ -638,7 +686,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             val avgDelay = if (triggerDelayCount > 0) triggerDelayTotal / triggerDelayCount else 0
             val maxDelay = if (triggerDelayCount > 0) "Max delay: ${maxFrameTime}ms" else "No delays"
             
-            android.util.Log.i("WidgetProvider", "📊 High-Precision Performance Stats:")
+            android.util.Log.i("WidgetProvider", "📊 2fps Performance Stats:")
             android.util.Log.i("WidgetProvider", "  - Frame time: Avg ${averageFrameTime}ms, Max ${maxFrameTime}ms, Min ${minFrameTime}ms")
             android.util.Log.i("WidgetProvider", "  - Trigger delay: Avg ${avgDelay}ms, Count ${triggerDelayCount}/${frameUpdateCount}")
             android.util.Log.i("WidgetProvider", "  - Precision: ${(frameUpdateCount - triggerDelayCount) * 100 / frameUpdateCount}% on-time")
@@ -654,15 +702,150 @@ class CounterWidgetProvider : AppWidgetProvider() {
             val avgDelay = if (triggerDelayCount > 0) triggerDelayTotal / triggerDelayCount else 0
             val precisionPercent = (frameUpdateCount - triggerDelayCount) * 100 / frameUpdateCount
             
-            android.util.Log.i("WidgetProvider", "📊 Final High-Precision Animation Statistics:")
+            android.util.Log.i("WidgetProvider", "📊 Final 2fps Animation Statistics:")
             android.util.Log.i("WidgetProvider", "  - Total frames: $frameUpdateCount")
             android.util.Log.i("WidgetProvider", "  - Average frame time: ${averageFrameTime}ms")
             android.util.Log.i("WidgetProvider", "  - Frame time range: ${minFrameTime}ms - ${maxFrameTime}ms")
             android.util.Log.i("WidgetProvider", "  - Average trigger delay: ${avgDelay}ms")
             android.util.Log.i("WidgetProvider", "  - Precision rate: ${precisionPercent}% on-time")
             android.util.Log.i("WidgetProvider", "  - Target interval: ${ANIMATION_INTERVAL_MS}ms (${1000/ANIMATION_INTERVAL_MS}fps)")
+            android.util.Log.i("WidgetProvider", "  - Auto-restart attempts: $autoRestartCount/${MAX_AUTO_RESTART_COUNT}")
+            android.util.Log.i("WidgetProvider", "  - Auto-restart enabled: $autoRestartEnabled")
         }
     }
+    
+    private fun startAutoRestartMonitoring(context: Context) {
+        if (!autoRestartEnabled) return
+        
+        android.util.Log.d("WidgetProvider", "🔄 Starting AlarmManager-based auto-restart monitoring")
+        
+        try {
+            // 既存の監視アラームを停止
+            stopAutoRestartMonitoring()
+            
+            // 自動再開チェック用のPendingIntentを作成
+            val intent = Intent(context, CounterWidgetProvider::class.java).apply {
+                action = ACTION_AUTO_RESTART_CHECK
+            }
+            
+            autoRestartPendingIntent = PendingIntent.getBroadcast(
+                context,
+                100, // 異なるrequestCodeを使用
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // AlarmManagerで定期チェックをスケジュール
+            scheduleAutoRestartCheck(context)
+            
+            android.util.Log.d("WidgetProvider", "✅ AlarmManager-based auto-restart monitoring started")
+            
+                } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Failed to start auto-restart monitoring", e)
+        }
+    }
+    
+    private fun stopAutoRestartMonitoring() {
+        android.util.Log.d("WidgetProvider", "🛑 Stopping AlarmManager-based auto-restart monitoring")
+        
+        try {
+            autoRestartPendingIntent?.let { pendingIntent ->
+                alarmManager?.cancel(pendingIntent)
+                pendingIntent.cancel()
+                android.util.Log.d("WidgetProvider", "✅ Auto-restart monitoring alarm cancelled")
+            }
+            autoRestartPendingIntent = null
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error stopping auto-restart monitoring", e)
+        }
+    }
+    
+    private fun scheduleAutoRestartCheck(context: Context) {
+        try {
+            val triggerTime = SystemClock.elapsedRealtime() + AUTO_RESTART_DELAY_MS
+            val pendingIntent = autoRestartPendingIntent
+            
+            if (pendingIntent != null && alarmManager != null) {
+                // 近似アラームを使用（監視なので正確性はそれほど重要ではない）
+                alarmManager!!.set(
+                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+                android.util.Log.v("WidgetProvider", "🔍 Auto-restart check scheduled in ${AUTO_RESTART_DELAY_MS}ms")
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Failed to schedule auto-restart check", e)
+        }
+    }
+    
+    private fun handleAutoRestartCheck(context: Context) {
+        try {
+            val currentTime = System.currentTimeMillis()
+            val timeSinceLastFrame = currentTime - lastSuccessfulFrameTime
+            
+            android.util.Log.d("WidgetProvider", "🔍 Auto-restart check: ${timeSinceLastFrame}ms since last frame, running: $isAnimationRunning")
+            android.util.Log.d("WidgetProvider", "  - Threshold: ${ANIMATION_INTERVAL_MS * 2}ms (2x animation interval)")
+            android.util.Log.d("WidgetProvider", "  - Should restart: ${!isAnimationRunning || timeSinceLastFrame > ANIMATION_INTERVAL_MS * 2}")
+            
+            // アニメーションが停止していて、最大再開回数に達していない場合
+            // 判定：アニメーション間隔の2倍以上経過している場合（2秒）
+            if (!isAnimationRunning || timeSinceLastFrame > ANIMATION_INTERVAL_MS * 2) {
+                if (autoRestartCount < MAX_AUTO_RESTART_COUNT && autoRestartEnabled) {
+                    
+                    android.util.Log.w("WidgetProvider", "⚠️ Animation appears to be stopped")
+                    android.util.Log.i("WidgetProvider", "🔄 Auto-restarting animation (attempt ${autoRestartCount + 1}/${MAX_AUTO_RESTART_COUNT})")
+                    
+                    autoRestartCount++
+                    
+                    // 自動再開を実行
+                    performAutoRestart(context)
+                    
+                } else if (autoRestartCount >= MAX_AUTO_RESTART_COUNT) {
+                    android.util.Log.w("WidgetProvider", "⚠️ Max auto-restart attempts reached. Disabling auto-restart.")
+                    autoRestartEnabled = false
+                    stopAutoRestartMonitoring()
+                    return // 次の監視をスケジュールしない
+                }
+            } else {
+                android.util.Log.v("WidgetProvider", "✅ Animation is running normally")
+            }
+            
+            // 継続監視のために次のチェックをスケジュール
+            if (autoRestartEnabled) {
+                scheduleAutoRestartCheck(context)
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error in auto-restart check", e)
+            // エラーが発生しても監視を継続
+            if (autoRestartEnabled) {
+                scheduleAutoRestartCheck(context)
+            }
+        }
+    }
+    
+    private fun performAutoRestart(context: Context) {
+        try {
+            android.util.Log.i("WidgetProvider", "🚀 Performing automatic restart...")
+            android.util.Log.i("WidgetProvider", "  - Current state: isAnimationRunning=$isAnimationRunning")
+            android.util.Log.i("WidgetProvider", "  - Auto-restart attempt: $autoRestartCount/$MAX_AUTO_RESTART_COUNT")
+            
+            // 現在のアニメーションを停止
+            stopAlarmBasedAnimation(context)
+            
+            // 即座に再開（遅延なし）
+            android.util.Log.i("WidgetProvider", "🔄 Immediately restarting animation...")
+            startAlarmBasedAnimation(context, resetAutoRestartCounter = false)
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error performing auto-restart", e)
+        }
+    }
+    
+
     
     private fun cleanupImageCache() {
         android.util.Log.d("WidgetProvider", "🧹 Cleaning up image cache")
@@ -670,6 +853,9 @@ class CounterWidgetProvider : AppWidgetProvider() {
         try {
             // 統計情報を出力
             logFinalStatistics()
+            
+            // 自動再開システムを停止
+            stopAutoRestartMonitoring()
             
             optimizedImageCache.forEach { bitmap ->
                 if (!bitmap.isRecycled) {
@@ -681,7 +867,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             
             android.util.Log.d("WidgetProvider", "✅ Image cache cleaned up")
             
-        } catch (e: Exception) {
+                    } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error cleaning up image cache", e)
         }
     }
