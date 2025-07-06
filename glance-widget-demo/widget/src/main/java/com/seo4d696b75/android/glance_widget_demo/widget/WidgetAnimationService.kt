@@ -39,6 +39,7 @@ class WidgetAnimationService : Service() {
         
         // アニメーション状態
         private var currentFrame = 0
+        private var actualFrameCount = 0 // 実際に利用可能な画像数
         private var frameUpdateCount = 0
         private var lastFrameTime = 0L
         private var totalFrameTime = 0L
@@ -68,6 +69,12 @@ class WidgetAnimationService : Service() {
         when (intent?.action) {
             "START_ANIMATION" -> startAnimation()
             "STOP_ANIMATION" -> stopAnimation()
+            "REBUILD_CACHE" -> {
+                android.util.Log.d("WidgetAnimationService", "🔄 Force rebuilding image cache...")
+                Thread {
+                    initializeImageCache()
+                }.start()
+            }
             else -> startAnimation() // デフォルトで開始
         }
         
@@ -205,8 +212,8 @@ class WidgetAnimationService : Service() {
                             }
                         }
                         
-                        if (currentFrame >= optimizedImageCache.size) {
-                            android.util.Log.w("WidgetAnimationService", "⚠️ Frame index out of bounds: $currentFrame >= ${optimizedImageCache.size}")
+                        if (actualFrameCount == 0 || currentFrame >= actualFrameCount) {
+                            android.util.Log.w("WidgetAnimationService", "⚠️ Frame index out of bounds: $currentFrame >= $actualFrameCount (cache size: ${optimizedImageCache.size})")
                             return@Thread
                         }
                         
@@ -249,7 +256,9 @@ class WidgetAnimationService : Service() {
                             
                             // フレームカウンターの更新（同期化）
                             synchronized(this@WidgetAnimationService) {
-                                currentFrame = (currentFrame + 1) % TOTAL_FRAMES
+                                if (actualFrameCount > 0) {
+                                    currentFrame = (currentFrame + 1) % actualFrameCount
+                                }
                                 frameUpdateCount++
                                 lastFrameTime = System.currentTimeMillis()
                             }
@@ -334,17 +343,65 @@ class WidgetAnimationService : Service() {
             }
             
             // 画像ファイルパスを取得（外部ファイルディレクトリを使用）
-            val imagesDir = getExternalFilesDir("WidgetImages")
+            val baseDir = getExternalFilesDir(null)
+            val imagesDir = if (baseDir != null) File(baseDir, "Mao/State/Adle") else null
+            
+            android.util.Log.d("WidgetAnimationService", "🔍 Checking directories:")
+            android.util.Log.d("WidgetAnimationService", "  - Base dir: ${baseDir?.absolutePath}")
+            android.util.Log.d("WidgetAnimationService", "  - Images dir: ${imagesDir?.absolutePath}")
+            android.util.Log.d("WidgetAnimationService", "  - Images dir exists: ${imagesDir?.exists()}")
+            
+            // 親ディレクトリの確認
+            if (baseDir != null) {
+                android.util.Log.d("WidgetAnimationService", "  - Base dir contents:")
+                baseDir.listFiles()?.forEach { file ->
+                    android.util.Log.d("WidgetAnimationService", "    - ${file.name} (${if (file.isDirectory) "DIR" else "FILE"})")
+                }
+                
+                // Maoディレクトリの確認
+                val maoDir = File(baseDir, "Mao")
+                if (maoDir.exists()) {
+                    android.util.Log.d("WidgetAnimationService", "  - Mao dir contents:")
+                    maoDir.listFiles()?.forEach { file ->
+                        android.util.Log.d("WidgetAnimationService", "    - ${file.name} (${if (file.isDirectory) "DIR" else "FILE"})")
+                    }
+                    
+                    // Mao/Stateディレクトリの確認
+                    val stateDir = File(maoDir, "State")
+                    if (stateDir.exists()) {
+                        android.util.Log.d("WidgetAnimationService", "  - State dir contents:")
+                        stateDir.listFiles()?.forEach { file ->
+                            android.util.Log.d("WidgetAnimationService", "    - ${file.name} (${if (file.isDirectory) "DIR" else "FILE"})")
+                        }
+                    }
+                }
+            }
+            
             if (imagesDir == null || !imagesDir.exists()) {
                 android.util.Log.e("WidgetAnimationService", "❌ Images directory not found: ${imagesDir?.absolutePath}")
                 
                 // 代替パス（MainActivity等で使用される内部ファイルディレクトリ）をチェック
                 val alternativeDir = java.io.File(filesDir, "WidgetImages")
+                android.util.Log.d("WidgetAnimationService", "🔍 Checking alternative directory: ${alternativeDir.absolutePath}")
+                android.util.Log.d("WidgetAnimationService", "  - Alternative dir exists: ${alternativeDir.exists()}")
+                
                 if (alternativeDir.exists()) {
                     android.util.Log.d("WidgetAnimationService", "📁 Using alternative images directory: ${alternativeDir.absolutePath}")
                     scanImagesDirectory(alternativeDir)
                 } else {
                     android.util.Log.e("WidgetAnimationService", "❌ Alternative images directory also not found: ${alternativeDir.absolutePath}")
+                    
+                    // 手動でディレクトリを作成してみる
+                    android.util.Log.d("WidgetAnimationService", "🔧 Attempting to create images directory...")
+                    if (imagesDir != null) {
+                        try {
+                            imagesDir.mkdirs()
+                            android.util.Log.d("WidgetAnimationService", "✅ Directory created: ${imagesDir.absolutePath}")
+                            android.util.Log.d("WidgetAnimationService", "  - Directory exists now: ${imagesDir.exists()}")
+                        } catch (e: Exception) {
+                            android.util.Log.e("WidgetAnimationService", "❌ Failed to create directory", e)
+                        }
+                    }
                 }
                 return
             }
@@ -368,17 +425,23 @@ class WidgetAnimationService : Service() {
             android.util.Log.d("WidgetAnimationService", "  - Total files in directory: ${allFiles?.size ?: 0}")
             
             val imageFiles = imagesDir.listFiles { file ->
-                file.isFile && file.name.endsWith(".png", ignoreCase = true)
+                file.isFile && file.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp")
             }?.sortedBy { it.name } ?: emptyList()
             
-            android.util.Log.d("WidgetAnimationService", "  - PNG files found: ${imageFiles.size}")
+            android.util.Log.d("WidgetAnimationService", "  - Image files found: ${imageFiles.size}")
             
             if (imageFiles.isEmpty()) {
-                android.util.Log.e("WidgetAnimationService", "❌ No PNG files found in directory!")
-                allFiles?.take(10)?.forEach { file ->
-                    android.util.Log.d("WidgetAnimationService", "    - Found file: ${file.name} (${file.length()} bytes)")
+                android.util.Log.e("WidgetAnimationService", "❌ No image files found in directory!")
+                android.util.Log.d("WidgetAnimationService", "  - All files in directory:")
+                allFiles?.forEach { file ->
+                    android.util.Log.d("WidgetAnimationService", "    - ${file.name} (${file.length()} bytes, ext: ${file.extension})")
                 }
                 return
+            } else {
+                android.util.Log.d("WidgetAnimationService", "  - Found image files:")
+                imageFiles.take(10).forEach { file ->
+                    android.util.Log.d("WidgetAnimationService", "    - ${file.name} (${file.length()} bytes, ext: ${file.extension})")
+                }
             }
             
             if (imageFiles.size < TOTAL_FRAMES) {
@@ -474,11 +537,13 @@ class WidgetAnimationService : Service() {
                     }
                     
                     isCacheReady = optimizedImageCache.isNotEmpty()
+                    actualFrameCount = optimizedImageCache.size
                     
                     android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
                     android.util.Log.d("WidgetAnimationService", "  - Image size: ${WIDGET_IMAGE_WIDTH}x${WIDGET_IMAGE_HEIGHT}")
                     android.util.Log.d("WidgetAnimationService", "  - Format: RGB_565 (50% memory reduction)")
                     android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
+                    android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs TOTAL_FRAMES: $TOTAL_FRAMES)")
                 }
                 
             } catch (e: Exception) {

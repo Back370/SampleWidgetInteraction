@@ -19,6 +19,8 @@ import kotlinx.coroutines.withContext
 
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.delay
+import android.content.Intent
 
 class MainActivity : ComponentActivity() {
 
@@ -151,95 +153,138 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Firebase Storageから画像をダウンロードする関数
+    // Firebase Storageから画像をダウンロードする関数（リトライ機能付き）
     fun downloadImagesFromFirebaseStorage(imagePaths: List<String>) {
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // Firebase匿名認証を確実に実施
-                signInAnonymouslyIfNeeded()
+            val maxRetries = 5
+            val retryDelayMs = 2000L // 2秒間隔
+            var currentRetry = 0
+            
+            while (currentRetry < maxRetries) {
+                try {
+                    // Firebase匿名認証を確実に実施
+                    signInAnonymouslyIfNeeded()
 
-                val baseDir = getExternalFilesDir(null)
-                if (baseDir != null) {
-                    val widgetImagesDir = File(baseDir, "WidgetImages")
+                    val baseDir = getExternalFilesDir(null)
+                    if (baseDir != null) {
+                        val widgetImagesDir = File(baseDir, "Mao/State/Adle")
 
-                    if (!widgetImagesDir.exists()) {
-                        widgetImagesDir.mkdirs()
-                    }
+                        if (!widgetImagesDir.exists()) {
+                            widgetImagesDir.mkdirs()
+                        }
 
-                    // 既存の画像ファイルをチェック
-                    val existingFiles = getExistingImageFiles(widgetImagesDir)
-                    android.util.Log.d(
-                        "MainActivity",
-                        "Found ${existingFiles.size} existing image files"
-                    )
+                        // 既存の画像ファイルをチェック
+                        val existingFiles = getExistingImageFiles(widgetImagesDir)
+                        android.util.Log.d(
+                            "MainActivity",
+                            "Retry ${currentRetry + 1}/${maxRetries}: Found ${existingFiles.size} existing image files"
+                        )
 
-                    var downloadCount = 0
-                    var skipCount = 0
+                        var downloadCount = 0
+                        var skipCount = 0
+                        var failedCount = 0
 
-                    imagePaths.forEachIndexed { index, imagePath ->
-                        try {
-                            // ファイル名を生成
-                            val lowerName = imagePath.lowercase()
-                            val extension = when {
-                                lowerName.endsWith(".jpg") -> "jpg"
-                                lowerName.endsWith(".jpeg") -> "jpeg"
-                                lowerName.endsWith(".png") -> "png"
-                                lowerName.endsWith(".webp") -> "webp"
-                                else -> "png"
-                            }
-                            val fileName = String.format("%03d.%s", index + 1, extension)
-                            val outputFile = File(widgetImagesDir, fileName)
+                        imagePaths.forEachIndexed { index, imagePath ->
+                            try {
+                                // ファイル名を生成
+                                val lowerName = imagePath.lowercase()
+                                val extension = when {
+                                    lowerName.endsWith(".jpg") -> "jpg"
+                                    lowerName.endsWith(".jpeg") -> "jpeg"
+                                    lowerName.endsWith(".png") -> "png"
+                                    lowerName.endsWith(".webp") -> "webp"
+                                    else -> "png"
+                                }
+                                val fileName = String.format("%03d.%s", index + 1, extension)
+                                val outputFile = File(widgetImagesDir, fileName)
 
-                            // 既にファイルが存在し、サイズが0でない場合はスキップ
-                            if (outputFile.exists() && outputFile.length() > 0) {
+                                // 既にファイルが存在し、サイズが0でない場合はスキップ
+                                if (outputFile.exists() && outputFile.length() > 0) {
+                                    skipCount++
+                                    return@forEachIndexed
+                                }
+
+                                withContext(Dispatchers.Main) {
+                                    android.util.Log.d("MainActivity", "Downloading image ${index + 1}/${imagePaths.size} from Firebase Storage: $imagePath")
+                                }
+
+                                val storageRef = firebaseStorage.reference.child(imagePath)
+                                val maxDownloadSize = 50L * 1024 * 1024 // 50MB
+                                val bytes = storageRef.getBytes(maxDownloadSize).await()
+
+                                // ファイルに書き込み
+                                outputFile.writeBytes(bytes)
+                                downloadCount++
+
                                 withContext(Dispatchers.Main) {
                                     android.util.Log.d(
                                         "MainActivity",
-                                        "Skipping existing file: ${outputFile.name} (${outputFile.length()} bytes)"
+                                        "Downloaded from Firebase: ${outputFile.name} (${outputFile.length()} bytes)"
                                     )
                                 }
-                                skipCount++
-                                return@forEachIndexed
+
+                            } catch (e: Exception) {
+                                failedCount++
+                                withContext(Dispatchers.Main) {
+                                    android.util.Log.e("MainActivity", "Failed to download image ${index + 1}: $imagePath", e)
+                                }
                             }
+                        }
 
-                            withContext(Dispatchers.Main) {
-                                android.util.Log.d("MainActivity", "Downloading image $index from Firebase Storage: $imagePath")
-                            }
+                        val totalSuccessful = downloadCount + skipCount
+                        val targetCount = imagePaths.size
 
-                            val storageRef = firebaseStorage.reference.child(imagePath)
-                            val maxDownloadSize = 50L * 1024 * 1024 // 50MB
-                            val bytes = storageRef.getBytes(maxDownloadSize).await()
+                        withContext(Dispatchers.Main) {
+                            android.util.Log.d(
+                                "MainActivity",
+                                "Firebase download attempt ${currentRetry + 1}: Downloaded: $downloadCount, Skipped: $skipCount, Failed: $failedCount, Total: $totalSuccessful/$targetCount"
+                            )
+                        }
 
-                            // ファイルに書き込み
-                            outputFile.writeBytes(bytes)
-                            downloadCount++
-
+                        // 50枚すべてダウンロード完了チェック
+                        if (totalSuccessful >= targetCount) {
                             withContext(Dispatchers.Main) {
                                 android.util.Log.d(
                                     "MainActivity",
-                                    "Downloaded from Firebase: ${outputFile.absolutePath} (${outputFile.length()} bytes)"
+                                    "✅ All ${targetCount} images downloaded successfully!"
                                 )
+                                notifyWidgetUpdate()
+                                
+                                // WidgetAnimationServiceにキャッシュ再構築を指示
+                                rebuildWidgetAnimationCache()
                             }
-
-                        } catch (e: Exception) {
+                            return@launch // 成功したので終了
+                        } else {
                             withContext(Dispatchers.Main) {
-                                android.util.Log.e("MainActivity", "Failed to download image $index: $imagePath", e)
+                                android.util.Log.w(
+                                    "MainActivity",
+                                    "⚠️ Only $totalSuccessful/${targetCount} images available. Retrying in ${retryDelayMs}ms..."
+                                )
                             }
                         }
                     }
-
+                } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        android.util.Log.d(
-                            "MainActivity",
-                            "Firebase image download completed - Downloaded: $downloadCount, Skipped: $skipCount"
-                        )
-                        notifyWidgetUpdate()
+                        android.util.Log.e("MainActivity", "Error in Firebase download process (retry ${currentRetry + 1})", e)
                     }
                 }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    android.util.Log.e("MainActivity", "Error in Firebase download process", e)
+                
+                currentRetry++
+                
+                // 最大リトライ回数に達していない場合は待機
+                if (currentRetry < maxRetries) {
+                    delay(retryDelayMs)
                 }
+            }
+            
+            // 最大リトライ回数に達した場合
+            withContext(Dispatchers.Main) {
+                android.util.Log.e(
+                    "MainActivity",
+                    "❌ Failed to download all images after ${maxRetries} attempts"
+                )
+                // 部分的なダウンロードでもウィジェットを更新
+                notifyWidgetUpdate()
             }
         }
     }
@@ -281,14 +326,14 @@ class MainActivity : ComponentActivity() {
                 val storageRef = firebaseStorage.reference
                 android.util.Log.d("MainActivity", "Storage reference created: ${storageRef.path}")
 
-                // Adleフォルダのファイル一覧取得テスト
-                val adleRef = storageRef.child("Adle")
+                // Mao/State/Adleフォルダのファイル一覧取得テスト
+                val adleRef = storageRef.child("Mao/State/Adle")
                 val listResult = adleRef.listAll().await()
 
                 withContext(Dispatchers.Main) {
                     android.util.Log.d(
                         "MainActivity",
-                        "Files found in Adle/: ${listResult.items.size}"
+                        "Files found in Mao/State/Adle/: ${listResult.items.size}"
                     )
                     listResult.items.forEach { item ->
                         android.util.Log.d("MainActivity", "  - ${item.name}")
@@ -296,13 +341,14 @@ class MainActivity : ComponentActivity() {
 
                     if (listResult.items.isNotEmpty()) {
                         android.util.Log.d("MainActivity", "Firebase Storage access successful!")
+                        android.util.Log.d("MainActivity", "Found ${listResult.items.size} images in Firebase Storage")
                         // 実際の画像ダウンロードを実行
-                        val imagePaths = listResult.items.map { "Adle/${it.name}" }
+                        val imagePaths = listResult.items.map { "Mao/State/Adle/${it.name}" }
                         downloadImagesFromFirebaseStorage(imagePaths)
                     } else {
                         android.util.Log.w(
                             "MainActivity",
-                            "No images found in Firebase Storage /Adle/ folder"
+                            "No images found in Firebase Storage /Mao/State/Adle/ folder"
                         )
                     }
                 }
@@ -365,7 +411,7 @@ class MainActivity : ComponentActivity() {
             try {
                 val baseDir = getExternalFilesDir(null)
                 if (baseDir != null) {
-                    val widgetImagesDir = File(baseDir, "WidgetImages")
+                    val widgetImagesDir = File(baseDir, "Mao/State/Adle")
 
                     if (!widgetImagesDir.exists()) {
                         widgetImagesDir.mkdirs()
@@ -454,6 +500,27 @@ class MainActivity : ComponentActivity() {
                     android.util.Log.e("MainActivity", "Error in download process", e)
                 }
             }
+        }
+    }
+
+    private fun rebuildWidgetAnimationCache() {
+        try {
+            android.util.Log.d("MainActivity", "🔄 Requesting WidgetAnimationService to rebuild cache...")
+            
+            val serviceIntent = Intent(this, com.seo4d696b75.android.glance_widget_demo.widget.WidgetAnimationService::class.java).apply {
+                action = "REBUILD_CACHE"
+            }
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+            
+            android.util.Log.d("MainActivity", "✅ Cache rebuild request sent to WidgetAnimationService")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "❌ Failed to request cache rebuild", e)
         }
     }
 

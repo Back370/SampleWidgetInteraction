@@ -36,79 +36,8 @@ fun MainScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.main_hello_message),
-                    )
 
-                    Button(
-                        onClick = {
-                            forceWidgetUpdate(context)
-                        }
-                    ) {
-                        Text("Force Widget Update")
-                    }
-                    
-                    Button(
-                        onClick = {
-                            forceSystemConstraintWorkaround(context)
-                        }
-                    ) {
-                        Text("Force System Workaround")
-                    }
 
-                    Button(
-                        onClick = {
-                            debugImagePath(context)
-                        }
-                    ) {
-                        Text("Debug Path")
-                    }
-
-                    Button(
-                        onClick = {
-                            downloadTestImages(context)
-                        }
-                    ) {
-                        Text("Download Images (HTTP)")
-                    }
-
-                    Button(
-                        onClick = {
-                            downloadFirebaseImages(context)
-                        }
-                    ) {
-                        Text("Download Firebase Images")
-                    }
-
-                    Button(
-                        onClick = {
-                            requestPermissions(context)
-                        }
-                    ) {
-                        Text("Request Permissions")
-                    }
-
-                    Button(
-                        onClick = {
-                            clearAllImages(context)
-                        }
-                    ) {
-                        Text("Clear All Images")
-                    }
-                    
-                    Button(
-                        onClick = {
-                            emergencyForceRestart(context)
-                        }
-                    ) {
-                        Text("Emergency Force Restart")
-                    }
-                }
             }
         }
     }

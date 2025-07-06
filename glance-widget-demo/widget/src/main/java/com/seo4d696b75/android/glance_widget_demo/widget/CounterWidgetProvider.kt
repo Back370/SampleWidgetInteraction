@@ -542,7 +542,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
         try {
             imageFilePaths.clear()
             
-            val externalFilesDir = context.getExternalFilesDir("WidgetImages")
+            val baseDir = context.getExternalFilesDir(null)
+            val externalFilesDir = if (baseDir != null) File(baseDir, "Mao/State/Adle") else null
             if (externalFilesDir?.exists() == true) {
                 val files = externalFilesDir.listFiles { file ->
                     file.isFile && file.name.endsWith(".png", ignoreCase = true)
