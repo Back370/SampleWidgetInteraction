@@ -42,4 +42,15 @@ dependencies {
     implementation(project(":domain"))
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    
+    // Core Android libraries
+    implementation(libs.androidx.core)
+    implementation(libs.coroutines)
+    
+    // Network & Image libraries
+    implementation(libs.retrofit)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.glide)
+    ksp(libs.glide.compiler)
 }

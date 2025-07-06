@@ -35,7 +35,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 }
 kotlin {
@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
     implementation(project(":theme"))
+    implementation(project(":data"))
+    implementation(project(":domain"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.espresso.core)

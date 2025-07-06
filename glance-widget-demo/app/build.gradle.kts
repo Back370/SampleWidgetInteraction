@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -43,7 +44,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -56,6 +57,10 @@ kotlin {
 }
 
 dependencies {
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage)
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle)

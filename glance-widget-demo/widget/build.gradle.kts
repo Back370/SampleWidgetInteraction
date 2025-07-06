@@ -2,6 +2,8 @@
 plugins {
     alias(libs.plugins.com.android.library)
     alias(libs.plugins.org.jetbrains.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -40,6 +42,12 @@ kotlin {
 dependencies {
 
     implementation(libs.androidx.core)
+    implementation(libs.coroutines)
+    implementation(libs.glide)
+    
+    // Hilt for dependency injection
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
 
     implementation(project(":domain"))
     implementation(project(":data"))

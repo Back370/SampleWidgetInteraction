@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 外部キャッシュディレクトリ -->
+    <external-cache-path name="widget_assets" path="widget_assets/" />
+    
+    <!-- 外部ファイルディレクトリ -->
+    <external-files-path name="widget_files" path="widget_assets/" />
+    
+    <!-- 内部キャッシュディレクトリ -->
+    <cache-path name="widget_cache" path="widget_assets/" />
+</paths> 
