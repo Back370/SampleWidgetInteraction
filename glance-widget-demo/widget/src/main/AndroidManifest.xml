@@ -8,8 +8,9 @@
             android:label="@string/widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.seo4d696b75.android.glance_widget_demo.widget.ACTION_INCREMENT" />
-                <action android:name="com.seo4d696b75.android.glance_widget_demo.widget.ACTION_DECREMENT" />
+                <action android:name="com.seo4d696b75.android.glance_widget_demo.WIDGET_UPDATE" />
+                <action android:name="com.seo4d696b75.android.glance_widget_demo.START_ANIMATION" />
+                <action android:name="com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
