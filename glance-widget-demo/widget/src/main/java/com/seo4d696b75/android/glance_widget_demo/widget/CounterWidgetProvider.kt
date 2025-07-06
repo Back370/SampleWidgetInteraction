@@ -20,8 +20,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
     companion object {
         const val ACTION_WIDGET_UPDATE = "com.seo4d696b75.android.glance_widget_demo.WIDGET_UPDATE"
         const val ACTION_START_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.START_ANIMATION"
-        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
-        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
+//        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
+//        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
         
         private const val ANIMATION_INTERVAL_MS = 500L // 2fps - AlarmManagerで実現可能な間隔
         private const val TOTAL_FRAMES = 50
@@ -74,15 +74,15 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 // フォアグラウンドServiceでアニメーション開始
                 startForegroundAnimation(context)
             }
-            ACTION_STOP_ANIMATION -> {
-                android.util.Log.d("WidgetProvider", "⏹️ Stop animation command received")
-                // フォアグラウンドServiceでアニメーション停止
-                stopForegroundAnimation(context)
-            }
-            ACTION_AUTO_RESTART_CHECK -> {
-                android.util.Log.d("WidgetProvider", "🔍 Auto-restart check triggered")
-                handleAutoRestartCheck(context)
-            }
+//            ACTION_STOP_ANIMATION -> {
+//                android.util.Log.d("WidgetProvider", "⏹️ Stop animation command received")
+//                // フォアグラウンドServiceでアニメーション停止
+//                stopForegroundAnimation(context)
+//            }
+//            ACTION_AUTO_RESTART_CHECK -> {
+//                android.util.Log.d("WidgetProvider", "🔍 Auto-restart check triggered")
+//                handleAutoRestartCheck(context)
+//            }
         }
     }
     
@@ -92,11 +92,11 @@ class CounterWidgetProvider : AppWidgetProvider() {
         startForegroundAnimation(context)
     }
     
-    override fun onDisabled(context: Context) {
-        super.onDisabled(context)
-        android.util.Log.d("WidgetProvider", "🛑 Widget disabled - Stopping foreground animation")
-        stopForegroundAnimation(context)
-    }
+//    override fun onDisabled(context: Context) {
+//        super.onDisabled(context)
+//        android.util.Log.d("WidgetProvider", "🛑 Widget disabled - Stopping foreground animation")
+////        stopForegroundAnimation(context)
+//    }
     
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         android.util.Log.d("WidgetProvider", "🔄 onUpdate called for ${appWidgetIds.size} widgets")
@@ -130,90 +130,90 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-    private fun stopForegroundAnimation(context: Context) {
-        try {
-            android.util.Log.d("WidgetProvider", "🛑 Stopping foreground animation service")
-            
-            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
-                action = "STOP_ANIMATION"
-            }
-            context.startService(serviceIntent)
-            
-            android.util.Log.d("WidgetProvider", "✅ Foreground animation service stop requested")
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to stop foreground animation service", e)
-        }
-    }
+//    private fun stopForegroundAnimation(context: Context) {
+//        try {
+//            android.util.Log.d("WidgetProvider", "🛑 Stopping foreground animation service")
+//
+//            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+//                action = "STOP_ANIMATION"
+//            }
+//            context.startService(serviceIntent)
+//
+//            android.util.Log.d("WidgetProvider", "✅ Foreground animation service stop requested")
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Failed to stop foreground animation service", e)
+//        }
+//    }
     
-    private fun startAlarmBasedAnimation(context: Context, resetAutoRestartCounter: Boolean = false) {
-        android.util.Log.d("WidgetProvider", "🎬 === STARTING 2FPS ANIMATION ===")
-        
-        try {
-            // 既存のアニメーションを停止
-            stopAlarmBasedAnimation(context)
-            
-            // AlarmManagerのみを使用（バックグラウンド制約完全回避）
-            alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            
-            // アニメーション状態の初期化
-            isAnimationRunning = true
-            currentFrame = 0
-            frameUpdateCount = 0
-            lastFrameTime = System.currentTimeMillis()
-            expectedTriggerTime = System.currentTimeMillis() + ANIMATION_INTERVAL_MS
-            triggerDelayTotal = 0L
-            triggerDelayCount = 0
-            lastFrameScheduleTime = System.currentTimeMillis()
-            
-            // 自動再開システムの初期化
-            lastSuccessfulFrameTime = System.currentTimeMillis()
-            if (resetAutoRestartCounter) {
-                autoRestartCount = 0
-                autoRestartEnabled = true
-                android.util.Log.d("WidgetProvider", "🔄 Auto-restart counter reset")
-            }
-            startAutoRestartMonitoring(context)
-            
-            // AlarmManagerメインシステムの初期化
-            initializeAlarmManagerMain(context)
-            
-            // AlarmManagerでアニメーション開始
-            scheduleAlarmManagerFrame(context)
-            
-            android.util.Log.d("WidgetProvider", "✅ AlarmManager-only animation started successfully")
-            android.util.Log.d("WidgetProvider", "  - Frame interval: ${ANIMATION_INTERVAL_MS}ms (2fps)")
-            android.util.Log.d("WidgetProvider", "  - Total frames: $TOTAL_FRAMES")
-            android.util.Log.d("WidgetProvider", "  - Available images: ${imageFilePaths.size}")
-            android.util.Log.d("WidgetProvider", "  - Primary: AlarmManager (background-constraint-free)")
-            android.util.Log.d("WidgetProvider", "  - Auto-restart: ${if (autoRestartEnabled) "ENABLED" else "DISABLED"} (${AUTO_RESTART_DELAY_MS}ms)")
-            android.util.Log.d("WidgetProvider", "  - Max restarts: ${MAX_AUTO_RESTART_COUNT}, Current: $autoRestartCount")
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to start AlarmManager-only animation", e)
-            isAnimationRunning = false
-        }
-    }
+//    private fun startAlarmBasedAnimation(context: Context, resetAutoRestartCounter: Boolean = false) {
+//        android.util.Log.d("WidgetProvider", "🎬 === STARTING 2FPS ANIMATION ===")
+//
+//        try {
+//            // 既存のアニメーションを停止
+//            stopAlarmBasedAnimation(context)
+//
+//            // AlarmManagerのみを使用（バックグラウンド制約完全回避）
+//            alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+//
+//            // アニメーション状態の初期化
+//            isAnimationRunning = true
+//            currentFrame = 0
+//            frameUpdateCount = 0
+//            lastFrameTime = System.currentTimeMillis()
+//            expectedTriggerTime = System.currentTimeMillis() + ANIMATION_INTERVAL_MS
+//            triggerDelayTotal = 0L
+//            triggerDelayCount = 0
+//            lastFrameScheduleTime = System.currentTimeMillis()
+//
+//            // 自動再開システムの初期化
+//            lastSuccessfulFrameTime = System.currentTimeMillis()
+//            if (resetAutoRestartCounter) {
+//                autoRestartCount = 0
+//                autoRestartEnabled = true
+//                android.util.Log.d("WidgetProvider", "🔄 Auto-restart counter reset")
+//            }
+//            startAutoRestartMonitoring(context)
+//
+//            // AlarmManagerメインシステムの初期化
+//            initializeAlarmManagerMain(context)
+//
+//            // AlarmManagerでアニメーション開始
+//            scheduleAlarmManagerFrame(context)
+//
+//            android.util.Log.d("WidgetProvider", "✅ AlarmManager-only animation started successfully")
+//            android.util.Log.d("WidgetProvider", "  - Frame interval: ${ANIMATION_INTERVAL_MS}ms (2fps)")
+//            android.util.Log.d("WidgetProvider", "  - Total frames: $TOTAL_FRAMES")
+//            android.util.Log.d("WidgetProvider", "  - Available images: ${imageFilePaths.size}")
+//            android.util.Log.d("WidgetProvider", "  - Primary: AlarmManager (background-constraint-free)")
+//            android.util.Log.d("WidgetProvider", "  - Auto-restart: ${if (autoRestartEnabled) "ENABLED" else "DISABLED"} (${AUTO_RESTART_DELAY_MS}ms)")
+//            android.util.Log.d("WidgetProvider", "  - Max restarts: ${MAX_AUTO_RESTART_COUNT}, Current: $autoRestartCount")
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Failed to start AlarmManager-only animation", e)
+//            isAnimationRunning = false
+//        }
+//    }
     
     private fun stopAlarmBasedAnimation(context: Context) {
         android.util.Log.d("WidgetProvider", "⏹️ Stopping AlarmManager-only animation")
-        
+
         try {
             // 自動再開システムを停止
-            stopAutoRestartMonitoring()
-            
+            //stopAutoRestartMonitoring()
+
             // AlarmManagerメインシステムを停止
             animationPendingIntent?.let { pendingIntent ->
                 alarmManager?.cancel(pendingIntent)
                 pendingIntent.cancel()
                 android.util.Log.d("WidgetProvider", "✅ AlarmManager main system stopped")
             }
-            
+
             isAnimationRunning = false
             animationPendingIntent = null
-            
+
             android.util.Log.d("WidgetProvider", "✅ AlarmManager-only animation stopped")
-            
+
         } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error stopping AlarmManager-only animation", e)
         }
@@ -280,26 +280,26 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-    private fun initializeAlarmManagerMain(context: Context) {
-        try {
-            // AlarmManagerメインシステムの初期化
-            val intent = Intent(context, CounterWidgetProvider::class.java).apply {
-                action = ACTION_WIDGET_UPDATE
-            }
-            
-            animationPendingIntent = PendingIntent.getBroadcast(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            
-            android.util.Log.d("WidgetProvider", "✅ AlarmManager main system initialized")
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to initialize AlarmManager main system", e)
-        }
-    }
+//    private fun initializeAlarmManagerMain(context: Context) {
+//        try {
+//            // AlarmManagerメインシステムの初期化
+//            val intent = Intent(context, CounterWidgetProvider::class.java).apply {
+//                action = ACTION_WIDGET_UPDATE
+//            }
+//
+//            animationPendingIntent = PendingIntent.getBroadcast(
+//                context,
+//                0,
+//                intent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//
+//            android.util.Log.d("WidgetProvider", "✅ AlarmManager main system initialized")
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Failed to initialize AlarmManager main system", e)
+//        }
+//    }
     
 
     
@@ -466,7 +466,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 remoteViews.setImageViewBitmap(R.id.widget_image, bitmap)
                 
                 // アニメーション制御ボタンの設定
-                setupButtons(context, remoteViews)
+               // setupButtons(context, remoteViews)
                 
                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
             }
@@ -499,7 +499,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 }
                 
                 // ボタンの設定
-                setupButtons(context, remoteViews)
+                //setupButtons(context, remoteViews)
                 
                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
             }
@@ -509,32 +509,32 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
-        try {
-            // 開始ボタン
-            val startIntent = Intent(context, CounterWidgetProvider::class.java).apply {
-                action = ACTION_START_ANIMATION
-            }
-            val startPendingIntent = PendingIntent.getBroadcast(
-                context, 1, startIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            remoteViews.setOnClickPendingIntent(R.id.button_start, startPendingIntent)
-            
-            // 停止ボタン
-            val stopIntent = Intent(context, CounterWidgetProvider::class.java).apply {
-                action = ACTION_STOP_ANIMATION
-            }
-            val stopPendingIntent = PendingIntent.getBroadcast(
-                context, 2, stopIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            remoteViews.setOnClickPendingIntent(R.id.button_stop, stopPendingIntent)
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
-        }
-    }
+//    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
+//        try {
+//            // 開始ボタン
+//            val startIntent = Intent(context, CounterWidgetProvider::class.java).apply {
+//                action = ACTION_START_ANIMATION
+//            }
+//            val startPendingIntent = PendingIntent.getBroadcast(
+//                context, 1, startIntent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//            remoteViews.setOnClickPendingIntent(R.id.button_start, startPendingIntent)
+//
+//            // 停止ボタン
+//            val stopIntent = Intent(context, CounterWidgetProvider::class.java).apply {
+//                action = ACTION_STOP_ANIMATION
+//            }
+//            val stopPendingIntent = PendingIntent.getBroadcast(
+//                context, 2, stopIntent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//            remoteViews.setOnClickPendingIntent(R.id.button_stop, stopPendingIntent)
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
+//        }
+//    }
     
     private fun initializeImagePaths(context: Context) {
         android.util.Log.d("WidgetProvider", "🔍 Initializing image paths")
@@ -697,178 +697,178 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-    private fun logFinalStatistics() {
-        if (frameUpdateCount > 0) {
-            val avgDelay = if (triggerDelayCount > 0) triggerDelayTotal / triggerDelayCount else 0
-            val precisionPercent = (frameUpdateCount - triggerDelayCount) * 100 / frameUpdateCount
-            
-            android.util.Log.i("WidgetProvider", "📊 Final 2fps Animation Statistics:")
-            android.util.Log.i("WidgetProvider", "  - Total frames: $frameUpdateCount")
-            android.util.Log.i("WidgetProvider", "  - Average frame time: ${averageFrameTime}ms")
-            android.util.Log.i("WidgetProvider", "  - Frame time range: ${minFrameTime}ms - ${maxFrameTime}ms")
-            android.util.Log.i("WidgetProvider", "  - Average trigger delay: ${avgDelay}ms")
-            android.util.Log.i("WidgetProvider", "  - Precision rate: ${precisionPercent}% on-time")
-            android.util.Log.i("WidgetProvider", "  - Target interval: ${ANIMATION_INTERVAL_MS}ms (${1000/ANIMATION_INTERVAL_MS}fps)")
-            android.util.Log.i("WidgetProvider", "  - Auto-restart attempts: $autoRestartCount/${MAX_AUTO_RESTART_COUNT}")
-            android.util.Log.i("WidgetProvider", "  - Auto-restart enabled: $autoRestartEnabled")
-        }
+//    private fun logFinalStatistics() {
+//        if (frameUpdateCount > 0) {
+//            val avgDelay = if (triggerDelayCount > 0) triggerDelayTotal / triggerDelayCount else 0
+//            val precisionPercent = (frameUpdateCount - triggerDelayCount) * 100 / frameUpdateCount
+//
+//            android.util.Log.i("WidgetProvider", "📊 Final 2fps Animation Statistics:")
+//            android.util.Log.i("WidgetProvider", "  - Total frames: $frameUpdateCount")
+//            android.util.Log.i("WidgetProvider", "  - Average frame time: ${averageFrameTime}ms")
+//            android.util.Log.i("WidgetProvider", "  - Frame time range: ${minFrameTime}ms - ${maxFrameTime}ms")
+//            android.util.Log.i("WidgetProvider", "  - Average trigger delay: ${avgDelay}ms")
+//            android.util.Log.i("WidgetProvider", "  - Precision rate: ${precisionPercent}% on-time")
+//            android.util.Log.i("WidgetProvider", "  - Target interval: ${ANIMATION_INTERVAL_MS}ms (${1000/ANIMATION_INTERVAL_MS}fps)")
+//            android.util.Log.i("WidgetProvider", "  - Auto-restart attempts: $autoRestartCount/${MAX_AUTO_RESTART_COUNT}")
+//            android.util.Log.i("WidgetProvider", "  - Auto-restart enabled: $autoRestartEnabled")
+//        }
+//    }
+    
+//    private fun startAutoRestartMonitoring(context: Context) {
+//        if (!autoRestartEnabled) return
+//
+//        android.util.Log.d("WidgetProvider", "🔄 Starting AlarmManager-based auto-restart monitoring")
+//
+//        try {
+//            // 既存の監視アラームを停止
+//            stopAutoRestartMonitoring()
+//
+//            // 自動再開チェック用のPendingIntentを作成
+//            val intent = Intent(context, CounterWidgetProvider::class.java).apply {
+//                action = ACTION_AUTO_RESTART_CHECK
+//            }
+//
+//            autoRestartPendingIntent = PendingIntent.getBroadcast(
+//                context,
+//                100, // 異なるrequestCodeを使用
+//                intent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//
+//            // AlarmManagerで定期チェックをスケジュール
+//            scheduleAutoRestartCheck(context)
+//
+//            android.util.Log.d("WidgetProvider", "✅ AlarmManager-based auto-restart monitoring started")
+//
+//                } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Failed to start auto-restart monitoring", e)
+//        }
+//    }
+    
+//    private fun stopAutoRestartMonitoring() {
+//        android.util.Log.d("WidgetProvider", "🛑 Stopping AlarmManager-based auto-restart monitoring")
+//
+//        try {
+//            autoRestartPendingIntent?.let { pendingIntent ->
+//                alarmManager?.cancel(pendingIntent)
+//                pendingIntent.cancel()
+//                android.util.Log.d("WidgetProvider", "✅ Auto-restart monitoring alarm cancelled")
+//            }
+//            autoRestartPendingIntent = null
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Error stopping auto-restart monitoring", e)
+//        }
+//    }
+    
+//    private fun scheduleAutoRestartCheck(context: Context) {
+//        try {
+//            val triggerTime = SystemClock.elapsedRealtime() + AUTO_RESTART_DELAY_MS
+//            val pendingIntent = autoRestartPendingIntent
+//
+//            if (pendingIntent != null && alarmManager != null) {
+//                // 近似アラームを使用（監視なので正確性はそれほど重要ではない）
+//                alarmManager!!.set(
+//                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                    triggerTime,
+//                    pendingIntent
+//                )
+//                android.util.Log.v("WidgetProvider", "🔍 Auto-restart check scheduled in ${AUTO_RESTART_DELAY_MS}ms")
+//            }
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Failed to schedule auto-restart check", e)
+//        }
+//    }
+    
+//    private fun handleAutoRestartCheck(context: Context) {
+//        try {
+//            val currentTime = System.currentTimeMillis()
+//            val timeSinceLastFrame = currentTime - lastSuccessfulFrameTime
+//
+//            android.util.Log.d("WidgetProvider", "🔍 Auto-restart check: ${timeSinceLastFrame}ms since last frame, running: $isAnimationRunning")
+//            android.util.Log.d("WidgetProvider", "  - Threshold: ${ANIMATION_INTERVAL_MS * 2}ms (2x animation interval)")
+//            android.util.Log.d("WidgetProvider", "  - Should restart: ${!isAnimationRunning || timeSinceLastFrame > ANIMATION_INTERVAL_MS * 2}")
+//
+//            // アニメーションが停止していて、最大再開回数に達していない場合
+//            // 判定：アニメーション間隔の2倍以上経過している場合（2秒）
+//            if (!isAnimationRunning || timeSinceLastFrame > ANIMATION_INTERVAL_MS * 2) {
+//                if (autoRestartCount < MAX_AUTO_RESTART_COUNT && autoRestartEnabled) {
+//
+//                    android.util.Log.w("WidgetProvider", "⚠️ Animation appears to be stopped")
+//                    android.util.Log.i("WidgetProvider", "🔄 Auto-restarting animation (attempt ${autoRestartCount + 1}/${MAX_AUTO_RESTART_COUNT})")
+//
+//                    autoRestartCount++
+//
+//                    // 自動再開を実行
+////                    performAutoRestart(context)
+//
+//                } else if (autoRestartCount >= MAX_AUTO_RESTART_COUNT) {
+//                    android.util.Log.w("WidgetProvider", "⚠️ Max auto-restart attempts reached. Disabling auto-restart.")
+//                    autoRestartEnabled = false
+//                    stopAutoRestartMonitoring()
+//                    return // 次の監視をスケジュールしない
+//                }
+//            } else {
+//                android.util.Log.v("WidgetProvider", "✅ Animation is running normally")
+//            }
+//
+//            // 継続監視のために次のチェックをスケジュール
+//            if (autoRestartEnabled) {
+//                scheduleAutoRestartCheck(context)
+//            }
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Error in auto-restart check", e)
+//            // エラーが発生しても監視を継続
+//            if (autoRestartEnabled) {
+//                scheduleAutoRestartCheck(context)
+//            }
+//        }
     }
     
-    private fun startAutoRestartMonitoring(context: Context) {
-        if (!autoRestartEnabled) return
-        
-        android.util.Log.d("WidgetProvider", "🔄 Starting AlarmManager-based auto-restart monitoring")
-        
-        try {
-            // 既存の監視アラームを停止
-            stopAutoRestartMonitoring()
-            
-            // 自動再開チェック用のPendingIntentを作成
-            val intent = Intent(context, CounterWidgetProvider::class.java).apply {
-                action = ACTION_AUTO_RESTART_CHECK
-            }
-            
-            autoRestartPendingIntent = PendingIntent.getBroadcast(
-                context,
-                100, // 異なるrequestCodeを使用
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            
-            // AlarmManagerで定期チェックをスケジュール
-            scheduleAutoRestartCheck(context)
-            
-            android.util.Log.d("WidgetProvider", "✅ AlarmManager-based auto-restart monitoring started")
-            
-                } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to start auto-restart monitoring", e)
-        }
-    }
-    
-    private fun stopAutoRestartMonitoring() {
-        android.util.Log.d("WidgetProvider", "🛑 Stopping AlarmManager-based auto-restart monitoring")
-        
-        try {
-            autoRestartPendingIntent?.let { pendingIntent ->
-                alarmManager?.cancel(pendingIntent)
-                pendingIntent.cancel()
-                android.util.Log.d("WidgetProvider", "✅ Auto-restart monitoring alarm cancelled")
-            }
-            autoRestartPendingIntent = null
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error stopping auto-restart monitoring", e)
-        }
-    }
-    
-    private fun scheduleAutoRestartCheck(context: Context) {
-        try {
-            val triggerTime = SystemClock.elapsedRealtime() + AUTO_RESTART_DELAY_MS
-            val pendingIntent = autoRestartPendingIntent
-            
-            if (pendingIntent != null && alarmManager != null) {
-                // 近似アラームを使用（監視なので正確性はそれほど重要ではない）
-                alarmManager!!.set(
-                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    triggerTime,
-                    pendingIntent
-                )
-                android.util.Log.v("WidgetProvider", "🔍 Auto-restart check scheduled in ${AUTO_RESTART_DELAY_MS}ms")
-            }
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Failed to schedule auto-restart check", e)
-        }
-    }
-    
-    private fun handleAutoRestartCheck(context: Context) {
-        try {
-            val currentTime = System.currentTimeMillis()
-            val timeSinceLastFrame = currentTime - lastSuccessfulFrameTime
-            
-            android.util.Log.d("WidgetProvider", "🔍 Auto-restart check: ${timeSinceLastFrame}ms since last frame, running: $isAnimationRunning")
-            android.util.Log.d("WidgetProvider", "  - Threshold: ${ANIMATION_INTERVAL_MS * 2}ms (2x animation interval)")
-            android.util.Log.d("WidgetProvider", "  - Should restart: ${!isAnimationRunning || timeSinceLastFrame > ANIMATION_INTERVAL_MS * 2}")
-            
-            // アニメーションが停止していて、最大再開回数に達していない場合
-            // 判定：アニメーション間隔の2倍以上経過している場合（2秒）
-            if (!isAnimationRunning || timeSinceLastFrame > ANIMATION_INTERVAL_MS * 2) {
-                if (autoRestartCount < MAX_AUTO_RESTART_COUNT && autoRestartEnabled) {
-                    
-                    android.util.Log.w("WidgetProvider", "⚠️ Animation appears to be stopped")
-                    android.util.Log.i("WidgetProvider", "🔄 Auto-restarting animation (attempt ${autoRestartCount + 1}/${MAX_AUTO_RESTART_COUNT})")
-                    
-                    autoRestartCount++
-                    
-                    // 自動再開を実行
-                    performAutoRestart(context)
-                    
-                } else if (autoRestartCount >= MAX_AUTO_RESTART_COUNT) {
-                    android.util.Log.w("WidgetProvider", "⚠️ Max auto-restart attempts reached. Disabling auto-restart.")
-                    autoRestartEnabled = false
-                    stopAutoRestartMonitoring()
-                    return // 次の監視をスケジュールしない
-                }
-            } else {
-                android.util.Log.v("WidgetProvider", "✅ Animation is running normally")
-            }
-            
-            // 継続監視のために次のチェックをスケジュール
-            if (autoRestartEnabled) {
-                scheduleAutoRestartCheck(context)
-            }
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error in auto-restart check", e)
-            // エラーが発生しても監視を継続
-            if (autoRestartEnabled) {
-                scheduleAutoRestartCheck(context)
-            }
-        }
-    }
-    
-    private fun performAutoRestart(context: Context) {
-        try {
-            android.util.Log.i("WidgetProvider", "🚀 Performing automatic restart...")
-            android.util.Log.i("WidgetProvider", "  - Current state: isAnimationRunning=$isAnimationRunning")
-            android.util.Log.i("WidgetProvider", "  - Auto-restart attempt: $autoRestartCount/$MAX_AUTO_RESTART_COUNT")
-            
-            // 現在のアニメーションを停止
-            stopAlarmBasedAnimation(context)
-            
-            // 即座に再開（遅延なし）
-            android.util.Log.i("WidgetProvider", "🔄 Immediately restarting animation...")
-            startAlarmBasedAnimation(context, resetAutoRestartCounter = false)
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error performing auto-restart", e)
-        }
-    }
+//    private fun performAutoRestart(context: Context) {
+//        try {
+//            android.util.Log.i("WidgetProvider", "🚀 Performing automatic restart...")
+//            android.util.Log.i("WidgetProvider", "  - Current state: isAnimationRunning=$isAnimationRunning")
+//            android.util.Log.i("WidgetProvider", "  - Auto-restart attempt: $autoRestartCount/$MAX_AUTO_RESTART_COUNT")
+//
+//            // 現在のアニメーションを停止
+//            stopAlarmBasedAnimation(context)
+//
+//            // 即座に再開（遅延なし）
+//            android.util.Log.i("WidgetProvider", "🔄 Immediately restarting animation...")
+//            startAlarmBasedAnimation(context, resetAutoRestartCounter = false)
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Error performing auto-restart", e)
+//        }
+//    }
     
 
     
-    private fun cleanupImageCache() {
-        android.util.Log.d("WidgetProvider", "🧹 Cleaning up image cache")
-        
-        try {
-            // 統計情報を出力
-            logFinalStatistics()
-            
-            // 自動再開システムを停止
-            stopAutoRestartMonitoring()
-            
-            optimizedImageCache.forEach { bitmap ->
-                if (!bitmap.isRecycled) {
-                    bitmap.recycle()
-                }
-            }
-            optimizedImageCache.clear()
-            isCacheReady = false
-            
-            android.util.Log.d("WidgetProvider", "✅ Image cache cleaned up")
-            
-                    } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error cleaning up image cache", e)
-        }
-    }
-}
+//    private fun cleanupImageCache() {
+//        android.util.Log.d("WidgetProvider", "🧹 Cleaning up image cache")
+//
+//        try {
+//            // 統計情報を出力
+//            logFinalStatistics()
+//
+//            // 自動再開システムを停止
+//            stopAutoRestartMonitoring()
+//
+//            optimizedImageCache.forEach { bitmap ->
+//                if (!bitmap.isRecycled) {
+//                    bitmap.recycle()
+//                }
+//            }
+//            optimizedImageCache.clear()
+//            isCacheReady = false
+//
+//            android.util.Log.d("WidgetProvider", "✅ Image cache cleaned up")
+//
+//                    } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Error cleaning up image cache", e)
+//        }
+//    }
+//}

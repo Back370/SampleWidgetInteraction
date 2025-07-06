@@ -100,35 +100,35 @@ class WidgetAnimationService : Service() {
             this, 0, stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
+
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("ウィジェットアニメーション実行中")
                 .setContentText("5fps (400x500解像度) でスムーズアニメーション中")
-                .setSmallIcon(R.drawable.ic_arrow_up)
-                .setOngoing(true)
-                .addAction(
-                    Notification.Action.Builder(
-                        R.drawable.ic_arrow_down,
-                        "停止",
-                        stopPendingIntent
-                    ).build()
-                )
+//                .setSmallIcon(R.drawable.ic_arrow_up)
+//                .setOngoing(true)
+//                .addAction(
+//                    Notification.Action.Builder(
+//                        R.drawable.ic_arrow_down,
+//                        "停止",
+//                        stopPendingIntent
+//                    ).build()
+//                )
                 .build()
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
                 .setContentTitle("ウィジェットアニメーション実行中")
                 .setContentText("5fps (400x500解像度) でスムーズアニメーション中")
-                .setSmallIcon(R.drawable.ic_arrow_up)
-                .setOngoing(true)
-                .addAction(
-                    Notification.Action.Builder(
-                        R.drawable.ic_arrow_down,
-                        "停止",
-                        stopPendingIntent
-                    ).build()
-                )
+//                .setSmallIcon(R.drawable.ic_arrow_up)
+//                .setOngoing(true)
+//                .addAction(
+//                    Notification.Action.Builder(
+//                        R.drawable.ic_arrow_down,
+//                        "停止",
+//                        stopPendingIntent
+//                    ).build()
+//                )
                 .build()
         }
     }
@@ -242,7 +242,7 @@ class WidgetAnimationService : Service() {
                                 remoteViews.setImageViewBitmap(R.id.widget_image, bitmap)
                                 
                                 // ボタンの設定
-                                setupButtons(remoteViews)
+                                //setupButtons(remoteViews)
                                 
                                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
                             }
@@ -273,27 +273,27 @@ class WidgetAnimationService : Service() {
         }
     }
     
-    private fun setupButtons(remoteViews: RemoteViews) {
-        // 停止ボタン
-        val stopIntent = Intent(this, WidgetAnimationService::class.java).apply {
-            action = "STOP_ANIMATION"
-        }
-        val stopPendingIntent = PendingIntent.getService(
-            this, 2, stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        remoteViews.setOnClickPendingIntent(R.id.button_stop, stopPendingIntent)
-        
-        // 開始ボタン
-        val startIntent = Intent(this, WidgetAnimationService::class.java).apply {
-            action = "START_ANIMATION"
-        }
-        val startPendingIntent = PendingIntent.getService(
-            this, 3, startIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        remoteViews.setOnClickPendingIntent(R.id.button_start, startPendingIntent)
-    }
+//    private fun setupButtons(remoteViews: RemoteViews) {
+//        // 停止ボタン
+//        val stopIntent = Intent(this, WidgetAnimationService::class.java).apply {
+//            action = "STOP_ANIMATION"
+//        }
+//        val stopPendingIntent = PendingIntent.getService(
+//            this, 2, stopIntent,
+//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
+//        remoteViews.setOnClickPendingIntent(R.id.button_stop, stopPendingIntent)
+//
+//        // 開始ボタン
+//        val startIntent = Intent(this, WidgetAnimationService::class.java).apply {
+//            action = "START_ANIMATION"
+//        }
+//        val startPendingIntent = PendingIntent.getService(
+//            this, 3, startIntent,
+//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
+//        remoteViews.setOnClickPendingIntent(R.id.button_start, startPendingIntent)
+//    }
     
     private fun stopAnimation() {
         android.util.Log.d("WidgetAnimationService", "⏹️ Stopping foreground animation")
