@@ -127,6 +127,11 @@ object SampleCharacterConfigs {
                 animationType = "Flow",
                 frameCount = 50,
                 frameDelay = 200L
+            ),
+            AnimationConfig(
+                animationType = "Special",
+                frameCount = 50,
+                frameDelay = 200L
             )
         )
     )

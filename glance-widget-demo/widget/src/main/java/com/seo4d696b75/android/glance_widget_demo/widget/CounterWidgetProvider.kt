@@ -560,15 +560,24 @@ class CounterWidgetProvider : AppWidgetProvider() {
             android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
         }
     }
-    
-    private fun handleToggleAnimation(context: Context) {
+
+    //アニメーションを切り替え
+    private fun handleToggleAnimation(context: Context, AnimType: String = "null") {
         try {
             android.util.Log.d("WidgetProvider", "🔄 Handling animation toggle")
             
             // アニメーション状態を切り替え
-            val animationStateManager = AnimationStateManager.getInstance(context)
-            val newAnimationType = animationStateManager.toggleAnimationType()
-            
+            val animationStateManager = AnimationStateManager.getInstance(context);
+
+            val newAnimationType =
+            when(AnimType){
+                "FlowState" -> animationStateManager.setFlowState()
+                "AdleState" -> animationStateManager.setAdleState()
+                "SpecialState" -> animationStateManager.setSpecialState()
+                else -> animationStateManager.toggleAnimationType()
+            }
+
+
             android.util.Log.d("WidgetProvider", "✅ Animation switched to: $newAnimationType")
             
             // 古いキャッシュをクリア
@@ -788,7 +797,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             val loadOptions = BitmapFactory.Options().apply {
                 inJustDecodeBounds = false
                 inSampleSize = sampleSize
-                inPreferredConfig = Bitmap.Config.RGB_565 // メモリ効率を改善
+                inPreferredConfig = Bitmap.Config.ARGB_8888 // 透明度サポート
             }
             
             val bitmap = BitmapFactory.decodeFile(imagePath, loadOptions)

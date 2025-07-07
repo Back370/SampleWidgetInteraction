@@ -878,6 +878,7 @@ private fun organizeExistingImages(context: Context) {
         val stateDir = java.io.File(maoDir, "State")
         val adleDir = java.io.File(stateDir, "Adle")
         val flowDir = java.io.File(stateDir, "Flow")
+        val specialDir = java.io.File(stateDir, "Special")
         
         // 既存のディレクトリをクリア
         if (adleDir.exists()) {
@@ -888,13 +889,19 @@ private fun organizeExistingImages(context: Context) {
             android.util.Log.d("MainScreen", "🧹 Clearing existing Flow directory")
             flowDir.listFiles()?.forEach { it.delete() }
         }
+        if (specialDir.exists()) {
+            android.util.Log.d("MainScreen", "🧹 Clearing existing Special directory")
+            specialDir.listFiles()?.forEach { it.delete() }
+        }
         
         adleDir.mkdirs()
         flowDir.mkdirs()
+        specialDir.mkdirs()
         
         android.util.Log.d("MainScreen", "📁 Created clean directory structure:")
         android.util.Log.d("MainScreen", "  - Adle: ${adleDir.absolutePath}")
         android.util.Log.d("MainScreen", "  - Flow: ${flowDir.absolutePath}")
+        android.util.Log.d("MainScreen", "  - Special: ${specialDir.absolutePath}")
         
         // 既存画像を一時的にAdle用として移動（FirebaseからダウンロードされたものがAdleと仮定）
         android.util.Log.d("MainScreen", "📊 既存画像をAdleアニメーションに移動:")
@@ -953,14 +960,18 @@ private fun organizeExistingImages(context: Context) {
             
         }, 1000L) // 1秒後に実行
         
-        // Flowアニメーションの画像はFirebaseから別途ダウンロード
-        android.util.Log.d("MainScreen", "📥 Flowアニメーションの画像をダウンロード開始...")
+        // FlowとSpecialアニメーションの画像はFirebaseから別途ダウンロード
+        android.util.Log.d("MainScreen", "📥 FlowとSpecialアニメーションの画像をダウンロード開始...")
         try {
             // Flowアニメーションのダウンロードを開始
             ImageDownloadService.downloadCharacterImages(context, "Mao", "Flow")
             android.util.Log.d("MainScreen", "✅ Flowアニメーションダウンロード開始")
+            
+            // Specialアニメーションのダウンロードを開始
+            ImageDownloadService.downloadCharacterImages(context, "Mao", "Special")
+            android.util.Log.d("MainScreen", "✅ Specialアニメーションダウンロード開始")
         } catch (e: Exception) {
-            android.util.Log.e("MainScreen", "❌ Failed to start Flow animation download", e)
+            android.util.Log.e("MainScreen", "❌ Failed to start animation downloads", e)
         }
         
         // 結果確認
@@ -1172,6 +1183,15 @@ private fun showCurrentDirectoryStatus(context: Context) {
             android.util.Log.d("MainScreen", "   Mao/State/Flow: 存在しません")
         }
         
+        // Specialディレクトリ
+        val specialDir = java.io.File(baseDir, "Mao/State/Special")
+        if (specialDir.exists()) {
+            val files = specialDir.listFiles()?.size ?: 0
+            android.util.Log.d("MainScreen", "   Mao/State/Special: $files files")
+        } else {
+            android.util.Log.d("MainScreen", "   Mao/State/Special: 存在しません")
+        }
+        
     } catch (e: Exception) {
         android.util.Log.e("MainScreen", "❌ Error showing directory status", e)
     }
@@ -1196,11 +1216,16 @@ private fun showDetailedFileList(context: Context) {
         val flowDir = java.io.File(baseDir, "Mao/State/Flow")
         showDirectoryDetails(flowDir, "Mao/State/Flow")
         
+        // Specialディレクトリの詳細
+        val specialDir = java.io.File(baseDir, "Mao/State/Special")
+        showDirectoryDetails(specialDir, "Mao/State/Special")
+        
         android.util.Log.d("MainScreen", "")
         android.util.Log.d("MainScreen", "📝 ファイル名形式の説明:")
         android.util.Log.d("MainScreen", "  WidgetImages: 001.png, 002.png, ... 050.png")
         android.util.Log.d("MainScreen", "  Adle: 001.png, 002.png, ... 050.png")
         android.util.Log.d("MainScreen", "  Flow: 001.png, 002.png, ... 050.png")
+        android.util.Log.d("MainScreen", "  Special: 001.png, 002.png, ... 050.png")
         android.util.Log.d("MainScreen", "  (注: Firebase元画像は 001_reduced_16colors.png 形式)")
         
     } catch (e: Exception) {
@@ -1378,6 +1403,7 @@ private fun forceCleanupImages(context: Context) {
                 java.io.File(baseDir, "WidgetImages"),
                 java.io.File(baseDir, "Mao/State/Adle"),
                 java.io.File(baseDir, "Mao/State/Flow"),
+                java.io.File(baseDir, "Mao/State/Special"),
                 java.io.File(baseDir, "Mao/State"),
                 java.io.File(baseDir, "Mao")
             )

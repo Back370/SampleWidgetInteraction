@@ -372,6 +372,11 @@ class WidgetAnimationService : Service() {
         try {
             android.util.Log.d("WidgetAnimationService", "🔄 Handling animation toggle")
             
+            // アニメーション状態管理から最新の状態を取得
+            val animationStateManager = AnimationStateManager.getInstance(this)
+            val currentAnimationType = animationStateManager.getCurrentAnimationType()
+            android.util.Log.d("WidgetAnimationService", "🎯 Current animation type: $currentAnimationType")
+            
             // 現在のアニメーションを停止
             val wasRunning = isServiceRunning
             if (wasRunning) {
@@ -569,7 +574,7 @@ class WidgetAnimationService : Service() {
                 android.util.Log.d("WidgetAnimationService", "🔄 Building optimized image cache...")
 
                 // メモリ使用量の予測計算
-                val bytesPerPixel = 2 // RGB_565
+                val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
                 val pixelsPerImage = WIDGET_IMAGE_WIDTH * WIDGET_IMAGE_HEIGHT
                 val bytesPerImage = pixelsPerImage * bytesPerPixel
                 val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
@@ -609,7 +614,7 @@ class WidgetAnimationService : Service() {
                                 true
                             )
 
-                            val compressedBitmap = optimizedBitmap.copy(Bitmap.Config.RGB_565, false)
+                            val compressedBitmap = optimizedBitmap.copy(Bitmap.Config.ARGB_8888, false)
                             optimizedImageCache.add(compressedBitmap)
 
                             android.util.Log.d("WidgetAnimationService", "  - Optimized size: ${compressedBitmap.width}x${compressedBitmap.height}")
@@ -637,7 +642,7 @@ class WidgetAnimationService : Service() {
 
                     android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
                     android.util.Log.d("WidgetAnimationService", "  - Image size: ${WIDGET_IMAGE_WIDTH}x${WIDGET_IMAGE_HEIGHT}")
-                    android.util.Log.d("WidgetAnimationService", "  - Format: RGB_565 (50% memory reduction)")
+                    android.util.Log.d("WidgetAnimationService", "  - Format: ARGB_8888 (透明度サポート)")
                     android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
                     android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
                 }
@@ -681,7 +686,7 @@ class WidgetAnimationService : Service() {
             val decodeOptions = android.graphics.BitmapFactory.Options().apply {
                 inJustDecodeBounds = false
                 inSampleSize = sampleSize
-                inPreferredConfig = Bitmap.Config.RGB_565  // メモリ効率
+                inPreferredConfig = Bitmap.Config.ARGB_8888  // 透明度サポート
                 inPurgeable = true
                 inInputShareable = true
             }

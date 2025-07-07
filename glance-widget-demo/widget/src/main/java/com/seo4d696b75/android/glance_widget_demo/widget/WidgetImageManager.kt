@@ -51,7 +51,10 @@ class WidgetImageManager @Inject constructor(
         val cachedFile = imageCacheRepository.getCachedImageFile(characterId, animationType, frameIndex)
         cachedFile?.let { file ->
             try {
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                val options = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.ARGB_8888 // 透明度サポート
+                }
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath, options)
                 bitmap?.let {
                     // メモリキャッシュに保存
                     addToMemoryCache(cacheKey, it)
@@ -93,7 +96,10 @@ class WidgetImageManager @Inject constructor(
             )
             
             result.getOrNull()?.let { file ->
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                val options = BitmapFactory.Options().apply {
+                    inPreferredConfig = Bitmap.Config.ARGB_8888 // 透明度サポート
+                }
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath, options)
                 bitmap?.let {
                     val cacheKey = getCacheKey(characterId, animationType, frameIndex)
                     addToMemoryCache(cacheKey, it)

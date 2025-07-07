@@ -62,28 +62,46 @@ class AnimationStateManager private constructor(context: Context) {
     /**
      * キャラクターIDを設定
      */
-    fun setCharacterId(characterId: String) {
-        sharedPreferences.edit()
-            .putString(KEY_CHARACTER_ID, characterId)
-            .apply()
-        
-        android.util.Log.d("AnimationStateManager", "Character ID set to: $characterId")
+//    fun setCharacterId(characterId: String) {
+//        sharedPreferences.edit()
+//            .putString(KEY_CHARACTER_ID, characterId)
+//            .apply()
+//
+//        android.util.Log.d("AnimationStateManager", "Character ID set to: $characterId")
+//    }
+
+    //アイドル状態にする関数
+    fun setAdleState(): String {
+        setAnimationType(ANIMATION_TYPE_ADLE)
+        return ANIMATION_TYPE_ADLE
+    }
+
+    //ふらふら状態にする関数
+    fun setFlowState(): String {
+        setAnimationType(ANIMATION_TYPE_FLOW)
+        return ANIMATION_TYPE_FLOW
+    }
+
+    //スペシャル状態にする関数
+    fun setSpecialState(): String {
+        setAnimationType(ANIMATION_TYPE_SPECIAL)
+        return ANIMATION_TYPE_SPECIAL
     }
     
     /**
-     * アニメーション種別を切り替え
+     * アニメーション種別を切り替え（Adle → Flow → Special → Adle...）
      */
     fun toggleAnimationType(): String {
         val currentType = getCurrentAnimationType()
-        val newType = if (currentType == ANIMATION_TYPE_ADLE) {
-            ANIMATION_TYPE_FLOW
-        } else if (currentType == ANIMATION_TYPE_FLOW) {
-            ANIMATION_TYPE_ADLE
-        } else {
-            ANIMATION_TYPE_SPECIAL
+        val newType = when (currentType) {
+            ANIMATION_TYPE_ADLE -> ANIMATION_TYPE_FLOW
+            ANIMATION_TYPE_FLOW -> ANIMATION_TYPE_SPECIAL
+            ANIMATION_TYPE_SPECIAL -> ANIMATION_TYPE_ADLE
+            else -> ANIMATION_TYPE_ADLE // デフォルト
         }
         
         setAnimationType(newType)
+        android.util.Log.d("AnimationStateManager", "Animation switched: $currentType → $newType")
         return newType
     }
     
@@ -99,10 +117,11 @@ class AnimationStateManager private constructor(context: Context) {
      */
     fun getNextAnimationDisplayText(): String {
         val currentType = getCurrentAnimationType()
-        val nextType = if (currentType == ANIMATION_TYPE_ADLE) {
-            ANIMATION_TYPE_FLOW
-        } else {
-            ANIMATION_TYPE_ADLE
+        val nextType = when (currentType) {
+            ANIMATION_TYPE_ADLE -> ANIMATION_TYPE_FLOW
+            ANIMATION_TYPE_FLOW -> ANIMATION_TYPE_SPECIAL
+            ANIMATION_TYPE_SPECIAL -> ANIMATION_TYPE_ADLE
+            else -> ANIMATION_TYPE_ADLE // デフォルト
         }
         return "${getCurrentCharacterId()}/State/${nextType}"
     }
