@@ -37,7 +37,16 @@ object ImageUrlGenerator {
         animationType: String,
         frameIndex: Int
     ): String {
-        return "${config.baseUrl}$animationType/frame_${frameIndex.toString().padStart(2, '0')}.${getFileFormat(config, animationType)}"
+        val paddedFrameNumber = (frameIndex + 1).toString().padStart(3, '0')
+        val fileFormat = getFileFormat(config, animationType)
+        
+        // Maoキャラクターの場合は特別なファイル名形式を使用
+        return if (config.characterId == "Mao") {
+            "${config.baseUrl}$animationType/${paddedFrameNumber}_reduced_16colors.$fileFormat"
+        } else {
+            // ウィジェットアニメーションが期待するファイル名形式（001.png, 002.png, ...）に合わせる
+            "${config.baseUrl}$animationType/${paddedFrameNumber}.$fileFormat"
+        }
     }
     
     /**
@@ -104,11 +113,29 @@ object SampleCharacterConfigs {
         )
     )
     
+    val CHARACTER_MAO = CharacterImageConfig(
+        characterId = "Mao",
+        name = "Mao",
+        baseUrl = "gs://backproject-c19a9.firebasestorage.app/Mao/State/",
+        animations = listOf(
+            AnimationConfig(
+                animationType = "Adle",
+                frameCount = 50,
+                frameDelay = 200L
+            ),
+            AnimationConfig(
+                animationType = "Flow",
+                frameCount = 50,
+                frameDelay = 200L
+            )
+        )
+    )
+    
     /**
      * 全キャラクター設定の取得
      */
     fun getAllCharacters(): List<CharacterImageConfig> {
-        return listOf(CHARACTER_001, CHARACTER_002)
+        return listOf(CHARACTER_001, CHARACTER_002, CHARACTER_MAO)
     }
     
     /**
