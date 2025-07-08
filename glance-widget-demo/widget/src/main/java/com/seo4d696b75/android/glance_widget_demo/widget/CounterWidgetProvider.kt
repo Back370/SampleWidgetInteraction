@@ -603,11 +603,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 action = "TOGGLE_ANIMATION"
             }
             
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
+            // TOGGLE_ANIMATIONは通常のサービスとして開始（フォアグラウンドサービスではない）
+            context.startService(serviceIntent)
             
             // ウィジェットの表示を更新
             val appWidgetManager = AppWidgetManager.getInstance(context)
