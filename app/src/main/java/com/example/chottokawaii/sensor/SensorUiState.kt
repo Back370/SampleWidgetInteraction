@@ -1,4 +1,4 @@
-package com.example.sensor.sensor
+package com.example.chottokawaii.sensor
 
 data class SensorUiState(
     val xAxis: Float = 0f,

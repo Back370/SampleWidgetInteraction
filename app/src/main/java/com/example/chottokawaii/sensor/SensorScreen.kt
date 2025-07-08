@@ -1,4 +1,4 @@
-package com.example.sensor.sensor
+package com.example.chottokawaii.sensor
 
 import android.annotation.SuppressLint
 import android.widget.Toast
@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.drawscope.rotate
+import kotlin.math.abs
 import kotlin.math.atan2
 
 
@@ -87,7 +87,7 @@ fun LineLevel(xAxisValue: Float, yAxisValue: Float, zAxisValue: Float, modifier:
             text = "${String.format("%.1f", xzAngle)}°", // 小数点以下1桁まで表示
             fontSize = 48.sp,
             fontWeight = FontWeight.Light,
-            color = if (kotlin.math.abs(xzAngle) < 1.0f) Color.Green else Color.Black
+            color = if (abs(xzAngle) < 1.0f) Color.Green else Color.Black
         )
 
         Spacer(modifier = Modifier.height(32.dp))
