@@ -6,8 +6,10 @@ import com.seo4d696b75.android.glance_widget_demo.domain.ImageCacheRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -20,6 +22,10 @@ class ImageCacheRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val okHttpClient: OkHttpClient
 ) : ImageCacheRepository {
+    
+    private val firebaseStorage: FirebaseStorage by lazy {
+        FirebaseStorage.getInstance()
+    }
 
     companion object {
         private const val TAG = "ImageCacheRepository"
@@ -29,7 +35,8 @@ class ImageCacheRepositoryImpl @Inject constructor(
     }
 
     private val cacheDir: File by lazy {
-        File(context.externalCacheDir, CACHE_DIR_NAME).apply {
+        // 外部ファイルディレクトリを使用（ウィジェットアニメーションと同じ場所）
+        File(context.getExternalFilesDir(null), "").apply {
             if (!exists()) {
                 mkdirs()
             }
@@ -47,40 +54,57 @@ class ImageCacheRepositoryImpl @Inject constructor(
             
             // 既にキャッシュが存在する場合は返す
             if (cacheFile.exists()) {
+                Log.d(TAG, "Image already cached: ${cacheFile.absolutePath}")
                 return@withContext Result.success(cacheFile)
             }
 
             // ディレクトリが存在しない場合は作成
             cacheFile.parentFile?.mkdirs()
 
-            // 画像をダウンロード
-            val request = Request.Builder()
-                .url(imageUrl)
-                .build()
+            Log.d(TAG, "Downloading image from Firebase Storage: $imageUrl")
+            Log.d(TAG, "Saving to: ${cacheFile.absolutePath}")
 
-            val response = okHttpClient.newCall(request).execute()
-            
-            if (!response.isSuccessful) {
-                throw IOException("Failed to download image: ${response.code}")
+            // Firebase Storageからダウンロード
+            if (imageUrl.startsWith("gs://")) {
+                // Firebase Storage URL の場合
+                val storageRef = firebaseStorage.getReferenceFromUrl(imageUrl)
+                
+                // ファイルにダウンロード
+                storageRef.getFile(cacheFile).await()
+                
+                Log.d(TAG, "Firebase image cached successfully: ${cacheFile.absolutePath}")
+                
+            } else {
+                // HTTP URL の場合（フォールバック）
+                val request = Request.Builder()
+                    .url(imageUrl)
+                    .build()
+
+                val response = okHttpClient.newCall(request).execute()
+                
+                if (!response.isSuccessful) {
+                    throw IOException("Failed to download image: ${response.code}")
+                }
+
+                response.body?.let { body ->
+                    FileOutputStream(cacheFile).use { output ->
+                        body.byteStream().use { input ->
+                            input.copyTo(output)
+                        }
+                    }
+                } ?: throw IOException("Empty response body")
+                
+                Log.d(TAG, "HTTP image cached successfully: ${cacheFile.absolutePath}")
             }
 
-            response.body?.let { body ->
-                FileOutputStream(cacheFile).use { output ->
-                    body.byteStream().use { input ->
-                        input.copyTo(output)
-                    }
-                }
-                
-                Log.d(TAG, "Image cached successfully: ${cacheFile.absolutePath}")
-                
-                // キャッシュサイズチェック
-                cleanupOldCache()
-                
-                Result.success(cacheFile)
-            } ?: throw IOException("Empty response body")
+            // キャッシュサイズチェック
+            cleanupOldCache()
+            
+            Result.success(cacheFile)
             
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to download and cache image", e)
+            Log.e(TAG, "Failed to download and cache image: $imageUrl", e)
+            Log.e(TAG, "Target file: ${getCacheFile(characterId, animationType, frameIndex).absolutePath}")
             Result.failure(e)
         }
     }
@@ -149,8 +173,9 @@ class ImageCacheRepositoryImpl @Inject constructor(
         animationType: String,
         frameIndex: Int
     ): File {
-        val subDir = File(cacheDir, "$characterId/$animationType")
-        val filename = "frame_${frameIndex.toString().padStart(2, '0')}$CACHE_FILE_EXTENSION"
+        // ウィジェットアニメーションが期待するディレクトリ構造に合わせる
+        val subDir = File(cacheDir, "$characterId/State/$animationType")
+        val filename = "${(frameIndex + 1).toString().padStart(3, '0')}.png"  // 001.png, 002.png, ... のフォーマット
         return File(subDir, filename)
     }
 

@@ -53,4 +53,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.glide)
     ksp(libs.glide.compiler)
+    
+    // Firebase libraries
+    implementation("com.google.firebase:firebase-storage-ktx:20.3.0")
 }

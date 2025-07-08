@@ -78,14 +78,35 @@ class ImageDownloadService : Service() {
             }
             context.startService(intent)
         }
+        
+        /**
+         * 実際のフレーム数を取得（他クラスから呼び出し可能）
+         */
+        fun getActualFrameCount(context: Context, characterId: String, animationType: String, defaultCount: Int): Int {
+            return try {
+                val prefs = context.getSharedPreferences("actual_frame_counts", Context.MODE_PRIVATE)
+                val key = "${characterId}_${animationType}"
+                val actualCount = prefs.getInt(key, defaultCount)
+                Log.d(TAG, "📖 Retrieved actual frame count: $key = $actualCount")
+                actualCount
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Error retrieving actual frame count", e)
+                defaultCount
+            }
+        }
     }
     
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "🔧 ImageDownloadService onCreate")
         createNotificationChannel()
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "🚀 ImageDownloadService onStartCommand called")
+        Log.d(TAG, "Intent: ${intent?.toString()}")
+        Log.d(TAG, "Action: ${intent?.action}")
+        
         intent?.let { handleIntent(it) }
         return START_NOT_STICKY
     }
@@ -93,32 +114,48 @@ class ImageDownloadService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     
     private fun handleIntent(intent: Intent) {
+        Log.d(TAG, "=== ImageDownloadService handleIntent ===")
+        Log.d(TAG, "Action: ${intent.action}")
+        
         when (intent.action) {
             ACTION_DOWNLOAD_CHARACTER -> {
                 val characterId = intent.getStringExtra(EXTRA_CHARACTER_ID) ?: return
                 val animationType = intent.getStringExtra(EXTRA_ANIMATION_TYPE)
+                Log.d(TAG, "📥 Download character request: $characterId, animation: $animationType")
                 downloadCharacterImages(characterId, animationType)
             }
             ACTION_DOWNLOAD_ALL -> {
+                Log.d(TAG, "📥 Download all images request")
                 downloadAllImages()
             }
             ACTION_CLEAR_CACHE -> {
+                Log.d(TAG, "📥 Clear cache request")
                 clearCache()
+            }
+            else -> {
+                Log.w(TAG, "Unknown action: ${intent.action}")
             }
         }
     }
     
     private fun downloadCharacterImages(characterId: String, animationType: String?) {
+        Log.d(TAG, "🚀 downloadCharacterImages called: characterId=$characterId, animationType=$animationType")
+        
         serviceScope.launch {
             try {
                 showNotification("画像ダウンロード中", "$characterId の画像をダウンロードしています...")
                 
                 val config = SampleCharacterConfigs.getCharacterById(characterId)
                 if (config == null) {
-                    Log.e(TAG, "Character config not found: $characterId")
+                    Log.e(TAG, "❌ Character config not found: $characterId")
+                    showNotification("エラー", "キャラクター設定が見つかりません: $characterId")
                     stopSelf()
                     return@launch
                 }
+                
+                Log.d(TAG, "✅ Character config found: ${config.characterId}")
+                Log.d(TAG, "📁 Base URL: ${config.baseUrl}")
+                Log.d(TAG, "🎬 Available animations: ${config.animations.map { it.animationType }}")
                 
                 val animationsToDownload = if (animationType != null) {
                     config.animations.filter { it.animationType == animationType }
@@ -126,11 +163,16 @@ class ImageDownloadService : Service() {
                     config.animations
                 }
                 
+                Log.d(TAG, "📋 Animations to download: ${animationsToDownload.map { it.animationType }}")
+                
                 var totalDownloaded = 0
                 var totalFailed = 0
                 
                 for (animation in animationsToDownload) {
-                    Log.d(TAG, "Downloading animation: ${animation.animationType}")
+                    Log.d(TAG, "🎬 Downloading animation: ${animation.animationType} (${animation.frameCount} frames)")
+                    
+                    var actualFrameCount = 0
+                    var consecutiveFailures = 0
                     
                     for (frameIndex in 0 until animation.frameCount) {
                         try {
@@ -139,6 +181,8 @@ class ImageDownloadService : Service() {
                                 animation.animationType,
                                 frameIndex
                             )
+                            
+                            Log.d(TAG, "🔗 Frame $frameIndex URL: $imageUrl")
                             
                             val result = imageCacheRepository.downloadAndCacheImage(
                                 imageUrl,
@@ -149,10 +193,28 @@ class ImageDownloadService : Service() {
                             
                             if (result.isSuccess) {
                                 totalDownloaded++
-                                Log.d(TAG, "Downloaded: ${animation.animationType} frame $frameIndex")
+                                actualFrameCount = frameIndex + 1
+                                consecutiveFailures = 0
+                                if (frameIndex % 10 == 0) {  // 10フレームごとにログ出力
+                                    Log.d(TAG, "✅ Downloaded: ${animation.animationType} frame $frameIndex")
+                                }
                             } else {
                                 totalFailed++
-                                Log.w(TAG, "Failed to download: ${animation.animationType} frame $frameIndex")
+                                consecutiveFailures++
+                                val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error"
+                                Log.w(TAG, "❌ Failed to download: ${animation.animationType} frame $frameIndex - $errorMessage")
+                                
+                                // 404エラーが2回連続で発生した場合、実際のフレーム数を検出したと判断
+                                if (errorMessage.contains("Object does not exist") && consecutiveFailures >= 2) {
+                                    Log.i(TAG, "🔍 Detected actual frame count for ${animation.animationType}: $actualFrameCount frames (instead of ${animation.frameCount})")
+                                    
+                                    // SharedPreferencesに実際のフレーム数を保存
+                                    saveActualFrameCount(config.characterId, animation.animationType, actualFrameCount)
+                                    
+                                    // 残りのフレームダウンロードをスキップ
+                                    Log.i(TAG, "⏭️ Skipping remaining frames for ${animation.animationType} (${frameIndex + 1} to ${animation.frameCount - 1})")
+                                    break
+                                }
                             }
                             
                             // 進捗通知を更新
@@ -163,9 +225,12 @@ class ImageDownloadService : Service() {
                             
                         } catch (e: Exception) {
                             totalFailed++
-                            Log.e(TAG, "Error downloading frame $frameIndex", e)
+                            consecutiveFailures++
+                            Log.e(TAG, "❌ Error downloading frame $frameIndex for ${animation.animationType}", e)
                         }
                     }
+                    
+                    Log.d(TAG, "🏁 Animation ${animation.animationType} completed: ${animation.frameCount} frames processed (actual: $actualFrameCount)")
                 }
                 
                 showNotification(
@@ -173,10 +238,10 @@ class ImageDownloadService : Service() {
                     "成功: $totalDownloaded, 失敗: $totalFailed"
                 )
                 
-                Log.d(TAG, "Download completed: $totalDownloaded successful, $totalFailed failed")
+                Log.d(TAG, "🎯 Download completed: $totalDownloaded successful, $totalFailed failed")
                 
             } catch (e: Exception) {
-                Log.e(TAG, "Error in downloadCharacterImages", e)
+                Log.e(TAG, "❌ Error in downloadCharacterImages", e)
                 showNotification("エラー", "画像ダウンロードに失敗しました")
             } finally {
                 stopSelf()
@@ -304,5 +369,35 @@ class ImageDownloadService : Service() {
         
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, notification)
+    }
+    
+    /**
+     * 実際のフレーム数をSharedPreferencesに保存
+     */
+    private fun saveActualFrameCount(characterId: String, animationType: String, actualFrameCount: Int) {
+        try {
+            val prefs = getSharedPreferences("actual_frame_counts", Context.MODE_PRIVATE)
+            val key = "${characterId}_${animationType}"
+            prefs.edit().putInt(key, actualFrameCount).apply()
+            Log.d(TAG, "💾 Saved actual frame count: $key = $actualFrameCount")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error saving actual frame count", e)
+        }
+    }
+    
+    /**
+     * 実際のフレーム数をSharedPreferencesから取得
+     */
+    private fun getActualFrameCount(characterId: String, animationType: String, defaultCount: Int): Int {
+        return try {
+            val prefs = getSharedPreferences("actual_frame_counts", Context.MODE_PRIVATE)
+            val key = "${characterId}_${animationType}"
+            val actualCount = prefs.getInt(key, defaultCount)
+            Log.d(TAG, "📖 Retrieved actual frame count: $key = $actualCount")
+            actualCount
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error retrieving actual frame count", e)
+            defaultCount
+        }
     }
 } 

@@ -20,17 +20,19 @@ class CounterWidgetProvider : AppWidgetProvider() {
     companion object {
         const val ACTION_WIDGET_UPDATE = "com.seo4d696b75.android.glance_widget_demo.WIDGET_UPDATE"
         const val ACTION_START_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.START_ANIMATION"
+        const val ACTION_TOGGLE_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
 //        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
 //        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
         
         private const val ANIMATION_INTERVAL_MS = 500L // 2fps - AlarmManagerで実現可能な間隔
-        private const val TOTAL_FRAMES = 50
+        private const val DEFAULT_FRAMES = 50 // デフォルトフレーム数（実際のフレーム数が不明な場合）
         
         // ウィジェットに最適化されたサイズ
         private const val WIDGET_IMAGE_SIZE = 120 // dpに基づく最適サイズ
         
         private var isAnimationRunning = false
         private var currentFrame = 0
+        private var currentTotalFrames = DEFAULT_FRAMES // 動的に決定される実際のフレーム数
         private var alarmManager: AlarmManager? = null
         private var animationPendingIntent: PendingIntent? = null
         private var frameUpdateCount = 0
@@ -57,6 +59,26 @@ class CounterWidgetProvider : AppWidgetProvider() {
         private val imageFilePaths = mutableListOf<String>()
         private val optimizedImageCache = mutableListOf<Bitmap>()
         private var isCacheReady = false
+        
+        /**
+         * 実際のフレーム数を取得
+         */
+        private fun getActualFrameCount(context: Context): Int {
+            val animationStateManager = AnimationStateManager.getInstance(context)
+            val currentCharacterId = animationStateManager.getCurrentCharacterId()
+            val currentAnimationType = animationStateManager.getCurrentAnimationType()
+            
+            return try {
+                val actualFrameCount = com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService.getActualFrameCount(
+                    context, currentCharacterId, currentAnimationType, DEFAULT_FRAMES
+                )
+                android.util.Log.d("WidgetProvider", "📊 Actual frame count for $currentCharacterId/$currentAnimationType: $actualFrameCount")
+                actualFrameCount
+            } catch (e: Exception) {
+                android.util.Log.e("WidgetProvider", "❌ Error getting actual frame count", e)
+                DEFAULT_FRAMES
+            }
+        }
     }
     
     override fun onReceive(context: Context, intent: Intent) {
@@ -73,6 +95,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 android.util.Log.d("WidgetProvider", "▶️ Start animation command received (manual)")
                 // フォアグラウンドServiceでアニメーション開始
                 startForegroundAnimation(context)
+            }
+            ACTION_TOGGLE_ANIMATION -> {
+                android.util.Log.d("WidgetProvider", "🔄 Toggle animation command received")
+                handleToggleAnimation(context)
             }
 //            ACTION_STOP_ANIMATION -> {
 //                android.util.Log.d("WidgetProvider", "⏹️ Stop animation command received")
@@ -183,7 +209,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
 //
 //            android.util.Log.d("WidgetProvider", "✅ AlarmManager-only animation started successfully")
 //            android.util.Log.d("WidgetProvider", "  - Frame interval: ${ANIMATION_INTERVAL_MS}ms (2fps)")
-//            android.util.Log.d("WidgetProvider", "  - Total frames: $TOTAL_FRAMES")
+//            android.util.Log.d("WidgetProvider", "  - Total frames: $DEFAULT_FRAMES")
 //            android.util.Log.d("WidgetProvider", "  - Available images: ${imageFilePaths.size}")
 //            android.util.Log.d("WidgetProvider", "  - Primary: AlarmManager (background-constraint-free)")
 //            android.util.Log.d("WidgetProvider", "  - Auto-restart: ${if (autoRestartEnabled) "ENABLED" else "DISABLED"} (${AUTO_RESTART_DELAY_MS}ms)")
@@ -399,7 +425,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     updateWidgetsWithCurrentFrame(context, appWidgetManager, widgetIds)
                     
                     // フレームカウンターの更新
-                    currentFrame = (currentFrame + 1) % TOTAL_FRAMES
+                    currentTotalFrames = getActualFrameCount(context)
+                    currentFrame = (currentFrame + 1) % currentTotalFrames
                     frameUpdateCount++
                     lastFrameTime = System.currentTimeMillis()
                     
@@ -488,18 +515,18 @@ class CounterWidgetProvider : AppWidgetProvider() {
             }
             
             appWidgetIds.forEach { widgetId ->
-                val remoteViews = RemoteViews(context.packageName, R.layout.widget_layout)
+                val remoteViews = RemoteViews(context.packageName, R.layout.widget_layout_wall)
                 
                 // キャッシュされた画像を使用
                 if (isCacheReady && optimizedImageCache.isNotEmpty() && currentFrame < optimizedImageCache.size) {
                     val bitmap = optimizedImageCache[currentFrame]
                     if (!bitmap.isRecycled) {
-                        remoteViews.setImageViewBitmap(R.id.widget_image, bitmap)
+                        remoteViews.setImageViewBitmap(R.id.background_image, bitmap)
                     }
                 }
                 
                 // ボタンの設定
-                //setupButtons(context, remoteViews)
+                setupButtons(context, remoteViews)
                 
                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
             }
@@ -509,32 +536,90 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-//    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
-//        try {
-//            // 開始ボタン
-//            val startIntent = Intent(context, CounterWidgetProvider::class.java).apply {
-//                action = ACTION_START_ANIMATION
-//            }
-//            val startPendingIntent = PendingIntent.getBroadcast(
-//                context, 1, startIntent,
-//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//            )
-//            remoteViews.setOnClickPendingIntent(R.id.button_start, startPendingIntent)
-//
-//            // 停止ボタン
-//            val stopIntent = Intent(context, CounterWidgetProvider::class.java).apply {
-//                action = ACTION_STOP_ANIMATION
-//            }
-//            val stopPendingIntent = PendingIntent.getBroadcast(
-//                context, 2, stopIntent,
-//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//            )
-//            remoteViews.setOnClickPendingIntent(R.id.button_stop, stopPendingIntent)
-//
-//        } catch (e: Exception) {
-//            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
-//        }
-//    }
+    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
+        try {
+            // アニメーション状態管理
+            val animationStateManager = AnimationStateManager.getInstance(context)
+            
+            // 現在のアニメーション状態を表示
+            val currentAnimationText = animationStateManager.getCurrentAnimationDisplayText()
+            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
+            
+            // アニメーション切り替えボタン
+            val toggleIntent = Intent(context, CounterWidgetProvider::class.java).apply {
+                action = ACTION_TOGGLE_ANIMATION
+            }
+            val togglePendingIntent = PendingIntent.getBroadcast(
+                context, 1, toggleIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
+            
+
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
+        }
+    }
+
+    //アニメーションを切り替え
+    private fun handleToggleAnimation(context: Context, AnimType: String = "null") {
+        try {
+            android.util.Log.d("WidgetProvider", "🔄 Handling animation toggle")
+            
+            // アニメーション状態を切り替え
+            val animationStateManager = AnimationStateManager.getInstance(context);
+
+            val newAnimationType =
+            when(AnimType){
+                "FlowState" -> animationStateManager.setFlowState()
+                "AdleState" -> animationStateManager.setAdleState()
+                "SpecialState" -> animationStateManager.setSpecialState()
+                else -> animationStateManager.toggleAnimationType()
+            }
+
+
+            android.util.Log.d("WidgetProvider", "✅ Animation switched to: $newAnimationType")
+            
+            // 古いキャッシュをクリア
+            optimizedImageCache.forEach { bitmap ->
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
+            }
+            optimizedImageCache.clear()
+            imageFilePaths.clear()
+            isCacheReady = false
+            
+            // 新しいアニメーション種類の画像パスを取得
+            android.util.Log.d("WidgetProvider", "🔄 Rebuilding image cache for new animation type")
+            initializeImagePaths(context)
+            
+            // フレームをリセット
+            currentFrame = 0
+            android.util.Log.d("WidgetProvider", "🔄 Frame reset to 0 for new animation")
+            
+            // アニメーションサービスに切り替えを通知
+            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                action = "TOGGLE_ANIMATION"
+            }
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+            
+            // ウィジェットの表示を更新
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, CounterWidgetProvider::class.java))
+            updateAllWidgets(context, appWidgetManager, widgetIds)
+            
+            android.util.Log.d("WidgetProvider", "✅ Animation toggle complete - Cache status: ${if (isCacheReady) "READY" else "NOT READY"}, Images: ${optimizedImageCache.size}")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error handling animation toggle", e)
+        }
+    }
     
     private fun initializeImagePaths(context: Context) {
         android.util.Log.d("WidgetProvider", "🔍 Initializing image paths")
@@ -542,24 +627,104 @@ class CounterWidgetProvider : AppWidgetProvider() {
         try {
             imageFilePaths.clear()
             
-            val externalFilesDir = context.getExternalFilesDir("WidgetImages")
+            // アニメーション状態管理
+            val animationStateManager = AnimationStateManager.getInstance(context)
+            val currentAnimationType = animationStateManager.getCurrentAnimationType()
+            val currentCharacterId = animationStateManager.getCurrentCharacterId()
+            
+            val baseDir = context.getExternalFilesDir(null)
+            
+            // 複数のパスパターンを試行
+            val pathPatterns = listOf(
+                "$currentCharacterId/State/$currentAnimationType",  // Mao/State/Adle
+                "State/$currentAnimationType",                      // State/Adle
+                "$currentAnimationType",                            // Adle
+                "$currentCharacterId/$currentAnimationType",        // Mao/Adle
+                "WidgetImages",                                     // 従来のパス
+                "$currentCharacterId/State/${currentAnimationType.lowercase()}", // 小文字版
+                "State/${currentAnimationType.lowercase()}",                     // 小文字版
+                currentAnimationType.lowercase()                                 // 小文字版単体
+            )
+            
+            android.util.Log.d("WidgetProvider", "🎯 Looking for animation: $currentCharacterId/State/$currentAnimationType")
+            
+            var externalFilesDir: File? = null
+            var foundPath: String? = null
+            
+            if (baseDir != null) {
+                for (pattern in pathPatterns) {
+                    val testDir = File(baseDir, pattern)
+                    android.util.Log.d("WidgetProvider", "🔍 Testing path: $pattern -> ${testDir.absolutePath}")
+                    
+                    if (testDir.exists()) {
+                        val imageFiles = testDir.listFiles { file ->
+                            file.isFile && file.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp")
+                        }
+                        
+                        android.util.Log.d("WidgetProvider", "  - Directory exists: ${testDir.exists()}")
+                        android.util.Log.d("WidgetProvider", "  - Image files found: ${imageFiles?.size ?: 0}")
+                        
+                        // ディレクトリが存在するが画像がない場合、全ファイルを確認
+                        if (testDir.exists() && imageFiles.isNullOrEmpty()) {
+                            val allFiles = testDir.listFiles()
+                            android.util.Log.d("WidgetProvider", "  - All files in directory: ${allFiles?.size ?: 0}")
+                            allFiles?.take(5)?.forEach { file ->
+                                android.util.Log.d("WidgetProvider", "    - ${file.name} (${if (file.isDirectory) "DIR" else "FILE"}, ext: ${file.extension})")
+                            }
+                        }
+                        
+                        if (!imageFiles.isNullOrEmpty()) {
+                            externalFilesDir = testDir
+                            foundPath = pattern
+                            android.util.Log.d("WidgetProvider", "✅ Found images in: $pattern (${imageFiles.size} files)")
+                            
+                            // 特にWidgetImagesディレクトリの場合、ファイル名を詳細に確認
+                            if (pattern == "WidgetImages") {
+                                android.util.Log.d("WidgetProvider", "📁 WidgetImages directory contents:")
+                                imageFiles.take(10).forEach { file ->
+                                    android.util.Log.d("WidgetProvider", "  - ${file.name}")
+                                }
+                                if (imageFiles.size > 10) {
+                                    android.util.Log.d("WidgetProvider", "  - ... and ${imageFiles.size - 10} more files")
+                                }
+                            }
+                            
+                            break
+                        }
+                    }
+                }
+            }
+            
             if (externalFilesDir?.exists() == true) {
                 val files = externalFilesDir.listFiles { file ->
-                    file.isFile && file.name.endsWith(".png", ignoreCase = true)
+                    file.isFile && file.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp")
                 }
                 
                 files?.sortedBy { it.name }?.forEach { file ->
                     imageFilePaths.add(file.absolutePath)
                 }
                 
-                android.util.Log.d("WidgetProvider", "✅ Found ${imageFilePaths.size} image files")
+                android.util.Log.d("WidgetProvider", "✅ Found ${imageFilePaths.size} image files for $currentAnimationType using pattern: $foundPath")
                 
                 // 画像パスが見つかったら、最適化キャッシュを構築
                 if (imageFilePaths.isNotEmpty()) {
                     buildImageCache(context)
                 }
             } else {
-                android.util.Log.w("WidgetProvider", "⚠️ WidgetImages directory not found")
+                android.util.Log.w("WidgetProvider", "⚠️ No images found in any path pattern for: $currentAnimationType")
+                
+                // 利用可能なディレクトリを全てログ出力
+                android.util.Log.d("WidgetProvider", "📁 Available directories in base:")
+                baseDir?.listFiles()?.forEach { file ->
+                    if (file.isDirectory) {
+                        android.util.Log.d("WidgetProvider", "  - ${file.name}/")
+                        file.listFiles()?.forEach { subFile ->
+                            if (subFile.isDirectory) {
+                                android.util.Log.d("WidgetProvider", "    - ${subFile.name}/")
+                            }
+                        }
+                    }
+                }
             }
             
         } catch (e: Exception) {
@@ -632,7 +797,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             val loadOptions = BitmapFactory.Options().apply {
                 inJustDecodeBounds = false
                 inSampleSize = sampleSize
-                inPreferredConfig = Bitmap.Config.RGB_565 // メモリ効率を改善
+                inPreferredConfig = Bitmap.Config.ARGB_8888 // 透明度サポート
             }
             
             val bitmap = BitmapFactory.decodeFile(imagePath, loadOptions)
