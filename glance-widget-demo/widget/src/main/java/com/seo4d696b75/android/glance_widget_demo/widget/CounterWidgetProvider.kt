@@ -526,7 +526,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 }
                 
                 // ボタンの設定
-                setupButtons(context, remoteViews)
+                //setupButtons(context, remoteViews)
                 
                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
             }
@@ -536,30 +536,30 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
-        try {
-            // アニメーション状態管理
-            val animationStateManager = AnimationStateManager.getInstance(context)
-            
-            // 現在のアニメーション状態を表示
-            val currentAnimationText = animationStateManager.getCurrentAnimationDisplayText()
-            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
-            
-            // アニメーション切り替えボタン
-            val toggleIntent = Intent(context, CounterWidgetProvider::class.java).apply {
-                action = ACTION_TOGGLE_ANIMATION
-            }
-            val togglePendingIntent = PendingIntent.getBroadcast(
-                context, 1, toggleIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
-            
-
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
-        }
-    }
+//    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
+//        try {
+//            // アニメーション状態管理
+//            val animationStateManager = AnimationStateManager.getInstance(context)
+//
+//            // 現在のアニメーション状態を表示
+//            val currentAnimationText = animationStateManager.getCurrentAnimationDisplayText()
+//            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
+//
+//            // アニメーション切り替えボタン
+//            val toggleIntent = Intent(context, CounterWidgetProvider::class.java).apply {
+//                action = ACTION_TOGGLE_ANIMATION
+//            }
+//            val togglePendingIntent = PendingIntent.getBroadcast(
+//                context, 1, toggleIntent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
+//
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
+//        }
+//    }
 
     //アニメーションを切り替え
     private fun handleToggleAnimation(context: Context, AnimType: String = "null") {

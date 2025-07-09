@@ -11,7 +11,7 @@ import android.widget.RemoteViews
 import com.seo4d696b75.android.glance_widget_demo.domain.CountRepository
 import com.seo4d696b75.android.glance_widget_demo.data.CountRepositoryImpl
 
-class CounterWidgetProvider : AppWidgetProvider() {
+
 
     private val repository: CountRepository = CountRepositoryImpl()
 

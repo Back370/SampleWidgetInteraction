@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.seo4d696b75.android.glance_widget_demo"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.seo4d696b75.android.glance_widget_demo"
@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
+    implementation(libs.google.firebase.appcheck.playintegrity)
+    implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.lifecycle)
@@ -70,13 +72,16 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+    implementation(libs.androidx.navigation.compose)
 
     implementation(project(":ui"))
     implementation(project(":widget"))
     implementation(project(":domain"))
     implementation(project(":data"))
+    implementation(project(":theme"))
 
     implementation(libs.hilt.android)
+    implementation(libs.firebase.appcheck.playintegrity)
     ksp(libs.hilt.android.compiler)
 
     testImplementation(libs.junit)
@@ -86,4 +91,7 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+
 }
