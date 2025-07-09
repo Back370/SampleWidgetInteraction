@@ -49,6 +49,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/androidx.compose.material3_material3.version"
         }
     }
 }
@@ -71,7 +72,6 @@ dependencies {
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
-    implementation(libs.material3)
     implementation(libs.androidx.navigation.compose)
 
     implementation(project(":ui"))
@@ -82,6 +82,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.material3)
     ksp(libs.hilt.android.compiler)
 
     testImplementation(libs.junit)

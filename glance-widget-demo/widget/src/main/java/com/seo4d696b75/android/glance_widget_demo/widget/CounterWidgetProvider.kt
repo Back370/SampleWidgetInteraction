@@ -24,7 +24,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
 //        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
 //        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
         
-        private const val ANIMATION_INTERVAL_MS = 500L // 2fps - AlarmManagerで実現可能な間隔
+        private const val ANIMATION_INTERVAL_MS = 50L // 2fps - AlarmManagerで実現可能な間隔
         private const val DEFAULT_FRAMES = 50 // デフォルトフレーム数（実際のフレーム数が不明な場合）
         
         // ウィジェットに最適化されたサイズ

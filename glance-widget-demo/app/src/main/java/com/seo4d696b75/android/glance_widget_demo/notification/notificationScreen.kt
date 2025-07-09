@@ -18,12 +18,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -38,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList.notificationList
-
 object NotificationList : ViewModel() {
     val notificationList = mutableStateListOf<String>()
 
@@ -105,43 +106,59 @@ fun NotificationScreen(
     }
 }
 
+//
+//@Composable
+//fun FloatingAdd(
+//    onAddClicked: (String) -> Unit = { text -> NotificationList.Add(text) },
+//    text: String = "test",
+//) {
+//    Box(
+//        modifier = Modifier.fillMaxSize()
+//    ) {
+//        FloatingActionButton(
+//            onClick = { onAddClicked(text) },
+//            modifier = Modifier
+//                .align(Alignment.TopStart)
+//        ) {
+//            Icon(Icons.Default.Add, "Add")
+//        }
+//    }
+//}
 
-@Composable
-fun FloatingAdd(
-    onAddClicked: (String) -> Unit = { text -> NotificationList.Add(text) },
-    text: String = "test",
-) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        FloatingActionButton(
-            onClick = { onAddClicked(text) },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-        ) {
-            Icon(Icons.Default.Add, "Add")
-        }
-    }
-}
-
+//通知ボタン
 @Composable
 fun FloatingNotification(
+    //引数であるonNotificationClicked関数は引数をとらず戻り値を返さない
     onNotificationClicked: () -> Unit = {},
+    onWidgetSettingClicked: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        FloatingActionButton(
-            onClick = onNotificationClicked,
-            modifier = Modifier
-                .align(Alignment.TopEnd),
+        Column(
+           modifier = Modifier
+                .align(Alignment.TopEnd)
 
         ) {
-            Icon(
-                Icons.Default.Notifications,
-                contentDescription = "Notification"
-            )
+            FloatingActionButton(
+                onClick = onNotificationClicked,
+                modifier = Modifier
+                ) {
+                Icon(
+                    Icons.Default.Notifications,
+                    contentDescription = "Notification"
+                )
+            }
+            FloatingActionButton(
+                onClick = onWidgetSettingClicked,
+                modifier = Modifier
+            ) {
+                Icon(
+                    Icons.Default.Tab,
+                    contentDescription = "GoToWidgetSetting"
+                )
+            }
         }
     }
 }
@@ -161,26 +178,29 @@ fun TextBox(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun ScreenPreview(
-    modifier: Modifier = Modifier
-        .fillMaxSize(),
-) {
-    val screen = remember { mutableStateOf(false) }
 
-    FloatingAdd(onAddClicked = {
-        NotificationList.Add("test")
-    }
-    )
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun ScreenPreview(
+//    modifier: Modifier = Modifier
+//        .fillMaxSize(),
+//) {
+//    val screen = remember { mutableStateOf(false) }
+//
+//    FloatingAdd(onAddClicked = {
+//        NotificationList.Add("test")
+//    }
+//    )
+//
+//    FloatingNotification(onNotificationClicked = {screen.value = true})
+//
+//    if (screen.value) {
+//        NotificationScreen(
+//            notificationList = notificationList,
+//            onBackClicked = { screen.value = false }
+//        )
+//    }
+//
+//}
 
-    FloatingNotification(onNotificationClicked = {screen.value = true})
-
-    if (screen.value) {
-        NotificationScreen(
-            notificationList = notificationList,
-            onBackClicked = { screen.value = false }
-        )
-    }
-
-}

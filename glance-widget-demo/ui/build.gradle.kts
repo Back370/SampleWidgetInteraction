@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+    implementation(libs.activity.compose)
     implementation(project(":theme"))
     implementation(project(":data"))
     implementation(project(":domain"))

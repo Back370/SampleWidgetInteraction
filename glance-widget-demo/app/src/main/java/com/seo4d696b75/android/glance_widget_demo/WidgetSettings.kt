@@ -120,10 +120,16 @@ fun WidgetSettingsScreen(
 
                             Button(
                                 onClick = {
+                                    android.util.Log.d("WidgetSettings", "🔄 アニメーション切り替えボタン押下")
+                                    android.util.Log.d("WidgetSettings", "📊 切り替え前: ${animationStateManager.getCurrentAnimationDisplayText()}")
+                                    
                                     // アニメーション切り替え
                                     val newAnimationType = animationStateManager.toggleAnimationType()
                                     currentAnimationType = newAnimationType
                                     currentCharacterId = animationStateManager.getCurrentCharacterId()
+
+                                    android.util.Log.d("WidgetSettings", "📊 切り替え後: ${animationStateManager.getCurrentAnimationDisplayText()}")
+                                    android.util.Log.d("WidgetSettings", "🎯 新しいアニメーション種別: $newAnimationType")
 
                                     // ウィジェットを更新
                                     updateWidgetAfterToggle(context)
@@ -260,14 +266,20 @@ private fun updateWidgetAfterToggle(context: Context) {
         )
         val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
 
+        android.util.Log.d("WidgetSettings", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
+
         if (appWidgetIds.isNotEmpty()) {
             val intent = Intent().apply {
                 component = componentName
-                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                action = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
             }
             context.sendBroadcast(intent)
-            android.util.Log.d("WidgetSettings", "✅ ウィジェット更新ブロードキャスト送信")
+            android.util.Log.d("WidgetSettings", "✅ アニメーション切り替えブロードキャスト送信")
+            
+            // アニメーション状態を再確認
+            val animationStateManager = AnimationStateManager.getInstance(context)
+            android.util.Log.d("WidgetSettings", "📊 送信後の状態確認: ${animationStateManager.getCurrentAnimationDisplayText()}")
         } else {
             android.util.Log.w("WidgetSettings", "⚠️ 更新対象のウィジェットが見つかりません")
         }

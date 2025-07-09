@@ -45,7 +45,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val animationStateManager = remember { AnimationStateManager.getInstance(context) }
-    
+
     // アニメーション状態の管理
     var currentAnimationType by remember { mutableStateOf(animationStateManager.getCurrentAnimationType()) }
     var currentCharacterId by remember { mutableStateOf(animationStateManager.getCurrentCharacterId()) }
@@ -75,29 +75,29 @@ fun MainScreen(
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         Text(
                             text = "現在のアニメーション:",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        
+
                         Text(
                             text = "$currentCharacterId/State/$currentAnimationType",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        
+
                         Spacer(modifier = Modifier.height(16.dp))
-                        
+
                         Button(
                             onClick = {
                                 // アニメーション切り替え
                                 val newAnimationType = animationStateManager.toggleAnimationType()
                                 currentAnimationType = newAnimationType
                                 currentCharacterId = animationStateManager.getCurrentCharacterId()
-                                
+
                                 // ウィジェットを更新
                                 updateWidgetAfterToggle(context)
                             },
@@ -144,18 +144,18 @@ fun MainScreen(
                             )
                         }
                         
-                        OutlinedButton(
-                            onClick = {
-                                android.util.Log.d("MainScreen", "🔧 権限チェック開始")
-                                checkPermissions(context)
-                            },
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        ) {
-                            Text(
-                                text = "権限とディレクトリ確認",
-                                fontSize = 14.sp
-                            )
-                        }
+//                        OutlinedButton(
+//                            onClick = {
+//                                android.util.Log.d("MainScreen", "🔧 権限チェック開始")
+//                                checkPermissions(context)
+//                            },
+//                            modifier = Modifier.padding(horizontal = 16.dp)
+//                        ) {
+//                            Text(
+//                                text = "権限とディレクトリ確認",
+//                                fontSize = 14.sp
+//                            )
+//                        }
                         
                         OutlinedButton(
                             onClick = {

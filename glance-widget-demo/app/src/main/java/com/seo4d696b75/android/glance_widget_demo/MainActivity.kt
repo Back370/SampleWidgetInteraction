@@ -75,7 +75,8 @@ class MainActivity : ComponentActivity() {
                         composable("Home") {
                             HomeScreen(
                                 onCharacterClicked = { navController.navigate("Character") },
-                                onSettingsClicked = { navController.navigate("Settings") }
+                                onSettingsClicked = { navController.navigate("Settings") },
+                                onWidgetSettingClicked = { navController.navigate("WidgetSettings") }
                             )
                         }
                         composable("Settings") {
@@ -88,10 +89,14 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.navigate("Home") }
                             )
                         }
+                        composable("WidgetSettings"){
+                            WidgetSettingsScreen(
+                                onBackClick = { navController.navigate("Home") }
+                            )
+                        }
                     }
                 }
             }
-            AppNavigation()
         }
         // 権限チェックと初期化は並行して実行
         checkAndRequestStoragePermission()

@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.seo4d696b75.android.glance_widget_demo.Button
 import com.seo4d696b75.android.glance_widget_demo.R
-import com.seo4d696b75.android.glance_widget_demo.notification.FloatingAdd
+//import com.seo4d696b75.android.glance_widget_demo.notification.FloatingAdd
 import com.seo4d696b75.android.glance_widget_demo.notification.FloatingNotification
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList.notificationList
@@ -31,7 +31,8 @@ import com.seo4d696b75.android.glance_widget_demo.notification.NotificationScree
 @Composable
 fun HomeScreen(
     onCharacterClicked: () -> Unit = {},
-    onSettingsClicked: () -> Unit = {}
+    onSettingsClicked: () -> Unit = {},
+    onWidgetSettingClicked: () -> Unit = {}
 ){
     Column(
         modifier = Modifier
@@ -77,8 +78,11 @@ fun HomeScreen(
 
     val screen = remember { mutableStateOf(false) }
 
-    FloatingAdd(onAddClicked = { NotificationList.Add("test") } )
-    FloatingNotification(onNotificationClicked = {screen.value = true})
+    //FloatingAdd(onAddClicked = { NotificationList.Add("test") } )
+    FloatingNotification(
+        onNotificationClicked = {screen.value = true},
+        onWidgetSettingClicked = onWidgetSettingClicked
+    )
 
     if (screen.value) {
         NotificationScreen(
