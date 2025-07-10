@@ -24,7 +24,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
 //        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
 //        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
         
-        private const val ANIMATION_INTERVAL_MS = 500L // 2fps - AlarmManagerで実現可能な間隔
+        private const val ANIMATION_INTERVAL_MS = 50L // 2fps - AlarmManagerで実現可能な間隔
         private const val DEFAULT_FRAMES = 50 // デフォルトフレーム数（実際のフレーム数が不明な場合）
         
         // ウィジェットに最適化されたサイズ
@@ -526,7 +526,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 }
                 
                 // ボタンの設定
-                setupButtons(context, remoteViews)
+                //setupButtons(context, remoteViews)
                 
                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
             }
@@ -536,30 +536,30 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
-        try {
-            // アニメーション状態管理
-            val animationStateManager = AnimationStateManager.getInstance(context)
-            
-            // 現在のアニメーション状態を表示
-            val currentAnimationText = animationStateManager.getCurrentAnimationDisplayText()
-            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
-            
-            // アニメーション切り替えボタン
-            val toggleIntent = Intent(context, CounterWidgetProvider::class.java).apply {
-                action = ACTION_TOGGLE_ANIMATION
-            }
-            val togglePendingIntent = PendingIntent.getBroadcast(
-                context, 1, toggleIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
-            
-
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
-        }
-    }
+//    private fun setupButtons(context: Context, remoteViews: RemoteViews) {
+//        try {
+//            // アニメーション状態管理
+//            val animationStateManager = AnimationStateManager.getInstance(context)
+//
+//            // 現在のアニメーション状態を表示
+//            val currentAnimationText = animationStateManager.getCurrentAnimationDisplayText()
+//            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
+//
+//            // アニメーション切り替えボタン
+//            val toggleIntent = Intent(context, CounterWidgetProvider::class.java).apply {
+//                action = ACTION_TOGGLE_ANIMATION
+//            }
+//            val togglePendingIntent = PendingIntent.getBroadcast(
+//                context, 1, toggleIntent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
+//
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetProvider", "❌ Error setting up buttons", e)
+//        }
+//    }
 
     //アニメーションを切り替え
     private fun handleToggleAnimation(context: Context, AnimType: String = "null") {
@@ -603,11 +603,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 action = "TOGGLE_ANIMATION"
             }
             
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(serviceIntent)
-            } else {
-                context.startService(serviceIntent)
-            }
+            // TOGGLE_ANIMATIONは通常のサービスとして開始（フォアグラウンドサービスではない）
+            context.startService(serviceIntent)
             
             // ウィジェットの表示を更新
             val appWidgetManager = AppWidgetManager.getInstance(context)

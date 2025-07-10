@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.seo4d696b75.android.glance_widget_demo.color"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 27

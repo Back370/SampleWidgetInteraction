@@ -20,6 +20,7 @@ class AnimationStateManager private constructor(context: Context) {
         
         // キャラクターID
         const val CHARACTER_ID_MAO = "Mao"
+        const val CHARACTER_ID_HARU = "Haru"
         
         @Volatile
         private var INSTANCE: AnimationStateManager? = null
@@ -87,6 +88,25 @@ class AnimationStateManager private constructor(context: Context) {
         setAnimationType(ANIMATION_TYPE_SPECIAL)
         return ANIMATION_TYPE_SPECIAL
     }
+
+    //１アニメーションだけアイドル状態にする関数
+    fun RapidAdleState(): String {
+        setAnimationType(ANIMATION_TYPE_ADLE)
+        return ANIMATION_TYPE_ADLE
+    }
+
+    //１アニメーションだけふらふら状態にする関数
+    fun RapidFlowState(): String {
+        setAnimationType(ANIMATION_TYPE_FLOW)
+        return ANIMATION_TYPE_FLOW
+    }
+
+    //１アニメーションだけスペシャル状態にする関数
+    fun RapidSpecialState(): String {
+        setAnimationType(ANIMATION_TYPE_SPECIAL)
+        return ANIMATION_TYPE_SPECIAL
+    }
+
     
     /**
      * アニメーション種別を切り替え（Adle → Flow → Special → Adle...）

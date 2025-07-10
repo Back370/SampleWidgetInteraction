@@ -268,7 +268,7 @@ class WidgetAnimationService : Service() {
                                 }
                                 
                                 // ボタンの設定
-                                setupButtons(remoteViews)
+                                //setupButtons(remoteViews)
                                 
                                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
                             }
@@ -310,35 +310,35 @@ class WidgetAnimationService : Service() {
         }
     }
     
-    private fun setupButtons(remoteViews: RemoteViews) {
-        try {
-            // アニメーション状態管理
-            val animationStateManager = AnimationStateManager.getInstance(this)
-            
-            // 現在のアニメーション状態を表示
-            val currentAnimationText = if (isCacheReady && optimizedImageCache.isNotEmpty()) {
-                animationStateManager.getCurrentAnimationDisplayText()
-            } else {
-                "${animationStateManager.getCurrentAnimationDisplayText()} (画像なし)"
-            }
-            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
-            
-            // アニメーション切り替えボタン
-            val toggleIntent = Intent(this, CounterWidgetProvider::class.java).apply {
-                action = CounterWidgetProvider.ACTION_TOGGLE_ANIMATION
-            }
-            val togglePendingIntent = PendingIntent.getBroadcast(
-                this, 1, toggleIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
-            
-    
-
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetAnimationService", "❌ Error setting up buttons", e)
-        }
-    }
+//    private fun setupButtons(remoteViews: RemoteViews) {
+//        try {
+//            // アニメーション状態管理
+//            val animationStateManager = AnimationStateManager.getInstance(this)
+//
+//            // 現在のアニメーション状態を表示
+//            val currentAnimationText = if (isCacheReady && optimizedImageCache.isNotEmpty()) {
+//                animationStateManager.getCurrentAnimationDisplayText()
+//            } else {
+//                "${animationStateManager.getCurrentAnimationDisplayText()} (画像なし)"
+//            }
+//            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
+//
+//            // アニメーション切り替えボタン
+//            val toggleIntent = Intent(this, CounterWidgetProvider::class.java).apply {
+//                action = CounterWidgetProvider.ACTION_TOGGLE_ANIMATION
+//            }
+//            val togglePendingIntent = PendingIntent.getBroadcast(
+//                this, 1, toggleIntent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
+//
+//
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetAnimationService", "❌ Error setting up buttons", e)
+//        }
+//    }
     
     private fun stopAnimation() {
         android.util.Log.d("WidgetAnimationService", "⏹️ Stopping foreground animation")

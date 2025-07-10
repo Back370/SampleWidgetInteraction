@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.seo4d696b75.android.glance_widget_demo.ui"
-    compileSdk = 33
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 27
@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+    implementation(libs.activity.compose)
     implementation(project(":theme"))
     implementation(project(":data"))
     implementation(project(":domain"))

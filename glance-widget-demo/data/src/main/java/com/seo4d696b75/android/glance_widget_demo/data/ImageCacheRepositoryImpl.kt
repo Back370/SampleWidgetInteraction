@@ -52,14 +52,22 @@ class ImageCacheRepositoryImpl @Inject constructor(
         try {
             val cacheFile = getCacheFile(characterId, animationType, frameIndex)
             
+            Log.d(TAG, "📁 Attempting to cache image: $characterId/$animationType/$frameIndex")
+            Log.d(TAG, "📁 Cache file path: ${cacheFile.absolutePath}")
+            Log.d(TAG, "📁 Parent directory: ${cacheFile.parentFile?.absolutePath}")
+            
             // 既にキャッシュが存在する場合は返す
             if (cacheFile.exists()) {
-                Log.d(TAG, "Image already cached: ${cacheFile.absolutePath}")
+                Log.d(TAG, "✅ Image already cached: ${cacheFile.absolutePath}")
                 return@withContext Result.success(cacheFile)
             }
 
             // ディレクトリが存在しない場合は作成
-            cacheFile.parentFile?.mkdirs()
+            val parentDir = cacheFile.parentFile
+            if (parentDir != null && !parentDir.exists()) {
+                val mkdirResult = parentDir.mkdirs()
+                Log.d(TAG, "📁 Created directory: ${parentDir.absolutePath} - Success: $mkdirResult")
+            }
 
             Log.d(TAG, "Downloading image from Firebase Storage: $imageUrl")
             Log.d(TAG, "Saving to: ${cacheFile.absolutePath}")
@@ -72,7 +80,9 @@ class ImageCacheRepositoryImpl @Inject constructor(
                 // ファイルにダウンロード
                 storageRef.getFile(cacheFile).await()
                 
-                Log.d(TAG, "Firebase image cached successfully: ${cacheFile.absolutePath}")
+                Log.d(TAG, "✅ Firebase image cached successfully: ${cacheFile.absolutePath}")
+                Log.d(TAG, "📏 File size: ${cacheFile.length()} bytes")
+                Log.d(TAG, "📂 File exists: ${cacheFile.exists()}")
                 
             } else {
                 // HTTP URL の場合（フォールバック）
