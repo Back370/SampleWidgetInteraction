@@ -127,6 +127,58 @@ fun CharacterScreen(
                 )
 
             }
+            
+            Spacer(modifier = Modifier.height(30.dp))
+            
+            Text(
+                text = "Rapidアニメーション（1回のみ実行）",
+                modifier = Modifier.padding(10.dp)
+            )
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    icon = painterResource(id = R.drawable.baseline_face_24),
+                    text = "Rapid\nAdle",
+                    onClick = {
+                        android.util.Log.d("CharacterScreen", "📥 Rapid Adle実行")
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        animationStateManager.RapidAdleState()
+                        updateWidgetAfterCharacterChange(context)
+                    }
+                )
+
+                Button(
+                    modifier = Modifier.weight(1f),
+                    icon = painterResource(id = R.drawable.baseline_face_24),
+                    text = "Rapid\nFlow",
+                    onClick = {
+                        android.util.Log.d("CharacterScreen", "📥 Rapid Flow実行")
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        animationStateManager.RapidFlowState()
+                        updateWidgetAfterCharacterChange(context)
+                    }
+                )
+
+                Button(
+                    modifier = Modifier.weight(1f),
+                    icon = painterResource(id = R.drawable.baseline_face_24),
+                    text = "Rapid\nSpecial",
+                    onClick = {
+                        android.util.Log.d("CharacterScreen", "📥 Rapid Special実行")
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        animationStateManager.RapidSpecialState()
+                        updateWidgetAfterCharacterChange(context)
+                    }
+                )
+
+            }
         }
     }
 }

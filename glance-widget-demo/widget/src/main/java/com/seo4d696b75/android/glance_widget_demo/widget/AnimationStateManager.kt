@@ -13,6 +13,7 @@ class AnimationStateManager private constructor(context: Context) {
         private const val KEY_ANIMATION_TYPE = "animation_type"
         private const val KEY_CHARACTER_ID = "character_id"
         private const val KEY_PREVIOUS_ANIMATION_TYPE = "previous_animation_type"
+        private const val KEY_IS_TEMPORARY_ANIMATION = "is_temporary_animation"
         
         // アニメーション種別の定数
         const val ANIMATION_TYPE_ADLE = "Adle"
@@ -90,24 +91,6 @@ class AnimationStateManager private constructor(context: Context) {
         return ANIMATION_TYPE_SPECIAL
     }
 
-    //１アニメーションだけアイドル状態にする関数
-    fun RapidAdleState(): String {
-        setAnimationType(ANIMATION_TYPE_ADLE)
-        return ANIMATION_TYPE_ADLE
-    }
-
-    //１アニメーションだけふらふら状態にする関数
-    fun RapidFlowState(): String {
-        setAnimationType(ANIMATION_TYPE_FLOW)
-        return ANIMATION_TYPE_FLOW
-    }
-
-    //１アニメーションだけスペシャル状態にする関数
-    fun RapidSpecialState(): String {
-        setAnimationType(ANIMATION_TYPE_SPECIAL)
-        return ANIMATION_TYPE_SPECIAL
-    }
-
     
     /**
      * アニメーション種別を切り替え（Adle → Flow → Special → Adle...）
@@ -152,24 +135,33 @@ class AnimationStateManager private constructor(context: Context) {
      * 現在のアニメーション状態を保存してからSpecialに切り替える
      */
     fun switchToSpecialTemporarily(): String {
+        return switchToTemporarily(ANIMATION_TYPE_SPECIAL)
+    }
+    
+    /**
+     * 一時的に指定されたアニメーション種別に切り替え
+     * 現在のアニメーション状態を保存してから指定されたアニメーションに切り替える
+     */
+    private fun switchToTemporarily(targetAnimationType: String): String {
         val currentType = getCurrentAnimationType()
         
-        // 現在の状態がすでにSpecialの場合は何もしない
-        if (currentType == ANIMATION_TYPE_SPECIAL) {
-            android.util.Log.d("AnimationStateManager", "Already in Special state, no change needed")
+        // 現在の状態が既に指定されたアニメーションの場合は何もしない
+        if (currentType == targetAnimationType) {
+            android.util.Log.d("AnimationStateManager", "Already in $targetAnimationType state, no change needed")
             return currentType
         }
         
         // 現在のアニメーション種別を前の状態として保存
         sharedPreferences.edit()
             .putString(KEY_PREVIOUS_ANIMATION_TYPE, currentType)
+            .putBoolean(KEY_IS_TEMPORARY_ANIMATION, true)
             .apply()
         
-        // Specialアニメーションに切り替え
-        setAnimationType(ANIMATION_TYPE_SPECIAL)
+        // 指定されたアニメーションに切り替え
+        setAnimationType(targetAnimationType)
         
-        android.util.Log.d("AnimationStateManager", "Switched to Special temporarily, saved previous: $currentType")
-        return ANIMATION_TYPE_SPECIAL
+        android.util.Log.d("AnimationStateManager", "Switched to $targetAnimationType temporarily, saved previous: $currentType")
+        return targetAnimationType
     }
     
     /**
@@ -184,6 +176,7 @@ class AnimationStateManager private constructor(context: Context) {
         // 保存された前の状態をクリア
         sharedPreferences.edit()
             .remove(KEY_PREVIOUS_ANIMATION_TYPE)
+            .remove(KEY_IS_TEMPORARY_ANIMATION)
             .apply()
         
         android.util.Log.d("AnimationStateManager", "Restored previous animation: $previousType")
@@ -194,8 +187,28 @@ class AnimationStateManager private constructor(context: Context) {
      * 現在Specialアニメーション中かどうかを確認
      */
     fun isInTemporarySpecial(): Boolean {
-        val currentType = getCurrentAnimationType()
-        val hasPrevious = sharedPreferences.contains(KEY_PREVIOUS_ANIMATION_TYPE)
-        return currentType == ANIMATION_TYPE_SPECIAL && hasPrevious
+        return isInTemporaryAnimation() && getCurrentAnimationType() == ANIMATION_TYPE_SPECIAL
+    }
+    
+    /**
+     * 現在一時的なアニメーション中かどうかを確認
+     */
+    fun isInTemporaryAnimation(): Boolean {
+        return sharedPreferences.getBoolean(KEY_IS_TEMPORARY_ANIMATION, false)
+    }
+    
+    //１アニメーションだけアイドル状態にする関数
+    fun RapidAdleState(): String {
+        return switchToTemporarily(ANIMATION_TYPE_ADLE)
+    }
+
+    //１アニメーションだけふらふら状態にする関数
+    fun RapidFlowState(): String {
+        return switchToTemporarily(ANIMATION_TYPE_FLOW)
+    }
+
+    //１アニメーションだけスペシャル状態にする関数
+    fun RapidSpecialState(): String {
+        return switchToTemporarily(ANIMATION_TYPE_SPECIAL)
     }
 } 

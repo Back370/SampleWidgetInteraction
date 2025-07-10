@@ -30,8 +30,8 @@ class WidgetAnimationService : Service() {
         private const val NOTIFICATION_CHANNEL_ID = "widget_animation_channel"
         private const val ANIMATION_INTERVAL_MS = 200L // 5fps (ANR防止のため)
         private const val DEFAULT_FRAMES = 50
-        private const val WIDGET_IMAGE_WIDTH = 400
-        private const val WIDGET_IMAGE_HEIGHT = 500
+        // ウィジェットに最適化されたサイズ（CounterWidgetProviderと統一）
+        private const val WIDGET_IMAGE_SIZE = 120 // dpに基づく最適サイズ
         
         private var isServiceRunning = false
         private var scheduledExecutor: ScheduledExecutorService? = null
@@ -50,6 +50,12 @@ class WidgetAnimationService : Service() {
         private val imageFilePaths = mutableListOf<String>()
         private val optimizedImageCache = mutableListOf<Bitmap>()
         private var isCacheReady = false
+        
+        // 最適化された画像サイズを計算
+        private fun getOptimizedImageSize(context: Context): Int {
+            val displayMetrics = context.resources.displayMetrics
+            return (WIDGET_IMAGE_SIZE * displayMetrics.density).toInt()
+        }
     }
     
     override fun onCreate() {
@@ -64,7 +70,7 @@ class WidgetAnimationService : Service() {
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        android.util.Log.d("WidgetAnimationService", "🎬 === STARTING FOREGROUND 10FPS ANIMATION ===")
+        android.util.Log.d("WidgetAnimationService", "🎬 === STARTING FOREGROUND 5FPS ANIMATION ===")
         
         when (intent?.action) {
             "START_ANIMATION" -> startAnimation()
@@ -111,11 +117,13 @@ class WidgetAnimationService : Service() {
             this, 0, stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        
+        val optimizedSize = getOptimizedImageSize(this)
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("ウィジェットアニメーション実行中")
-                .setContentText("5fps (400x500解像度) でスムーズアニメーション中")
+                .setContentText("5fps (${optimizedSize}x${optimizedSize}最適化解像度) でスムーズアニメーション中")
 //                .setSmallIcon(R.drawable.ic_arrow_up)
 //                .setOngoing(true)
 //                .addAction(
@@ -130,7 +138,7 @@ class WidgetAnimationService : Service() {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
                 .setContentTitle("ウィジェットアニメーション実行中")
-                .setContentText("5fps (400x500解像度) でスムーズアニメーション中")
+                .setContentText("5fps (${optimizedSize}x${optimizedSize}最適化解像度) でスムーズアニメーション中")
 //                .setSmallIcon(R.drawable.ic_arrow_up)
 //                .setOngoing(true)
 //                .addAction(
@@ -167,9 +175,10 @@ class WidgetAnimationService : Service() {
             startHighFrequencyUpdates()
             
             isServiceRunning = true
+            val optimizedSize = getOptimizedImageSize(this)
             android.util.Log.d("WidgetAnimationService", "✅ Foreground 5fps animation started successfully")
             android.util.Log.d("WidgetAnimationService", "  - Frame interval: ${ANIMATION_INTERVAL_MS}ms (5fps)")
-            android.util.Log.d("WidgetAnimationService", "  - Resolution: ${WIDGET_IMAGE_WIDTH}x${WIDGET_IMAGE_HEIGHT}")
+            android.util.Log.d("WidgetAnimationService", "  - Resolution: ${optimizedSize}x${optimizedSize} (optimized)")
             android.util.Log.d("WidgetAnimationService", "  - Total frames: $DEFAULT_FRAMES")
             android.util.Log.d("WidgetAnimationService", "  - Available images: ${imageFilePaths.size}")
             android.util.Log.d("WidgetAnimationService", "  - WakeLock: ACTIVE")
@@ -584,7 +593,7 @@ class WidgetAnimationService : Service() {
 
                 // メモリ使用量の予測計算
                 val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
-                val pixelsPerImage = WIDGET_IMAGE_WIDTH * WIDGET_IMAGE_HEIGHT
+                val pixelsPerImage = WIDGET_IMAGE_SIZE * WIDGET_IMAGE_SIZE
                 val bytesPerImage = pixelsPerImage * bytesPerPixel
                 val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
                 android.util.Log.d("WidgetAnimationService", "  - Estimated cache size: ${totalCacheSize / 1024 / 1024}MB (${DEFAULT_FRAMES} images × ${bytesPerImage / 1024}KB)")
@@ -618,8 +627,8 @@ class WidgetAnimationService : Service() {
 
                             val optimizedBitmap = Bitmap.createScaledBitmap(
                                 originalBitmap,
-                                WIDGET_IMAGE_WIDTH,
-                                WIDGET_IMAGE_HEIGHT,
+                                WIDGET_IMAGE_SIZE,
+                                WIDGET_IMAGE_SIZE,
                                 true
                             )
 
@@ -650,7 +659,7 @@ class WidgetAnimationService : Service() {
                     actualFrameCount = optimizedImageCache.size
 
                     android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
-                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${WIDGET_IMAGE_WIDTH}x${WIDGET_IMAGE_HEIGHT}")
+                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${WIDGET_IMAGE_SIZE}x${WIDGET_IMAGE_SIZE}")
                     android.util.Log.d("WidgetAnimationService", "  - Format: ARGB_8888 (透明度サポート)")
                     android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
                     android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
@@ -687,7 +696,7 @@ class WidgetAnimationService : Service() {
             android.util.Log.d("WidgetAnimationService", "  - Image format: ${options.outMimeType}")
             
             // サンプルサイズを計算してメモリ使用量を削減
-            val targetSize = maxOf(WIDGET_IMAGE_WIDTH, WIDGET_IMAGE_HEIGHT) * 2
+            val targetSize = WIDGET_IMAGE_SIZE * 2
             val sampleSize = calculateSampleSize(options.outWidth, options.outHeight, targetSize)
             android.util.Log.d("WidgetAnimationService", "  - Sample size: $sampleSize")
             
@@ -758,20 +767,21 @@ class WidgetAnimationService : Service() {
     }
     
     /**
-     * Specialアニメーション完了の検出と自動復元処理
+     * 一時的なアニメーション完了の検出と自動復元処理
      */
     private fun checkSpecialAnimationCompletion(previousFrame: Int, currentFrame: Int) {
         try {
             val animationStateManager = AnimationStateManager.getInstance(this)
             
-            // Specialアニメーション中でない場合は何もしない
-            if (!animationStateManager.isInTemporarySpecial()) {
+            // 一時的なアニメーション中でない場合は何もしない
+            if (!animationStateManager.isInTemporaryAnimation()) {
                 return
             }
             
             // アニメーションが1サイクル完了した場合（フレームが0にリセットされた）
             if (previousFrame > 0 && currentFrame == 0 && actualFrameCount > 1) {
-                android.util.Log.d("WidgetAnimationService", "🎆 Special animation cycle completed! Restoring previous animation...")
+                val currentAnimationType = animationStateManager.getCurrentAnimationType()
+                android.util.Log.d("WidgetAnimationService", "🎆 Temporary animation cycle completed! ($currentAnimationType) Restoring previous animation...")
                 android.util.Log.d("WidgetAnimationService", "📊 Previous frame: $previousFrame -> Current frame: $currentFrame")
                 
                 // 自動復元処理を実行
@@ -779,7 +789,7 @@ class WidgetAnimationService : Service() {
             }
             
         } catch (e: Exception) {
-            android.util.Log.e("WidgetAnimationService", "❌ Error checking Special animation completion", e)
+            android.util.Log.e("WidgetAnimationService", "❌ Error checking temporary animation completion", e)
         }
     }
     
