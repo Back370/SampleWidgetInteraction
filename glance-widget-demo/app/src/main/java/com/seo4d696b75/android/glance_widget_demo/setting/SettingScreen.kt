@@ -1,6 +1,7 @@
 package com.seo4d696b75.android.glance_widget_demo
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
@@ -34,7 +36,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -71,58 +75,52 @@ fun settingScreen(
                 .padding(8.dp)
                 .padding(innerPadding)
         ) {
-            volumeSet()         //音量設定
-            notificationSet()   //通知設定
+            NotificationSet()   //通知設定
+            SliderUI(text = "音量")
+            SliderUI(text = "pixel_height")
+            SliderUI(text = "pixel_west")
         }
     }
 }
 
-@Composable
-fun volumeSet(
-    modifier: Modifier =Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(all = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        //音のアイコンもあれば良い？
-        Text(
-            text = "音量"
-        )
-        volumeSliderUI()
-    }
-}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun volumeSliderUI() {
-    //音の範囲は0.0fから1.0f
+fun SliderUI(
+    modifier: Modifier = Modifier,
+    text: String = ""
+) {
+    //範囲は0.0fから1.0f
     var sliderPosition by remember { mutableFloatStateOf(0.5f) }
 
     Row (
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(all = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
-        //Text (text = sliderPosition.toString())
+        Text(
+            text = text,
+            modifier = modifier.weight(1f)
+        )
 
         Slider(
             value = sliderPosition,
             onValueChange = { sliderPosition = it },
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier
+                .padding(8.dp)
+                .weight(3f),
             valueRange = 0f..1f,
 
+
             thumb = {
-                Box (
+                Box(
                     modifier = Modifier
-                        .padding(0.dp)
-                        .size(24.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = CircleShape
-                        )
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
             },
         )
@@ -133,7 +131,7 @@ fun volumeSliderUI() {
 }
 
 @Composable
-fun notificationSet(
+fun NotificationSet(
     modifier: Modifier = Modifier
 ) {
     var checked by remember { mutableStateOf(true) }
@@ -155,4 +153,10 @@ fun notificationSet(
             }
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun settingScreenPreview() {
+    settingScreen()
 }
