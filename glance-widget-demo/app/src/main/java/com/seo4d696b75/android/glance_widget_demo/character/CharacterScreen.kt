@@ -26,10 +26,15 @@ import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.seo4d696b75.android.glance_widget_demo.Button
 import com.seo4d696b75.android.glance_widget_demo.R
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
+import com.seo4d696b75.android.glance_widget_demo.widget.AnimationStateManager
 
 
 //@Preview(showBackground = true)
@@ -38,6 +43,8 @@ import com.seo4d696b75.android.glance_widget_demo.R
 fun CharacterScreen(
     onBackClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -88,22 +95,73 @@ fun CharacterScreen(
                 Button(
                     modifier = Modifier.weight(1f),
                     icon = painterResource(id = R.drawable.baseline_face_24),
-                    text = "キャラA"
+                    text = "Mao",
+                    onClick = {
+                        android.util.Log.d("CharacterScreen", "📥 Maoキャラクター選択")
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        animationStateManager.setCharacterId(AnimationStateManager.CHARACTER_ID_MAO)
+                        updateWidgetAfterCharacterChange(context)
+                    }
                 )
 
                 Button(
                     modifier = Modifier.weight(1f),
                     icon = painterResource(id = R.drawable.baseline_face_24),
-                    text = "キャラB"
+                    text = "Haru",
+                    onClick = {
+                        android.util.Log.d("CharacterScreen", "📥 Haruキャラクター選択")
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        animationStateManager.setCharacterId(AnimationStateManager.CHARACTER_ID_HARU)
+                        updateWidgetAfterCharacterChange(context)
+                    }
                 )
 
                 Button(
                     modifier = Modifier.weight(1f),
                     icon = painterResource(id = R.drawable.baseline_face_24),
-                    text = "キャラC"
+                    text = "キャラC",
+                    onClick = {
+                        android.util.Log.d("CharacterScreen", "📥 キャラC選択（未実装）")
+                        // キャラCは未実装のためログのみ
+                    }
                 )
 
             }
         }
+    }
+}
+
+// ヘルパー関数: キャラクター変更後のウィジェット更新
+private fun updateWidgetAfterCharacterChange(context: android.content.Context) {
+    try {
+        android.util.Log.d("CharacterScreen", "🔄 キャラクター変更後ウィジェット更新開始")
+        
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val componentName = ComponentName(
+            "com.seo4d696b75.android.glance_widget_demo",
+            "com.seo4d696b75.android.glance_widget_demo.widget.CounterWidgetProvider"
+        )
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+
+        android.util.Log.d("CharacterScreen", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
+
+        if (appWidgetIds.isNotEmpty()) {
+            val intent = Intent().apply {
+                component = componentName
+                action = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+                putExtra("CHARACTER_CHANGED", true)
+            }
+            context.sendBroadcast(intent)
+            android.util.Log.d("CharacterScreen", "✅ キャラクター変更ブロードキャスト送信")
+            
+            // アニメーション状態を再確認
+            val animationStateManager = AnimationStateManager.getInstance(context)
+            android.util.Log.d("CharacterScreen", "📊 送信後の状態確認: ${animationStateManager.getCurrentAnimationDisplayText()}")
+        } else {
+            android.util.Log.w("CharacterScreen", "⚠️ 更新対象のウィジェットが見つかりません")
+        }
+    } catch (e: Exception) {
+        android.util.Log.e("CharacterScreen", "❌ ウィジェット更新エラー", e)
     }
 }

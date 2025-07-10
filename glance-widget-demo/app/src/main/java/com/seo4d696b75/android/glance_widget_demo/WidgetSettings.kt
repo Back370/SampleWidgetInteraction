@@ -153,13 +153,26 @@ fun WidgetSettingsScreen(
                             // 画像ダウンロードボタン
                             OutlinedButton(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "📥 手動ダウンロード開始")
+                                    android.util.Log.d("WidgetSettings", "📥 手動ダウンロード開始 (Mao)")
                                     ImageDownloadService.downloadCharacterImages(context, "Mao")
                                 },
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             ) {
                                 Text(
                                     text = "Mao画像をダウンロード",
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    android.util.Log.d("WidgetSettings", "📥 手動ダウンロード開始 (Haru)")
+                                    ImageDownloadService.downloadCharacterImages(context, "Haru")
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            ) {
+                                Text(
+                                    text = "Haru画像をダウンロード",
                                     fontSize = 14.sp
                                 )
                             }
@@ -208,18 +221,18 @@ fun WidgetSettingsScreen(
                                 )
                             }
 
-                            OutlinedButton(
-                                onClick = {
-                                    android.util.Log.d("WidgetSettings", "🧹 強制クリーンアップ開始")
-                                    forceCleanupImages(context)
-                                },
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            ) {
-                                Text(
-                                    text = "強制クリーンアップ（手動削除用）",
-                                    fontSize = 14.sp
-                                )
-                            }
+//                            OutlinedButton(
+//                                onClick = {
+//                                    android.util.Log.d("WidgetSettings", "🧹 強制クリーンアップ開始")
+//                                    forceCleanupImages(context)
+//                                },
+//                                modifier = Modifier.padding(horizontal = 16.dp)
+//                            ) {
+//                                Text(
+//                                    text = "強制クリーンアップ（手動削除用）",
+//                                    fontSize = 14.sp
+//                                )
+//                            }
 
                             OutlinedButton(
                                 onClick = {

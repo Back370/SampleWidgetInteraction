@@ -21,6 +21,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
         const val ACTION_WIDGET_UPDATE = "com.seo4d696b75.android.glance_widget_demo.WIDGET_UPDATE"
         const val ACTION_START_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.START_ANIMATION"
         const val ACTION_TOGGLE_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
+        const val ACTION_WIDGET_TAP = "com.seo4d696b75.android.glance_widget_demo.WIDGET_TAP"
 //        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
 //        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
         
@@ -99,6 +100,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
             ACTION_TOGGLE_ANIMATION -> {
                 android.util.Log.d("WidgetProvider", "🔄 Toggle animation command received")
                 handleToggleAnimation(context)
+            }
+            ACTION_WIDGET_TAP -> {
+                android.util.Log.d("WidgetProvider", "👆 Widget tapped, executing special animation")
+                handleWidgetTap(context)
             }
 //            ACTION_STOP_ANIMATION -> {
 //                android.util.Log.d("WidgetProvider", "⏹️ Stop animation command received")
@@ -525,6 +530,9 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     }
                 }
                 
+                // ウィジェット全体にタップ処理を設定
+                setupWidgetTapHandler(context, remoteViews)
+                
                 // ボタンの設定
                 //setupButtons(context, remoteViews)
                 
@@ -533,6 +541,31 @@ class CounterWidgetProvider : AppWidgetProvider() {
             
         } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error updating widgets", e)
+        }
+    }
+    
+    // ウィジェットタップ処理を設定
+    private fun setupWidgetTapHandler(context: Context, remoteViews: RemoteViews) {
+        try {
+            // ウィジェットタップ用のIntent
+            val tapIntent = Intent(context, CounterWidgetProvider::class.java).apply {
+                action = ACTION_WIDGET_TAP
+            }
+            
+            val tapPendingIntent = PendingIntent.getBroadcast(
+                context,
+                100, // タップ用の固有リクエストコード
+                tapIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // ウィジェット全体をタップ可能にする（LinearLayoutにクリック処理を設定）
+            remoteViews.setOnClickPendingIntent(R.id.background_image, tapPendingIntent)
+            
+            android.util.Log.v("WidgetProvider", "✅ Widget tap handler set up")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error setting up widget tap handler", e)
         }
     }
     
@@ -615,6 +648,114 @@ class CounterWidgetProvider : AppWidgetProvider() {
             
         } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error handling animation toggle", e)
+        }
+    }
+    
+    // ウィジェットタップ処理
+    private fun handleWidgetTap(context: Context) {
+        try {
+            android.util.Log.d("WidgetProvider", "👆 === WIDGET TAP DETECTED ===")
+            
+            val animationStateManager = AnimationStateManager.getInstance(context)
+            
+            // 既にSpecialアニメーション中の場合は何もしない
+            if (animationStateManager.isInTemporarySpecial()) {
+                android.util.Log.d("WidgetProvider", "⚠️ Already in temporary Special animation, ignoring tap")
+                return
+            }
+            
+            // 現在の状態を保存してSpecialアニメーションに切り替え
+            val newAnimationType = animationStateManager.switchToSpecialTemporarily()
+            android.util.Log.d("WidgetProvider", "🎆 Switched to Special animation: $newAnimationType")
+            
+            // 古いキャッシュをクリア
+            optimizedImageCache.forEach { bitmap ->
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
+            }
+            optimizedImageCache.clear()
+            imageFilePaths.clear()
+            isCacheReady = false
+            
+            // Specialアニメーション用の画像パスを取得
+            android.util.Log.d("WidgetProvider", "🔄 Building cache for Special animation")
+            initializeImagePaths(context)
+            
+            // フレームをリセット
+            currentFrame = 0
+            
+            // Specialアニメーションのフレーム数を取得
+            val specialFrameCount = getActualFrameCount(context)
+            android.util.Log.d("WidgetProvider", "📊 Special animation frame count: $specialFrameCount")
+            
+            // アニメーションサービスに切り替えを通知
+            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                action = "TOGGLE_ANIMATION"
+            }
+            context.startService(serviceIntent)
+            
+            // ウィジェットの表示を更新
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, CounterWidgetProvider::class.java))
+            updateAllWidgets(context, appWidgetManager, widgetIds)
+            
+            android.util.Log.d("WidgetProvider", "✅ Special animation started, will auto-restore when animation cycle completes")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error handling widget tap", e)
+        }
+    }
+    
+    // 元のアニメーションに復元する処理
+    private fun handleRestoreAnimation(context: Context) {
+        try {
+            android.util.Log.d("WidgetProvider", "🔄 === RESTORING PREVIOUS ANIMATION ===")
+            
+            val animationStateManager = AnimationStateManager.getInstance(context)
+            
+            // 現在Specialアニメーション中でない場合は何もしない
+            if (!animationStateManager.isInTemporarySpecial()) {
+                android.util.Log.d("WidgetProvider", "⚠️ Not in temporary Special animation, nothing to restore")
+                return
+            }
+            
+            // 元のアニメーションに復元
+            val restoredAnimationType = animationStateManager.restorePreviousAnimation()
+            android.util.Log.d("WidgetProvider", "✅ Restored to animation: $restoredAnimationType")
+            
+            // 古いキャッシュをクリア
+            optimizedImageCache.forEach { bitmap ->
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
+            }
+            optimizedImageCache.clear()
+            imageFilePaths.clear()
+            isCacheReady = false
+            
+            // 復元されたアニメーション用の画像パスを取得
+            android.util.Log.d("WidgetProvider", "🔄 Building cache for restored animation: $restoredAnimationType")
+            initializeImagePaths(context)
+            
+            // フレームをリセット
+            currentFrame = 0
+            
+            // アニメーションサービスに切り替えを通知
+            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                action = "TOGGLE_ANIMATION"
+            }
+            context.startService(serviceIntent)
+            
+            // ウィジェットの表示を更新
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, CounterWidgetProvider::class.java))
+            updateAllWidgets(context, appWidgetManager, widgetIds)
+            
+            android.util.Log.d("WidgetProvider", "✅ Animation restoration complete")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error restoring animation", e)
         }
     }
     

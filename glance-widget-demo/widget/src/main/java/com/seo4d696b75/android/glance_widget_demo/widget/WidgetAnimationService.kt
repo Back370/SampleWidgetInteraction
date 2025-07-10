@@ -275,6 +275,9 @@ class WidgetAnimationService : Service() {
                             
                             // フレームカウンターの更新（同期化）
                             synchronized(this@WidgetAnimationService) {
+                                // 前のフレーム番号を保存（ループ検出用）
+                                val previousFrame = currentFrame
+                                
                                 // 画像がない場合でもフレームカウンターは更新
                                 if (actualFrameCount > 0) {
                                     currentFrame = (currentFrame + 1) % actualFrameCount
@@ -284,6 +287,9 @@ class WidgetAnimationService : Service() {
                                 }
                                 frameUpdateCount++
                                 lastFrameTime = System.currentTimeMillis()
+                                
+                                // Specialアニメーション完了検出（ループの検出）
+                                checkSpecialAnimationCompletion(previousFrame, currentFrame)
                                 
                                 // デバッグ情報
                                 if (bitmap == null) {
@@ -375,7 +381,10 @@ class WidgetAnimationService : Service() {
             // アニメーション状態管理から最新の状態を取得
             val animationStateManager = AnimationStateManager.getInstance(this)
             val currentAnimationType = animationStateManager.getCurrentAnimationType()
+            val currentCharacterId = animationStateManager.getCurrentCharacterId()
+            android.util.Log.d("WidgetAnimationService", "🎯 Current character: $currentCharacterId")
             android.util.Log.d("WidgetAnimationService", "🎯 Current animation type: $currentAnimationType")
+            android.util.Log.d("WidgetAnimationService", "📊 Full animation state: ${animationStateManager.getCurrentAnimationDisplayText()}")
             
             // 現在のアニメーションを停止
             val wasRunning = isServiceRunning
@@ -391,7 +400,7 @@ class WidgetAnimationService : Service() {
             // 画像キャッシュを再構築
             Thread {
                 try {
-                    android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding image cache with new animation type")
+                    android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding image cache with character: $currentCharacterId, animation: $currentAnimationType")
                     initializeImageCache()
                     
                     // アニメーションを再開
@@ -400,7 +409,7 @@ class WidgetAnimationService : Service() {
                             currentFrame = 0 // フレームをリセット
                             isServiceRunning = true
                             startHighFrequencyUpdates()
-                            android.util.Log.d("WidgetAnimationService", "▶️ Animation resumed with new type")
+                            android.util.Log.d("WidgetAnimationService", "▶️ Animation resumed with character: $currentCharacterId")
                         }
                     }
                     
@@ -745,6 +754,82 @@ class WidgetAnimationService : Service() {
             android.util.Log.i("WidgetAnimationService", "  - Average frame time: ${avgFrameTime}ms")
             android.util.Log.i("WidgetAnimationService", "  - Frame time range: ${frameTimeMin}ms - ${frameTimeMax}ms")
             android.util.Log.i("WidgetAnimationService", "  - Target interval: ${ANIMATION_INTERVAL_MS}ms (5fps)")
+        }
+    }
+    
+    /**
+     * Specialアニメーション完了の検出と自動復元処理
+     */
+    private fun checkSpecialAnimationCompletion(previousFrame: Int, currentFrame: Int) {
+        try {
+            val animationStateManager = AnimationStateManager.getInstance(this)
+            
+            // Specialアニメーション中でない場合は何もしない
+            if (!animationStateManager.isInTemporarySpecial()) {
+                return
+            }
+            
+            // アニメーションが1サイクル完了した場合（フレームが0にリセットされた）
+            if (previousFrame > 0 && currentFrame == 0 && actualFrameCount > 1) {
+                android.util.Log.d("WidgetAnimationService", "🎆 Special animation cycle completed! Restoring previous animation...")
+                android.util.Log.d("WidgetAnimationService", "📊 Previous frame: $previousFrame -> Current frame: $currentFrame")
+                
+                // 自動復元処理を実行
+                restorePreviousAnimationFromService()
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetAnimationService", "❌ Error checking Special animation completion", e)
+        }
+    }
+    
+    /**
+     * サービス内から前のアニメーションに復元する処理
+     */
+    private fun restorePreviousAnimationFromService() {
+        try {
+            android.util.Log.d("WidgetAnimationService", "🔄 === AUTO-RESTORING PREVIOUS ANIMATION ===")
+            
+            val animationStateManager = AnimationStateManager.getInstance(this)
+            
+            // 元のアニメーションに復元
+            val restoredAnimationType = animationStateManager.restorePreviousAnimation()
+            android.util.Log.d("WidgetAnimationService", "✅ Auto-restored to animation: $restoredAnimationType")
+            
+            // キャッシュ再構築のためにアニメーションを一時停止
+            val wasRunning = isServiceRunning
+            if (wasRunning) {
+                // タイマーを停止（但し、サービスは続行）
+                scheduledExecutor?.shutdown()
+                scheduledExecutor = null
+                isServiceRunning = false
+                
+                android.util.Log.d("WidgetAnimationService", "⏸️ Animation temporarily stopped for cache rebuild (auto-restore)")
+            }
+            
+            // バックグラウンドでキャッシュ再構築と再開
+            Thread {
+                try {
+                    android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding cache for restored animation: $restoredAnimationType")
+                    initializeImageCache()
+                    
+                    // アニメーションを再開
+                    if (wasRunning) {
+                        Handler(Looper.getMainLooper()).post {
+                            currentFrame = 0 // フレームをリセット
+                            isServiceRunning = true
+                            startHighFrequencyUpdates()
+                            android.util.Log.d("WidgetAnimationService", "✅ Auto-restoration complete, animation resumed")
+                        }
+                    }
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("WidgetAnimationService", "❌ Error rebuilding cache for auto-restore", e)
+                }
+            }.start()
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetAnimationService", "❌ Error in auto-restore process", e)
         }
     }
 //

@@ -11,7 +11,22 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.File
 
-
+// Firebase匿名認証を行うサスペンド関数
+//private suspend fun signInAnonymouslyIfNeeded() {
+//    try {
+//        android.util.Log.d("MainActivity", "🔐 Attempting Firebase anonymous authentication...")
+//
+//        val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+//        if (auth.currentUser == null) {
+//            auth.signInAnonymously().await()
+//            android.util.Log.d("MainActivity", "✅ Anonymous authentication successful")
+//        } else {
+//            android.util.Log.d("MainActivity", "ℹ️ User already authenticated")
+//        }
+//    } catch (e: Exception) {
+//        android.util.Log.e("MainActivity", "❌ Firebase authentication failed", e)
+//    }
+//}
 
 //private fun rebuildWidgetAnimationCache() {
 //    try {

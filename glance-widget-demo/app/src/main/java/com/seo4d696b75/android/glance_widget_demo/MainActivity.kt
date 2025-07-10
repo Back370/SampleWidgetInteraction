@@ -104,23 +104,6 @@ class MainActivity : ComponentActivity() {
         android.util.Log.d("MainActivity", "MainActivity setup completed")
     }
     
-    // Firebase匿名認証を行うサスペンド関数
-    private suspend fun signInAnonymouslyIfNeeded() {
-        try {
-            android.util.Log.d("MainActivity", "🔐 Attempting Firebase anonymous authentication...")
-            
-            val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-            if (auth.currentUser == null) {
-                auth.signInAnonymously().await()
-                android.util.Log.d("MainActivity", "✅ Anonymous authentication successful")
-            } else {
-                android.util.Log.d("MainActivity", "ℹ️ User already authenticated")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "❌ Firebase authentication failed", e)
-        }
-    }
-    
     // 権限名のリスト（Android 13+はREAD_MEDIA_IMAGESを使う）
     private val storagePermissions: Array<String>
         get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -277,6 +260,8 @@ class MainActivity : ComponentActivity() {
             
             // 全てのアニメーションタイプをダウンロード
             ImageDownloadService.downloadCharacterImages(this, "Mao")
+            ImageDownloadService.downloadCharacterImages(this, "Haru")
+
             
             android.util.Log.d("MainActivity", "✅ Image download service started for Mao character")
             
