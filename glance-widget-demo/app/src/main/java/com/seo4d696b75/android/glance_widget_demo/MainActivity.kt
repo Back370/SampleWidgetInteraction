@@ -32,6 +32,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.delay
 import android.content.Intent
 import androidx.activity.enableEdgeToEdge
+import com.google.firebase.appcheck.BuildConfig
 import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
 import com.seo4d696b75.android.glance_widget_demo.ui.theme.ChottoKawaiiTheme
 import com.seo4d696b75.android.glance_widget_demo.home.HomeScreen
@@ -56,6 +57,7 @@ class MainActivity : ComponentActivity() {
                 PlayIntegrityAppCheckProviderFactory.getInstance()
             )
             android.util.Log.d("MainActivity", "✅ Firebase App Check initialized")
+            android.util.Log.d("gemini", BuildConfig.apiKey)
         } catch (e: Exception) {
             android.util.Log.w("MainActivity", "⚠️ Firebase App Check initialization failed (optional)", e)
         }
