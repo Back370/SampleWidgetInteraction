@@ -85,7 +85,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         
-        android.util.Log.v("WidgetProvider", "🎯 onReceive: ${intent.action}")
+        android.util.Log.i("WidgetProvider", "🎯 === INTENT RECEIVED ===")
+        android.util.Log.i("WidgetProvider", "  - Action: ${intent.action}")
+        android.util.Log.i("WidgetProvider", "  - Package: ${intent.getPackage()}")
+        android.util.Log.i("WidgetProvider", "  - Extras: ${intent.extras}")
         
         when (intent.action) {
             ACTION_WIDGET_UPDATE -> {
@@ -102,8 +105,13 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 handleToggleAnimation(context)
             }
             ACTION_WIDGET_TAP -> {
-                android.util.Log.d("WidgetProvider", "👆 Widget tapped, executing special animation")
+                android.util.Log.i("WidgetProvider", "👆 === WIDGET TAP CONFIRMED ===")
+                android.util.Log.i("WidgetProvider", "  - About to execute special animation")
                 handleWidgetTap(context)
+                android.util.Log.i("WidgetProvider", "  - Special animation handling completed")
+            }
+            else -> {
+                android.util.Log.d("WidgetProvider", "🔍 Unknown action received: ${intent.action}")
             }
 //            ACTION_STOP_ANIMATION -> {
 //                android.util.Log.d("WidgetProvider", "⏹️ Stop animation command received")
@@ -494,11 +502,11 @@ class CounterWidgetProvider : AppWidgetProvider() {
             
             // すべてのウィジェットを更新
             widgetIds.forEach { widgetId ->
-                val remoteViews = RemoteViews(context.packageName, R.layout.widget_layout)
-                remoteViews.setImageViewBitmap(R.id.widget_image, bitmap)
+                val remoteViews = RemoteViews(context.packageName, R.layout.widget_layout_wall)
+                remoteViews.setImageViewBitmap(R.id.background_image, bitmap)
                 
-                // アニメーション制御ボタンの設定
-               // setupButtons(context, remoteViews)
+                // ウィジェット全体にタップ処理を設定（リサイズ後も確実に動作）
+                setupWidgetTapHandler(context, remoteViews)
                 
                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
             }
@@ -559,10 +567,14 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             
-            // ウィジェット全体をタップ可能にする（LinearLayoutにクリック処理を設定）
+            // ウィジェット全体をタップ可能にする（LinearLayoutとImageViewの両方に設定）
+            // ImageViewにタップハンドラーを設定
             remoteViews.setOnClickPendingIntent(R.id.background_image, tapPendingIntent)
             
-            android.util.Log.v("WidgetProvider", "✅ Widget tap handler set up")
+            // LinearLayout全体にもタップハンドラーを設定（fitCenterでの余白部分をカバー）
+            remoteViews.setOnClickPendingIntent(R.id.widget_container, tapPendingIntent)
+            
+            android.util.Log.v("WidgetProvider", "✅ Widget tap handler set up on both ImageView and LinearLayout")
             
         } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error setting up widget tap handler", e)
@@ -935,14 +947,18 @@ class CounterWidgetProvider : AppWidgetProvider() {
             val loadOptions = BitmapFactory.Options().apply {
                 inJustDecodeBounds = false
                 inSampleSize = sampleSize
+                // 透明度サポートのためARGB_8888を使用
                 inPreferredConfig = Bitmap.Config.ARGB_8888 // 透明度サポート
             }
             
             val bitmap = BitmapFactory.decodeFile(imagePath, loadOptions)
             if (bitmap != null) {
-                // 正確なサイズにスケール
-                Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true).also {
-                    if (it != bitmap) {
+                android.util.Log.v("WidgetProvider", "  - Original transparency: ${bitmap.hasAlpha()}")
+                
+                // 透明度を保持してスケール（フィルタリングを無効化）
+                Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, false).also { scaledBitmap ->
+                    android.util.Log.v("WidgetProvider", "  - Scaled transparency: ${scaledBitmap.hasAlpha()}")
+                    if (scaledBitmap != bitmap) {
                         bitmap.recycle()
                     }
                 }

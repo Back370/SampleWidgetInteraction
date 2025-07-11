@@ -276,6 +276,9 @@ class WidgetAnimationService : Service() {
                                     remoteViews.setInt(R.id.background_image, "setBackgroundColor", 0xFFE0E0E0.toInt())
                                 }
                                 
+                                // タップハンドラーを設定（フレーム更新のたびに削除されることを防ぐ）
+                                setupWidgetTapHandler(remoteViews)
+                                
                                 // ボタンの設定
                                 //setupButtons(remoteViews)
                                 
@@ -325,6 +328,32 @@ class WidgetAnimationService : Service() {
         }
     }
     
+    // ウィジェットタップ処理を設定
+    private fun setupWidgetTapHandler(remoteViews: RemoteViews) {
+        try {
+            // ウィジェットタップ用のIntent
+            val tapIntent = Intent(this, CounterWidgetProvider::class.java).apply {
+                action = CounterWidgetProvider.ACTION_WIDGET_TAP
+            }
+            
+            val tapPendingIntent = PendingIntent.getBroadcast(
+                this,
+                100, // タップ用の固有リクエストコード（CounterWidgetProviderと同じ値）
+                tapIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // ウィジェット全体をタップ可能にする（LinearLayoutとImageViewの両方に設定）
+            remoteViews.setOnClickPendingIntent(R.id.background_image, tapPendingIntent)
+            remoteViews.setOnClickPendingIntent(R.id.widget_container, tapPendingIntent)
+            
+            android.util.Log.v("WidgetAnimationService", "✅ Widget tap handler set up")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetAnimationService", "❌ Error setting up widget tap handler", e)
+        }
+    }
+
 //    private fun setupButtons(remoteViews: RemoteViews) {
 //        try {
 //            // アニメーション状態管理
@@ -591,11 +620,12 @@ class WidgetAnimationService : Service() {
             try {
                 android.util.Log.d("WidgetAnimationService", "🔄 Building optimized image cache...")
 
-                // メモリ使用量の予測計算
-                val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
-                val pixelsPerImage = WIDGET_IMAGE_SIZE * WIDGET_IMAGE_SIZE
-                val bytesPerImage = pixelsPerImage * bytesPerPixel
-                val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
+                                    // メモリ使用量の予測計算
+                    val optimizedSize = getOptimizedImageSize(this@WidgetAnimationService)
+                    val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
+                    val pixelsPerImage = optimizedSize * optimizedSize
+                    val bytesPerImage = pixelsPerImage * bytesPerPixel
+                    val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
                 android.util.Log.d("WidgetAnimationService", "  - Estimated cache size: ${totalCacheSize / 1024 / 1024}MB (${DEFAULT_FRAMES} images × ${bytesPerImage / 1024}KB)")
 
                 // 同期化された操作
@@ -625,23 +655,33 @@ class WidgetAnimationService : Service() {
                             android.util.Log.d("WidgetAnimationService", "  - Original size: ${originalBitmap.width}x${originalBitmap.height}")
                             android.util.Log.d("WidgetAnimationService", "  - Original config: ${originalBitmap.config}")
 
+                            // 透明度を保持してスケール（フィルタリングを無効化）
                             val optimizedBitmap = Bitmap.createScaledBitmap(
                                 originalBitmap,
-                                WIDGET_IMAGE_SIZE,
-                                WIDGET_IMAGE_SIZE,
-                                true
+                                optimizedSize,
+                                optimizedSize,
+                                false  // フィルタリングを無効化して透明度を保持
                             )
 
-                            val compressedBitmap = optimizedBitmap.copy(Bitmap.Config.ARGB_8888, false)
-                            optimizedImageCache.add(compressedBitmap)
+                            // 背景色が白や灰色の場合は透明化処理を適用
+                            val finalBitmap = if (shouldMakeBackgroundTransparent(optimizedBitmap)) {
+                                makeBackgroundTransparent(optimizedBitmap)
+                            } else {
+                                optimizedBitmap
+                            }
+                            
+                            optimizedImageCache.add(finalBitmap)
 
-                            android.util.Log.d("WidgetAnimationService", "  - Optimized size: ${compressedBitmap.width}x${compressedBitmap.height}")
-                            android.util.Log.d("WidgetAnimationService", "  - Optimized config: ${compressedBitmap.config}")
-
-                            originalBitmap.recycle()
-                            if (optimizedBitmap != compressedBitmap) {
+                            android.util.Log.d("WidgetAnimationService", "  - Final size: ${finalBitmap.width}x${finalBitmap.height}")
+                            android.util.Log.d("WidgetAnimationService", "  - Final config: ${finalBitmap.config}")
+                            android.util.Log.d("WidgetAnimationService", "  - Final transparency: ${finalBitmap.hasAlpha()}")
+                            
+                            // 処理されたビットマップのクリーンアップ
+                            if (finalBitmap != optimizedBitmap) {
                                 optimizedBitmap.recycle()
                             }
+
+                            originalBitmap.recycle()
 
                         } else {
                             android.util.Log.e("WidgetAnimationService", "❌ Failed to decode image: $imagePath")
@@ -659,7 +699,7 @@ class WidgetAnimationService : Service() {
                     actualFrameCount = optimizedImageCache.size
 
                     android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
-                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${WIDGET_IMAGE_SIZE}x${WIDGET_IMAGE_SIZE}")
+                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${optimizedSize}x${optimizedSize}")
                     android.util.Log.d("WidgetAnimationService", "  - Format: ARGB_8888 (透明度サポート)")
                     android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
                     android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
@@ -696,7 +736,8 @@ class WidgetAnimationService : Service() {
             android.util.Log.d("WidgetAnimationService", "  - Image format: ${options.outMimeType}")
             
             // サンプルサイズを計算してメモリ使用量を削減
-            val targetSize = WIDGET_IMAGE_SIZE * 2
+            val optimizedSize = getOptimizedImageSize(this@WidgetAnimationService)
+            val targetSize = optimizedSize * 2
             val sampleSize = calculateSampleSize(options.outWidth, options.outHeight, targetSize)
             android.util.Log.d("WidgetAnimationService", "  - Sample size: $sampleSize")
             
@@ -704,6 +745,7 @@ class WidgetAnimationService : Service() {
             val decodeOptions = android.graphics.BitmapFactory.Options().apply {
                 inJustDecodeBounds = false
                 inSampleSize = sampleSize
+                // 透明度サポートのためARGB_8888を使用
                 inPreferredConfig = Bitmap.Config.ARGB_8888  // 透明度サポート
                 inPurgeable = true
                 inInputShareable = true
@@ -711,6 +753,21 @@ class WidgetAnimationService : Service() {
             
             val bitmap = android.graphics.BitmapFactory.decodeFile(imagePath, decodeOptions)
             android.util.Log.d("WidgetAnimationService", "  - Decoded size: ${bitmap?.width}x${bitmap?.height}")
+            
+            // 透明度の詳細確認
+            if (bitmap != null) {
+                android.util.Log.d("WidgetAnimationService", "  - Has alpha channel: ${bitmap.hasAlpha()}")
+                android.util.Log.d("WidgetAnimationService", "  - Config: ${bitmap.config}")
+                android.util.Log.d("WidgetAnimationService", "  - Is premultiplied: ${bitmap.isPremultiplied}")
+                
+                // 画像の角のピクセルを確認（通常背景色が現れる箇所）
+                if (bitmap.width > 0 && bitmap.height > 0) {
+                    val cornerPixel = bitmap.getPixel(0, 0)
+                    val alpha = (cornerPixel shr 24) and 0xFF
+                    android.util.Log.d("WidgetAnimationService", "  - Corner pixel alpha: $alpha (0=transparent, 255=opaque)")
+                    android.util.Log.d("WidgetAnimationService", "  - Corner pixel color: ${String.format("#%08X", cornerPixel)}")
+                }
+            }
             
             bitmap
             
@@ -736,6 +793,81 @@ class WidgetAnimationService : Service() {
         }
         
         return sampleSize
+    }
+    
+    /**
+     * 画像の背景を透明化する必要があるかどうかを判定
+     */
+    private fun shouldMakeBackgroundTransparent(bitmap: Bitmap): Boolean {
+        // 既に透明度を持っている場合は処理不要
+        if (bitmap.hasAlpha()) {
+            // 角のピクセルをチェックして、実際に透明かどうかを確認
+            val cornerPixel = bitmap.getPixel(0, 0)
+            val alpha = (cornerPixel shr 24) and 0xFF
+            return alpha > 200 // ほぼ不透明な場合は透明化処理を行う
+        }
+        return true // アルファチャンネルがない場合は透明化処理を行う
+    }
+    
+    /**
+     * 画像の背景色（白や灰色）を透明にする
+     */
+    private fun makeBackgroundTransparent(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        
+        // 新しいARGB_8888のBitmapを作成
+        val transparentBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        
+        // 角の数ピクセルから背景色を推定
+        val backgroundColors = mutableSetOf<Int>()
+        val cornerPositions = listOf(
+            Pair(0, 0), Pair(width-1, 0), 
+            Pair(0, height-1), Pair(width-1, height-1)
+        )
+        
+        cornerPositions.forEach { (x, y) ->
+            val pixel = bitmap.getPixel(x, y)
+            val color = pixel and 0x00FFFFFF // アルファを除いた色
+            backgroundColors.add(color)
+        }
+        
+        android.util.Log.d("WidgetAnimationService", "  - Background colors detected: ${backgroundColors.map { String.format("#%06X", it) }}")
+        
+        // ピクセルごとに処理
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                val pixel = bitmap.getPixel(x, y)
+                val color = pixel and 0x00FFFFFF
+                
+                if (backgroundColors.contains(color) || isGrayishColor(color)) {
+                    // 背景色または灰色系の色は透明にする
+                    transparentBitmap.setPixel(x, y, 0x00000000) // 完全透明
+                } else {
+                    // その他の色はそのまま保持（アルファチャンネルを0xFFに設定）
+                    val opaquePixel = (pixel and 0x00FFFFFF) or (0xFF shl 24)
+                    transparentBitmap.setPixel(x, y, opaquePixel)
+                }
+            }
+        }
+        
+        android.util.Log.d("WidgetAnimationService", "  - Background transparency applied")
+        return transparentBitmap
+    }
+    
+    /**
+     * 灰色系の色かどうかを判定
+     */
+    private fun isGrayishColor(color: Int): Boolean {
+        val red = (color shr 16) and 0xFF
+        val green = (color shr 8) and 0xFF
+        val blue = color and 0xFF
+        
+        // RGBの差が小さく、明度が高い（明るい灰色）場合
+        val maxDiff = maxOf(maxOf(red, green), blue) - minOf(minOf(red, green), blue)
+        val brightness = (red + green + blue) / 3
+        
+        return maxDiff < 30 && brightness > 200 // 明るくて彩度の低い色
     }
     
     private fun updatePerformanceMetrics(frameTime: Long) {
