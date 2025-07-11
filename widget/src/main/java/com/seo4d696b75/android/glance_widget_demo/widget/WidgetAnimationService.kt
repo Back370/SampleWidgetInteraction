@@ -347,8 +347,6 @@ class WidgetAnimationService : Service() {
             remoteViews.setOnClickPendingIntent(R.id.background_image, tapPendingIntent)
             remoteViews.setOnClickPendingIntent(R.id.widget_container, tapPendingIntent)
             
-            android.util.Log.v("WidgetAnimationService", "✅ Widget tap handler set up")
-            
         } catch (e: Exception) {
             android.util.Log.e("WidgetAnimationService", "❌ Error setting up widget tap handler", e)
         }

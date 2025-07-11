@@ -77,6 +77,7 @@ class WidgetImageManager @Inject constructor(
      * @param frameIndex フレーム番号
      * @return Bitmap (成功時)
      */
+
     suspend fun downloadAndCacheImage(
         context: Context,
         imageUrl: String,

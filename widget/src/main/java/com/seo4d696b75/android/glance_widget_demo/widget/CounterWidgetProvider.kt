@@ -573,8 +573,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             
             // LinearLayout全体にもタップハンドラーを設定（fitCenterでの余白部分をカバー）
             remoteViews.setOnClickPendingIntent(R.id.widget_container, tapPendingIntent)
-            
-            android.util.Log.v("WidgetProvider", "✅ Widget tap handler set up on both ImageView and LinearLayout")
+
             
         } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error setting up widget tap handler", e)
