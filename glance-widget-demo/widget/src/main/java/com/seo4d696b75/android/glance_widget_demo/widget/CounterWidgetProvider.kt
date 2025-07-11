@@ -13,7 +13,10 @@ import android.os.Build
 import android.os.PowerManager
 import android.os.SystemClock
 import android.widget.RemoteViews
+import com.example.core.Constants
+import com.example.core.SensorService
 import java.io.File
+import kotlin.jvm.java
 
 class CounterWidgetProvider : AppWidgetProvider() {
     
@@ -80,6 +83,24 @@ class CounterWidgetProvider : AppWidgetProvider() {
             }
         }
     }
+
+    // --- ここから追記 (SensorServiceを制御するヘルパー関数) ---
+    private fun startSensorService(context: Context) {
+        val intent = Intent(context, SensorService::class.java)
+        android.util.Log.d("WidgetProvider", "🚀 Starting SensorService for background monitoring")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
+    private fun stopSensorService(context: Context) {
+        val intent = Intent(context, SensorService::class.java)
+        android.util.Log.d("WidgetProvider", "🛑 Stopping SensorService")
+        context.stopService(intent)
+    }
+    // --- ここまで追記 ---
     
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
@@ -91,6 +112,32 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 android.util.Log.d("WidgetProvider", "📡 AlarmManager triggered update")
                 handleAlarmManagerUpdate(context)
             }
+
+            // --- ここにcaseを追記 ---
+            Constants.ACTION_SENSOR_TRIGGERED_UPDATE -> {
+                android.util.Log.d("WidgetProvider", "📐 Sensor triggered update command received")
+                // 既存の更新処理を呼び出すなど、ここで行いたい処理を記述
+                // 例えば、アニメーションを切り替えたり、特定のフレームを表示したり
+                handleToggleAnimation(context, "SpecialState") // 例: 特別なアニメーションに切り替え
+            }
+
+            // --- ここからが呼び出し部分 ---
+
+            Constants.ACTION_SHAKE_DETECTED -> {
+                android.util.Log.d("WidgetProvider", "📳 Shake detected!")
+                // ▼▼▼ 振動があったら実行したい処理をここに書く ▼▼▼
+
+            }
+
+            Constants.ACTION_ANGLE_EXCEEDED -> {
+                android.util.Log.d("WidgetProvider", "📐 Angle exceeded!")
+                // ▼▼▼ しきい値より傾いたら実行したい処理をここに書く ▼▼▼
+
+            }
+
+            // --- ここまで ---
+
+
             ACTION_START_ANIMATION -> {
                 android.util.Log.d("WidgetProvider", "▶️ Start animation command received (manual)")
                 // フォアグラウンドServiceでアニメーション開始
@@ -116,13 +163,21 @@ class CounterWidgetProvider : AppWidgetProvider() {
         super.onEnabled(context)
         android.util.Log.d("WidgetProvider", "🚀 Widget enabled - Starting foreground 5fps animation (400x500 resolution)")
         startForegroundAnimation(context)
+
+        // --- 追記 ---
+        // 最初のウィジェットが置かれたので、センサー監視サービスを開始する
+        startSensorService(context)
     }
     
-//    override fun onDisabled(context: Context) {
-//        super.onDisabled(context)
-//        android.util.Log.d("WidgetProvider", "🛑 Widget disabled - Stopping foreground animation")
-////        stopForegroundAnimation(context)
-//    }
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        android.util.Log.d("WidgetProvider", "🛑 Widget disabled - Stopping foreground animation")
+//        stopForegroundAnimation(context)
+
+        // --- 追記 ---
+        // 最後のウィジェットが削除されたので、センサー監視サービスを停止してバッテリーを節約
+        stopSensorService(context)
+    }
     
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         android.util.Log.d("WidgetProvider", "🔄 onUpdate called for ${appWidgetIds.size} widgets")
@@ -133,6 +188,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
         // フォアグラウンドアニメーションを開始
         android.util.Log.d("WidgetProvider", "🔄 Starting foreground animation from onUpdate")
         startForegroundAnimation(context)
+
+        // --- 追記 ---
+        // ウィジェット更新時にも、サービスが万が一止まっていた場合に備えて開始命令を送っておくと、より確実
+        startSensorService(context)
     }
     
     private fun startForegroundAnimation(context: Context) {

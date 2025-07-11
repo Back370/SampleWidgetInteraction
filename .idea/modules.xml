@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/SampleWidgetInteraction.iml" filepath="$PROJECT_DIR$/.idea/SampleWidgetInteraction.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Sensor.iml" filepath="$PROJECT_DIR$/.idea/modules/Sensor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Sensor.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Sensor.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Sensor.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Sensor.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Sensor.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Sensor.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Sensor.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Sensor.app.unitTest.iml" />
     </modules>
   </component>
 </project>

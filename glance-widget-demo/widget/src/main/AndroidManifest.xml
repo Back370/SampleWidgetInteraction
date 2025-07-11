@@ -18,6 +18,8 @@
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION" />
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK" />
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION" />
+
+                <action android:name="com.seo4d696b75.android.SENSOR_TRIGGERED_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

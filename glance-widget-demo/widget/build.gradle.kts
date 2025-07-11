@@ -51,4 +51,7 @@ dependencies {
 
     implementation(project(":domain"))
     implementation(project(":data"))
+
+    // coreモジュールへの依存関係を追加
+    implementation(project(":core"))
 }
