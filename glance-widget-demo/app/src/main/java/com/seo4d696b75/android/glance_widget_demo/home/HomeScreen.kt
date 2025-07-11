@@ -1,29 +1,18 @@
 package com.seo4d696b75.android.glance_widget_demo.home
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.seo4d696b75.android.glance_widget_demo.Button
 import com.seo4d696b75.android.glance_widget_demo.R
-//import com.seo4d696b75.android.glance_widget_demo.notification.FloatingAdd
 import com.seo4d696b75.android.glance_widget_demo.notification.FloatingNotification
-import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList.notificationList
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationScreen
 
@@ -86,9 +75,16 @@ fun HomeScreen(
 
             Button(
                 modifier = Modifier.weight(1f),
-                icon = painterResource(id = R.drawable.baseline_face_24),
+                icon = painterResource(id = com.example.core.R.drawable.baseline_notifications_24),
                 text = "センサー",
                 onClick = onSensorClicked
+            )
+
+            Button(
+                modifier = Modifier.weight(1f),
+                icon = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = "ボタン",
+                onClick = onWidgetSettingClicked
             )
         }
     }

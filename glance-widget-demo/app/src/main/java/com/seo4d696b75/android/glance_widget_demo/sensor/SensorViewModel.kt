@@ -1,32 +1,97 @@
 package com.seo4d696b75.android.glance_widget_demo.sensor
 
+// app/src/main/java/com/seo4d696b75/android/glance_widget_demo/sensor/SensorViewModel.kt
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.core.SensorRepository // coreモジュールのRepository
-import com.example.core.SensorUiState // coreモジュールのUiState
+import com.example.core.SensorRepository
+import com.example.core.SensorUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// AndroidViewModelを継承して、安全にContextを取得する
 class SensorViewModel(application: Application) : AndroidViewModel(application) {
 
-    // 1. ViewModel内で状態を保持するためのMutableStateFlow
-    private val _uiState = MutableStateFlow(SensorUiState()) // 初期値を設定
+    private val _uiState = MutableStateFlow(SensorScreenUiState())
+    val uiState: StateFlow<SensorScreenUiState> = _uiState.asStateFlow()
 
-    // 2. UIには不変のStateFlowとして公開する
-    val uiState: StateFlow<SensorUiState> = _uiState.asStateFlow()
+    private var realSensorJob: Job? = null
 
-    // 3. ViewModelが生成されたときに、データ収集を開始する
     init {
-        viewModelScope.launch {
+        // 最初は本物のセンサーを起動
+        startRealSensorListening()
+    }
+
+    // --- UIからのイベントを受け取る関数 ---
+
+    fun onDebugModeChanged(isDebugMode: Boolean) {
+        _uiState.update { it.copy(isDebugMode = isDebugMode) }
+        if (isDebugMode) {
+            // デバッグモードON: 本物センサーを止め、現在のスライダー値でUIを更新
+            stopRealSensorListening()
+            updateUiWithDebugValues()
+        } else {
+            // デバッグモードOFF: 本物センサーを再開
+            startRealSensorListening()
+        }
+    }
+
+    fun onDebugXzAngleChanged(angle: Float) {
+        _uiState.update { it.copy(debugXzAngle = angle) }
+        updateUiWithDebugValues()
+    }
+
+    fun onDebugYzAngleChanged(angle: Float) {
+        _uiState.update { it.copy(debugYzAngle = angle) }
+        updateUiWithDebugValues()
+    }
+
+    fun onDebugShakeTriggered() {
+        // デバッグモード中のみ、一時的にisShakingをtrueにしてUIを更新
+        if (_uiState.value.isDebugMode) {
+            viewModelScope.launch {
+                val debugShakeState = _uiState.value.currentSensorValue.copy(isShaking = true)
+                _uiState.update { it.copy(currentSensorValue = debugShakeState) }
+            }
+        }
+    }
+
+    // --- 内部ロジック ---
+
+    private fun startRealSensorListening() {
+        // 既に動いていたら何もしない
+        if (realSensorJob?.isActive == true) return
+
+        realSensorJob = viewModelScope.launch {
             SensorRepository.getSensorData(getApplication())
-                .collect { newState ->
-                    // Repositoryから新しいデータが流れてくるたびに、自身の状態を更新
-                    _uiState.value = newState
+                .collect { realSensorValue ->
+                    // デバッグモードがOFFの時だけ、本物の値でUIを更新
+                    if (!_uiState.value.isDebugMode) {
+                        _uiState.update { it.copy(currentSensorValue = realSensorValue) }
+                    }
                 }
+        }
+    }
+
+    private fun stopRealSensorListening() {
+        realSensorJob?.cancel()
+    }
+
+    private fun updateUiWithDebugValues() {
+        // デバッグモードがONの時だけ、スライダーの値でUIを更新
+        if (_uiState.value.isDebugMode) {
+            val currentState = _uiState.value
+            val debugSensorValue = SensorUiState(
+                xzAngle = currentState.debugXzAngle,
+                yzAngle = currentState.debugYzAngle,
+                isShaking = false, // シェイクはボタンでトリガーするため、通常はfalse
+                isAngleExceeded = kotlin.math.abs(currentState.debugXzAngle) > 30f
+            )
+            _uiState.update { it.copy(currentSensorValue = debugSensorValue) }
         }
     }
 }

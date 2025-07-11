@@ -19,18 +19,12 @@ import androidx.navigation.compose.rememberNavController
 import com.seo4d696b75.android.glance_widget_demo.ui.MainScreen
 import com.seo4d696b75.android.glance_widget_demo.theme.AppTheme
 import java.io.File
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.delay
-import android.content.Intent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
@@ -98,6 +92,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("Sensor"){
                             SensorScreen(
+                                onBackClick = { navController.navigate("Home") },
                                 viewModel = viewModel(),
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -117,7 +112,7 @@ class MainActivity : ComponentActivity() {
         try {
             android.util.Log.d("MainActivity", "🔐 Attempting Firebase anonymous authentication...")
             
-            val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+            val auth = FirebaseAuth.getInstance()
             if (auth.currentUser == null) {
                 auth.signInAnonymously().await()
                 android.util.Log.d("MainActivity", "✅ Anonymous authentication successful")
