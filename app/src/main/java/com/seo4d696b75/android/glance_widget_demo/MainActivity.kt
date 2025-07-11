@@ -32,11 +32,12 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.delay
 import android.content.Intent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
 import com.seo4d696b75.android.glance_widget_demo.ui.theme.ChottoKawaiiTheme
 import com.seo4d696b75.android.glance_widget_demo.home.HomeScreen
 import com.seo4d696b75.android.glance_widget_demo.character.CharacterScreen
-
+import com.seo4d696b75.android.glance_widget_demo.sensor.SensorScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -76,7 +77,8 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(
                                 onCharacterClicked = { navController.navigate("Character") },
                                 onSettingsClicked = { navController.navigate("Settings") },
-                                onWidgetSettingClicked = { navController.navigate("WidgetSettings") }
+                                onWidgetSettingClicked = { navController.navigate("WidgetSettings") },
+                                onSensorClicked = { navController.navigate("Sensor") }
                             )
                         }
                         composable("Settings") {
@@ -92,6 +94,12 @@ class MainActivity : ComponentActivity() {
                         composable("WidgetSettings"){
                             WidgetSettingsScreen(
                                 onBackClick = { navController.navigate("Home") }
+                            )
+                        }
+                        composable("Sensor"){
+                            SensorScreen(
+                                viewModel = viewModel(),
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
                     }
