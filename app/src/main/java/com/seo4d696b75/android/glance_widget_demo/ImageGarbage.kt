@@ -1,4 +1,4 @@
-package com.seo4d696b75.android
+package com.seo4d696b75.android.glance_widget_demo
 
 // Firebase匿名認証を行うサスペンド関数
 //private suspend fun signInAnonymouslyIfNeeded() {

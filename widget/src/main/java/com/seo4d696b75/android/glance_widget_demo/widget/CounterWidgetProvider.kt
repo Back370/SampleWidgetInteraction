@@ -129,13 +129,16 @@ class CounterWidgetProvider : AppWidgetProvider() {
 
             Constants.ACTION_SHAKE_DETECTED -> {
                 android.util.Log.d("WidgetProvider", "📳 Shake detected!")
-                // ▼▼▼ 振動があったら実行したい処理をここに書く ▼▼▼
+
+                // TODO: 振動したときの関数の呼び出し
 
             }
 
             Constants.ACTION_ANGLE_EXCEEDED -> {
                 android.util.Log.d("WidgetProvider", "📐 Angle exceeded!")
-                // ▼▼▼ しきい値より傾いたら実行したい処理をここに書く ▼▼▼
+
+                // TODO: 傾きが閾値を超えたときの関数の呼び出し
+                //なお、閾値はcore内のSensorRepositoryで定義
 
             }
 

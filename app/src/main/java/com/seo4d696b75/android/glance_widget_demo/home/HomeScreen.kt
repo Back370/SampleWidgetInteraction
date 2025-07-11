@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.home
+package com.seo4d696b75.android.glance_widget_demo.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -10,12 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.seo4d696b75.android.Button
+import com.seo4d696b75.android.glance_widget_demo.Button
 import com.seo4d696b75.android.glance_widget_demo.R
-//import com.seo4d696b75.android.glance_widget_demo.notification.FloatingAdd
-import com.seo4d696b75.android.notification.FloatingNotification
-import com.seo4d696b75.android.notification.NotificationList.notificationList
-import com.seo4d696b75.android.notification.NotificationScreen
+import com.seo4d696b75.android.glance_widget_demo.notification.FloatingNotification
+import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList.notificationList
+import com.seo4d696b75.android.glance_widget_demo.notification.NotificationScreen
 
 //@Preview(showBackground = true)
 @Composable
@@ -76,9 +75,16 @@ fun HomeScreen(
 
             Button(
                 modifier = Modifier.weight(1f),
-                icon = painterResource(id = R.drawable.baseline_face_24),
+                icon = painterResource(id = R.drawable.baseline_notifications_24),
                 text = "センサー",
                 onClick = onSensorClicked
+            )
+
+            Button(
+                modifier = Modifier.weight(1f),
+                icon = painterResource(id = R.drawable.ic_launcher_foreground),
+                text = "ボタン",
+                onClick = onWidgetSettingClicked
             )
         }
     }

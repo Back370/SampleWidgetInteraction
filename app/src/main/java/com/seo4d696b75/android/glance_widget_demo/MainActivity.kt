@@ -1,4 +1,4 @@
-package com.seo4d696b75.android
+package com.seo4d696b75.android.glance_widget_demo
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -19,24 +19,23 @@ import androidx.navigation.compose.rememberNavController
 import com.seo4d696b75.android.glance_widget_demo.ui.MainScreen
 import com.seo4d696b75.android.glance_widget_demo.theme.AppTheme
 import java.io.File
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import kotlinx.coroutines.delay
 import android.util.Log
+import kotlinx.coroutines.tasks.await
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.seo4d696b75.android.character.CharacterScreen
+import com.seo4d696b75.android.glance_widget_demo.character.CharacterScreen
 import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
 import com.seo4d696b75.android.glance_widget_demo.ui.theme.ChottoKawaiiTheme
-import com.seo4d696b75.android.home.HomeScreen
+import com.seo4d696b75.android.glance_widget_demo.home.HomeScreen
 import com.seo4d696b75.android.glance_widget_demo.sensor.SensorScreen
-import com.seo4d696b75.android.glance_widget_demo.settingScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 
 class MainActivity : ComponentActivity() {
@@ -97,6 +96,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("Sensor"){
                             SensorScreen(
+                                onBackClick = { navController.navigate("Home") },
                                 viewModel = viewModel(),
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -109,6 +109,23 @@ class MainActivity : ComponentActivity() {
         checkAndRequestStoragePermission()
 
         Log.d("MainActivity", "MainActivity setup completed")
+    }
+    
+    // Firebase匿名認証を行うサスペンド関数
+    private suspend fun signInAnonymouslyIfNeeded() {
+        try {
+            Log.d("MainActivity", "🔐 Attempting Firebase anonymous authentication...")
+            
+            val auth = FirebaseAuth.getInstance()
+            if (auth.currentUser == null) {
+                auth.signInAnonymously().await()
+                Log.d("MainActivity", "✅ Anonymous authentication successful")
+            } else {
+                Log.d("MainActivity", "ℹ️ User already authenticated")
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "❌ Firebase authentication failed", e)
+        }
     }
     
     // 権限名のリスト（Android 13+はREAD_MEDIA_IMAGESを使う）

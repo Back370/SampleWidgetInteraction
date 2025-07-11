@@ -1,4 +1,4 @@
-package com.seo4d696b75.android
+package com.seo4d696b75.android.glance_widget_demo
 
 import android.Manifest
 import android.appwidget.AppWidgetManager
@@ -287,9 +287,8 @@ private fun updateWidgetAfterToggle(context: Context) {
         Log.d("WidgetSettings", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
 
         if (appWidgetIds.isNotEmpty()) {
-            val intent = Intent().apply {
-                Intent.setComponent = componentName
-                Intent.setAction = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
+            val intent = Intent(context, com.seo4d696b75.android.glance_widget_demo.widget.CounterWidgetProvider::class.java).apply {
+                action = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
             }
             context.sendBroadcast(intent)

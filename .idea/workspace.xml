@@ -23,36 +23,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="gitignoreの変更">
-      <change beforePath="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/sensor/SensorScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/sensor/SensorScreenUiState.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/sensor/SensorViewModel.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/src/main/res/drawable/baseline_notifications_24.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/AppApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/AppApplication.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/Button.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/Button.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/ImageCacheManagerScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/ImageCacheManagerScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/ImageGarbage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/ImageGarbage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/WidgetSettings.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/WidgetSettings.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/character/CharacterScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/character/CharacterScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/home/HomeScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/notification/notificationScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/notification/notificationScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/setting/SettingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/setting/SettingScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/theme/Color.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/theme/Theme.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/theme/Theme.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/theme/Type.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/theme/Type.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/sensor/SensorScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/sensor/SensorScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/sensor/SensorViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/sensor/SensorViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/core/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/core/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/consumer-rules.pro" beforeDir="false" afterPath="$PROJECT_DIR$/core/consumer-rules.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/proguard-rules.pro" beforeDir="false" afterPath="$PROJECT_DIR$/core/proguard-rules.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/androidTest/java/com/example/core/ExampleInstrumentedTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/androidTest/java/com/example/core/ExampleInstrumentedTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/main/java/com/example/core/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/example/core/Constants.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/main/java/com/example/core/SensorRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/example/core/SensorRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/main/java/com/example/core/SensorService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/example/core/SensorService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/main/java/com/example/core/SensorUiState.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/example/core/SensorUiState.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/main/res/drawable/baseline_notifications_24.xml" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/res/drawable/baseline_notifications_24.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/core/src/test/java/com/example/core/ExampleUnitTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/test/java/com/example/core/ExampleUnitTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/AppApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/AppApplication.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/Button.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/Button.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/ImageCacheManagerScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/ImageCacheManagerScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/ImageGarbage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/ImageGarbage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/WidgetSettings.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/WidgetSettings.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/character/CharacterScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/character/CharacterScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/home/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/notification/notificationScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/notification/notificationScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/sensor/SensorScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/sensor/SensorViewModel.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/setting/SettingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/setting/SettingScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/theme/Color.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/theme/Theme.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/theme/Theme.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/theme/Type.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/theme/Type.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/glance-widget-demo/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/CounterWidgetProvider.kt" beforeDir="false" afterPath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/CounterWidgetProvider.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,24 +130,30 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "com.google.services.firebase.aqiPopupShown": "true",
-    "git-widget-placeholder": "feat/importSensor-rebased",
+    "git-widget-placeholder": "Cherry-picking in feat/importSensor-rebased",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/VScodeFiles/GitHub/SampleWidgetInteraction/glance-widget-demo",
+    "last_opened_file_path": "C:/Users/ID-No/AndroidStudioProjects/SampleWidgetInteraction/app/src/main/res/drawable",
     "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction\app\src\main\res\drawable" />
       <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\ui\src\main\java\com\seo4d696b75\android\glance_widget_demo\ui" />
       <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\widget\src\main\res\drawable" />
       <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\widget\src\main\res\layout" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction" />
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction\app\src\main\java\com\seo4d696b75\android" />
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction\app\src\main\java\com\seo4d696b75\android\glance_widget_demo" />
       <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\app\src\main\res\drawable" />
       <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\app\src\main\java\com\seo4d696b75\android\glance_widget_demo" />
-      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\ui\src\main\res\drawable" />
-      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\app" />
-      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\data\src\main\java\com\seo4d696b75\android\glance_widget_demo\data\files\WidgetImages" />
+    </key>
+    <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="com.seo4d696b75.android.glance_widget_demo" />
+      <recent name="com.seo4d696b75.android.glance_widget_demo.character" />
+      <recent name="com.seo4d696b75.android" />
     </key>
   </component>
   <component name="RunManager">

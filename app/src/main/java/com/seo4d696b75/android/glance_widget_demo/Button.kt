@@ -1,4 +1,4 @@
-package com.seo4d696b75.android
+package com.seo4d696b75.android.glance_widget_demo
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

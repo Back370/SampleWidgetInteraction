@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.character
+package com.seo4d696b75.android.glance_widget_demo.character
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.seo4d696b75.android.Button
+import com.seo4d696b75.android.glance_widget_demo.Button
 import com.seo4d696b75.android.glance_widget_demo.R
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -200,9 +200,8 @@ private fun updateWidgetAfterCharacterChange(context: Context) {
         Log.d("CharacterScreen", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
 
         if (appWidgetIds.isNotEmpty()) {
-            val intent = Intent().apply {
-                Intent.setComponent = componentName
-                Intent.setAction = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
+            val intent = Intent(context, com.seo4d696b75.android.glance_widget_demo.widget.CounterWidgetProvider::class.java).apply {
+                action = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
                 putExtra("CHARACTER_CHANGED", true)
             }
