@@ -45,6 +45,7 @@ class ImageDownloadService : Service() {
         
         /**
          * 特定キャラクターの画像をダウンロード
+         * ImageDownloadService というバックグラウンドサービスを起動して画像ダウンロード開始
          */
         fun downloadCharacterImages(
             context: Context,

@@ -30,8 +30,8 @@ class WidgetAnimationService : Service() {
         private const val NOTIFICATION_CHANNEL_ID = "widget_animation_channel"
         private const val ANIMATION_INTERVAL_MS = 200L // 5fps (ANR防止のため)
         private const val DEFAULT_FRAMES = 50
-        private const val WIDGET_IMAGE_WIDTH = 400
-        private const val WIDGET_IMAGE_HEIGHT = 500
+        // ウィジェットに最適化されたサイズ（CounterWidgetProviderと統一）
+        private const val WIDGET_IMAGE_SIZE = 120 // dpに基づく最適サイズ
         
         private var isServiceRunning = false
         private var scheduledExecutor: ScheduledExecutorService? = null
@@ -50,6 +50,12 @@ class WidgetAnimationService : Service() {
         private val imageFilePaths = mutableListOf<String>()
         private val optimizedImageCache = mutableListOf<Bitmap>()
         private var isCacheReady = false
+        
+        // 最適化された画像サイズを計算
+        private fun getOptimizedImageSize(context: Context): Int {
+            val displayMetrics = context.resources.displayMetrics
+            return (WIDGET_IMAGE_SIZE * displayMetrics.density).toInt()
+        }
     }
     
     override fun onCreate() {
@@ -64,7 +70,7 @@ class WidgetAnimationService : Service() {
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        android.util.Log.d("WidgetAnimationService", "🎬 === STARTING FOREGROUND 10FPS ANIMATION ===")
+        android.util.Log.d("WidgetAnimationService", "🎬 === STARTING FOREGROUND 5FPS ANIMATION ===")
         
         when (intent?.action) {
             "START_ANIMATION" -> startAnimation()
@@ -111,11 +117,13 @@ class WidgetAnimationService : Service() {
             this, 0, stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        
+        val optimizedSize = getOptimizedImageSize(this)
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle("ウィジェットアニメーション実行中")
-                .setContentText("5fps (400x500解像度) でスムーズアニメーション中")
+                .setContentText("5fps (${optimizedSize}x${optimizedSize}最適化解像度) でスムーズアニメーション中")
 //                .setSmallIcon(R.drawable.ic_arrow_up)
 //                .setOngoing(true)
 //                .addAction(
@@ -130,7 +138,7 @@ class WidgetAnimationService : Service() {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
                 .setContentTitle("ウィジェットアニメーション実行中")
-                .setContentText("5fps (400x500解像度) でスムーズアニメーション中")
+                .setContentText("5fps (${optimizedSize}x${optimizedSize}最適化解像度) でスムーズアニメーション中")
 //                .setSmallIcon(R.drawable.ic_arrow_up)
 //                .setOngoing(true)
 //                .addAction(
@@ -167,9 +175,10 @@ class WidgetAnimationService : Service() {
             startHighFrequencyUpdates()
             
             isServiceRunning = true
+            val optimizedSize = getOptimizedImageSize(this)
             android.util.Log.d("WidgetAnimationService", "✅ Foreground 5fps animation started successfully")
             android.util.Log.d("WidgetAnimationService", "  - Frame interval: ${ANIMATION_INTERVAL_MS}ms (5fps)")
-            android.util.Log.d("WidgetAnimationService", "  - Resolution: ${WIDGET_IMAGE_WIDTH}x${WIDGET_IMAGE_HEIGHT}")
+            android.util.Log.d("WidgetAnimationService", "  - Resolution: ${optimizedSize}x${optimizedSize} (optimized)")
             android.util.Log.d("WidgetAnimationService", "  - Total frames: $DEFAULT_FRAMES")
             android.util.Log.d("WidgetAnimationService", "  - Available images: ${imageFilePaths.size}")
             android.util.Log.d("WidgetAnimationService", "  - WakeLock: ACTIVE")
@@ -267,14 +276,20 @@ class WidgetAnimationService : Service() {
                                     remoteViews.setInt(R.id.background_image, "setBackgroundColor", 0xFFE0E0E0.toInt())
                                 }
                                 
+                                // タップハンドラーを設定（フレーム更新のたびに削除されることを防ぐ）
+                                setupWidgetTapHandler(remoteViews)
+                                
                                 // ボタンの設定
-                                setupButtons(remoteViews)
+                                //setupButtons(remoteViews)
                                 
                                 appWidgetManager.updateAppWidget(widgetId, remoteViews)
                             }
                             
                             // フレームカウンターの更新（同期化）
                             synchronized(this@WidgetAnimationService) {
+                                // 前のフレーム番号を保存（ループ検出用）
+                                val previousFrame = currentFrame
+                                
                                 // 画像がない場合でもフレームカウンターは更新
                                 if (actualFrameCount > 0) {
                                     currentFrame = (currentFrame + 1) % actualFrameCount
@@ -284,6 +299,9 @@ class WidgetAnimationService : Service() {
                                 }
                                 frameUpdateCount++
                                 lastFrameTime = System.currentTimeMillis()
+                                
+                                // Specialアニメーション完了検出（ループの検出）
+                                checkSpecialAnimationCompletion(previousFrame, currentFrame)
                                 
                                 // デバッグ情報
                                 if (bitmap == null) {
@@ -310,35 +328,61 @@ class WidgetAnimationService : Service() {
         }
     }
     
-    private fun setupButtons(remoteViews: RemoteViews) {
+    // ウィジェットタップ処理を設定
+    private fun setupWidgetTapHandler(remoteViews: RemoteViews) {
         try {
-            // アニメーション状態管理
-            val animationStateManager = AnimationStateManager.getInstance(this)
-            
-            // 現在のアニメーション状態を表示
-            val currentAnimationText = if (isCacheReady && optimizedImageCache.isNotEmpty()) {
-                animationStateManager.getCurrentAnimationDisplayText()
-            } else {
-                "${animationStateManager.getCurrentAnimationDisplayText()} (画像なし)"
+            // ウィジェットタップ用のIntent
+            val tapIntent = Intent(this, CounterWidgetProvider::class.java).apply {
+                action = CounterWidgetProvider.ACTION_WIDGET_TAP
             }
-            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
             
-            // アニメーション切り替えボタン
-            val toggleIntent = Intent(this, CounterWidgetProvider::class.java).apply {
-                action = CounterWidgetProvider.ACTION_TOGGLE_ANIMATION
-            }
-            val togglePendingIntent = PendingIntent.getBroadcast(
-                this, 1, toggleIntent,
+            val tapPendingIntent = PendingIntent.getBroadcast(
+                this,
+                100, // タップ用の固有リクエストコード（CounterWidgetProviderと同じ値）
+                tapIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
             
-    
-
+            // ウィジェット全体をタップ可能にする（LinearLayoutとImageViewの両方に設定）
+            remoteViews.setOnClickPendingIntent(R.id.background_image, tapPendingIntent)
+            remoteViews.setOnClickPendingIntent(R.id.widget_container, tapPendingIntent)
+            
+            android.util.Log.v("WidgetAnimationService", "✅ Widget tap handler set up")
+            
         } catch (e: Exception) {
-            android.util.Log.e("WidgetAnimationService", "❌ Error setting up buttons", e)
+            android.util.Log.e("WidgetAnimationService", "❌ Error setting up widget tap handler", e)
         }
     }
+
+//    private fun setupButtons(remoteViews: RemoteViews) {
+//        try {
+//            // アニメーション状態管理
+//            val animationStateManager = AnimationStateManager.getInstance(this)
+//
+//            // 現在のアニメーション状態を表示
+//            val currentAnimationText = if (isCacheReady && optimizedImageCache.isNotEmpty()) {
+//                animationStateManager.getCurrentAnimationDisplayText()
+//            } else {
+//                "${animationStateManager.getCurrentAnimationDisplayText()} (画像なし)"
+//            }
+//            remoteViews.setTextViewText(R.id.animation_status_text, currentAnimationText)
+//
+//            // アニメーション切り替えボタン
+//            val toggleIntent = Intent(this, CounterWidgetProvider::class.java).apply {
+//                action = CounterWidgetProvider.ACTION_TOGGLE_ANIMATION
+//            }
+//            val togglePendingIntent = PendingIntent.getBroadcast(
+//                this, 1, toggleIntent,
+//                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//            )
+//            remoteViews.setOnClickPendingIntent(R.id.toggle_animation_button, togglePendingIntent)
+//
+//
+//
+//        } catch (e: Exception) {
+//            android.util.Log.e("WidgetAnimationService", "❌ Error setting up buttons", e)
+//        }
+//    }
     
     private fun stopAnimation() {
         android.util.Log.d("WidgetAnimationService", "⏹️ Stopping foreground animation")
@@ -375,7 +419,10 @@ class WidgetAnimationService : Service() {
             // アニメーション状態管理から最新の状態を取得
             val animationStateManager = AnimationStateManager.getInstance(this)
             val currentAnimationType = animationStateManager.getCurrentAnimationType()
+            val currentCharacterId = animationStateManager.getCurrentCharacterId()
+            android.util.Log.d("WidgetAnimationService", "🎯 Current character: $currentCharacterId")
             android.util.Log.d("WidgetAnimationService", "🎯 Current animation type: $currentAnimationType")
+            android.util.Log.d("WidgetAnimationService", "📊 Full animation state: ${animationStateManager.getCurrentAnimationDisplayText()}")
             
             // 現在のアニメーションを停止
             val wasRunning = isServiceRunning
@@ -391,7 +438,7 @@ class WidgetAnimationService : Service() {
             // 画像キャッシュを再構築
             Thread {
                 try {
-                    android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding image cache with new animation type")
+                    android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding image cache with character: $currentCharacterId, animation: $currentAnimationType")
                     initializeImageCache()
                     
                     // アニメーションを再開
@@ -400,7 +447,7 @@ class WidgetAnimationService : Service() {
                             currentFrame = 0 // フレームをリセット
                             isServiceRunning = true
                             startHighFrequencyUpdates()
-                            android.util.Log.d("WidgetAnimationService", "▶️ Animation resumed with new type")
+                            android.util.Log.d("WidgetAnimationService", "▶️ Animation resumed with character: $currentCharacterId")
                         }
                     }
                     
@@ -573,11 +620,12 @@ class WidgetAnimationService : Service() {
             try {
                 android.util.Log.d("WidgetAnimationService", "🔄 Building optimized image cache...")
 
-                // メモリ使用量の予測計算
-                val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
-                val pixelsPerImage = WIDGET_IMAGE_WIDTH * WIDGET_IMAGE_HEIGHT
-                val bytesPerImage = pixelsPerImage * bytesPerPixel
-                val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
+                                    // メモリ使用量の予測計算
+                    val optimizedSize = getOptimizedImageSize(this@WidgetAnimationService)
+                    val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
+                    val pixelsPerImage = optimizedSize * optimizedSize
+                    val bytesPerImage = pixelsPerImage * bytesPerPixel
+                    val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
                 android.util.Log.d("WidgetAnimationService", "  - Estimated cache size: ${totalCacheSize / 1024 / 1024}MB (${DEFAULT_FRAMES} images × ${bytesPerImage / 1024}KB)")
 
                 // 同期化された操作
@@ -607,23 +655,33 @@ class WidgetAnimationService : Service() {
                             android.util.Log.d("WidgetAnimationService", "  - Original size: ${originalBitmap.width}x${originalBitmap.height}")
                             android.util.Log.d("WidgetAnimationService", "  - Original config: ${originalBitmap.config}")
 
+                            // 透明度を保持してスケール（フィルタリングを無効化）
                             val optimizedBitmap = Bitmap.createScaledBitmap(
                                 originalBitmap,
-                                WIDGET_IMAGE_WIDTH,
-                                WIDGET_IMAGE_HEIGHT,
-                                true
+                                optimizedSize,
+                                optimizedSize,
+                                false  // フィルタリングを無効化して透明度を保持
                             )
 
-                            val compressedBitmap = optimizedBitmap.copy(Bitmap.Config.ARGB_8888, false)
-                            optimizedImageCache.add(compressedBitmap)
+                            // 背景色が白や灰色の場合は透明化処理を適用
+                            val finalBitmap = if (shouldMakeBackgroundTransparent(optimizedBitmap)) {
+                                makeBackgroundTransparent(optimizedBitmap)
+                            } else {
+                                optimizedBitmap
+                            }
+                            
+                            optimizedImageCache.add(finalBitmap)
 
-                            android.util.Log.d("WidgetAnimationService", "  - Optimized size: ${compressedBitmap.width}x${compressedBitmap.height}")
-                            android.util.Log.d("WidgetAnimationService", "  - Optimized config: ${compressedBitmap.config}")
-
-                            originalBitmap.recycle()
-                            if (optimizedBitmap != compressedBitmap) {
+                            android.util.Log.d("WidgetAnimationService", "  - Final size: ${finalBitmap.width}x${finalBitmap.height}")
+                            android.util.Log.d("WidgetAnimationService", "  - Final config: ${finalBitmap.config}")
+                            android.util.Log.d("WidgetAnimationService", "  - Final transparency: ${finalBitmap.hasAlpha()}")
+                            
+                            // 処理されたビットマップのクリーンアップ
+                            if (finalBitmap != optimizedBitmap) {
                                 optimizedBitmap.recycle()
                             }
+
+                            originalBitmap.recycle()
 
                         } else {
                             android.util.Log.e("WidgetAnimationService", "❌ Failed to decode image: $imagePath")
@@ -641,7 +699,7 @@ class WidgetAnimationService : Service() {
                     actualFrameCount = optimizedImageCache.size
 
                     android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
-                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${WIDGET_IMAGE_WIDTH}x${WIDGET_IMAGE_HEIGHT}")
+                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${optimizedSize}x${optimizedSize}")
                     android.util.Log.d("WidgetAnimationService", "  - Format: ARGB_8888 (透明度サポート)")
                     android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
                     android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
@@ -678,7 +736,8 @@ class WidgetAnimationService : Service() {
             android.util.Log.d("WidgetAnimationService", "  - Image format: ${options.outMimeType}")
             
             // サンプルサイズを計算してメモリ使用量を削減
-            val targetSize = maxOf(WIDGET_IMAGE_WIDTH, WIDGET_IMAGE_HEIGHT) * 2
+            val optimizedSize = getOptimizedImageSize(this@WidgetAnimationService)
+            val targetSize = optimizedSize * 2
             val sampleSize = calculateSampleSize(options.outWidth, options.outHeight, targetSize)
             android.util.Log.d("WidgetAnimationService", "  - Sample size: $sampleSize")
             
@@ -686,6 +745,7 @@ class WidgetAnimationService : Service() {
             val decodeOptions = android.graphics.BitmapFactory.Options().apply {
                 inJustDecodeBounds = false
                 inSampleSize = sampleSize
+                // 透明度サポートのためARGB_8888を使用
                 inPreferredConfig = Bitmap.Config.ARGB_8888  // 透明度サポート
                 inPurgeable = true
                 inInputShareable = true
@@ -693,6 +753,21 @@ class WidgetAnimationService : Service() {
             
             val bitmap = android.graphics.BitmapFactory.decodeFile(imagePath, decodeOptions)
             android.util.Log.d("WidgetAnimationService", "  - Decoded size: ${bitmap?.width}x${bitmap?.height}")
+            
+            // 透明度の詳細確認
+            if (bitmap != null) {
+                android.util.Log.d("WidgetAnimationService", "  - Has alpha channel: ${bitmap.hasAlpha()}")
+                android.util.Log.d("WidgetAnimationService", "  - Config: ${bitmap.config}")
+                android.util.Log.d("WidgetAnimationService", "  - Is premultiplied: ${bitmap.isPremultiplied}")
+                
+                // 画像の角のピクセルを確認（通常背景色が現れる箇所）
+                if (bitmap.width > 0 && bitmap.height > 0) {
+                    val cornerPixel = bitmap.getPixel(0, 0)
+                    val alpha = (cornerPixel shr 24) and 0xFF
+                    android.util.Log.d("WidgetAnimationService", "  - Corner pixel alpha: $alpha (0=transparent, 255=opaque)")
+                    android.util.Log.d("WidgetAnimationService", "  - Corner pixel color: ${String.format("#%08X", cornerPixel)}")
+                }
+            }
             
             bitmap
             
@@ -720,6 +795,81 @@ class WidgetAnimationService : Service() {
         return sampleSize
     }
     
+    /**
+     * 画像の背景を透明化する必要があるかどうかを判定
+     */
+    private fun shouldMakeBackgroundTransparent(bitmap: Bitmap): Boolean {
+        // 既に透明度を持っている場合は処理不要
+        if (bitmap.hasAlpha()) {
+            // 角のピクセルをチェックして、実際に透明かどうかを確認
+            val cornerPixel = bitmap.getPixel(0, 0)
+            val alpha = (cornerPixel shr 24) and 0xFF
+            return alpha > 200 // ほぼ不透明な場合は透明化処理を行う
+        }
+        return true // アルファチャンネルがない場合は透明化処理を行う
+    }
+    
+    /**
+     * 画像の背景色（白や灰色）を透明にする
+     */
+    private fun makeBackgroundTransparent(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        
+        // 新しいARGB_8888のBitmapを作成
+        val transparentBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        
+        // 角の数ピクセルから背景色を推定
+        val backgroundColors = mutableSetOf<Int>()
+        val cornerPositions = listOf(
+            Pair(0, 0), Pair(width-1, 0), 
+            Pair(0, height-1), Pair(width-1, height-1)
+        )
+        
+        cornerPositions.forEach { (x, y) ->
+            val pixel = bitmap.getPixel(x, y)
+            val color = pixel and 0x00FFFFFF // アルファを除いた色
+            backgroundColors.add(color)
+        }
+        
+        android.util.Log.d("WidgetAnimationService", "  - Background colors detected: ${backgroundColors.map { String.format("#%06X", it) }}")
+        
+        // ピクセルごとに処理
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                val pixel = bitmap.getPixel(x, y)
+                val color = pixel and 0x00FFFFFF
+                
+                if (backgroundColors.contains(color) || isGrayishColor(color)) {
+                    // 背景色または灰色系の色は透明にする
+                    transparentBitmap.setPixel(x, y, 0x00000000) // 完全透明
+                } else {
+                    // その他の色はそのまま保持（アルファチャンネルを0xFFに設定）
+                    val opaquePixel = (pixel and 0x00FFFFFF) or (0xFF shl 24)
+                    transparentBitmap.setPixel(x, y, opaquePixel)
+                }
+            }
+        }
+        
+        android.util.Log.d("WidgetAnimationService", "  - Background transparency applied")
+        return transparentBitmap
+    }
+    
+    /**
+     * 灰色系の色かどうかを判定
+     */
+    private fun isGrayishColor(color: Int): Boolean {
+        val red = (color shr 16) and 0xFF
+        val green = (color shr 8) and 0xFF
+        val blue = color and 0xFF
+        
+        // RGBの差が小さく、明度が高い（明るい灰色）場合
+        val maxDiff = maxOf(maxOf(red, green), blue) - minOf(minOf(red, green), blue)
+        val brightness = (red + green + blue) / 3
+        
+        return maxDiff < 30 && brightness > 200 // 明るくて彩度の低い色
+    }
+    
     private fun updatePerformanceMetrics(frameTime: Long) {
         totalFrameTime += frameTime
         frameTimeMin = minOf(frameTimeMin, frameTime)
@@ -745,6 +895,83 @@ class WidgetAnimationService : Service() {
             android.util.Log.i("WidgetAnimationService", "  - Average frame time: ${avgFrameTime}ms")
             android.util.Log.i("WidgetAnimationService", "  - Frame time range: ${frameTimeMin}ms - ${frameTimeMax}ms")
             android.util.Log.i("WidgetAnimationService", "  - Target interval: ${ANIMATION_INTERVAL_MS}ms (5fps)")
+        }
+    }
+    
+    /**
+     * 一時的なアニメーション完了の検出と自動復元処理
+     */
+    private fun checkSpecialAnimationCompletion(previousFrame: Int, currentFrame: Int) {
+        try {
+            val animationStateManager = AnimationStateManager.getInstance(this)
+            
+            // 一時的なアニメーション中でない場合は何もしない
+            if (!animationStateManager.isInTemporaryAnimation()) {
+                return
+            }
+            
+            // アニメーションが1サイクル完了した場合（フレームが0にリセットされた）
+            if (previousFrame > 0 && currentFrame == 0 && actualFrameCount > 1) {
+                val currentAnimationType = animationStateManager.getCurrentAnimationType()
+                android.util.Log.d("WidgetAnimationService", "🎆 Temporary animation cycle completed! ($currentAnimationType) Restoring previous animation...")
+                android.util.Log.d("WidgetAnimationService", "📊 Previous frame: $previousFrame -> Current frame: $currentFrame")
+                
+                // 自動復元処理を実行
+                restorePreviousAnimationFromService()
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetAnimationService", "❌ Error checking temporary animation completion", e)
+        }
+    }
+    
+    /**
+     * サービス内から前のアニメーションに復元する処理
+     */
+    private fun restorePreviousAnimationFromService() {
+        try {
+            android.util.Log.d("WidgetAnimationService", "🔄 === AUTO-RESTORING PREVIOUS ANIMATION ===")
+            
+            val animationStateManager = AnimationStateManager.getInstance(this)
+            
+            // 元のアニメーションに復元
+            val restoredAnimationType = animationStateManager.restorePreviousAnimation()
+            android.util.Log.d("WidgetAnimationService", "✅ Auto-restored to animation: $restoredAnimationType")
+            
+            // キャッシュ再構築のためにアニメーションを一時停止
+            val wasRunning = isServiceRunning
+            if (wasRunning) {
+                // タイマーを停止（但し、サービスは続行）
+                scheduledExecutor?.shutdown()
+                scheduledExecutor = null
+                isServiceRunning = false
+                
+                android.util.Log.d("WidgetAnimationService", "⏸️ Animation temporarily stopped for cache rebuild (auto-restore)")
+            }
+            
+            // バックグラウンドでキャッシュ再構築と再開
+            Thread {
+                try {
+                    android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding cache for restored animation: $restoredAnimationType")
+                    initializeImageCache()
+                    
+                    // アニメーションを再開
+                    if (wasRunning) {
+                        Handler(Looper.getMainLooper()).post {
+                            currentFrame = 0 // フレームをリセット
+                            isServiceRunning = true
+                            startHighFrequencyUpdates()
+                            android.util.Log.d("WidgetAnimationService", "✅ Auto-restoration complete, animation resumed")
+                        }
+                    }
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("WidgetAnimationService", "❌ Error rebuilding cache for auto-restore", e)
+                }
+            }.start()
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetAnimationService", "❌ Error in auto-restore process", e)
         }
     }
 //

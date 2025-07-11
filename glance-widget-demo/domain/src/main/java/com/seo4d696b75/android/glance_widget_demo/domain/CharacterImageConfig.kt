@@ -43,6 +43,9 @@ object ImageUrlGenerator {
         // Maoキャラクターの場合は特別なファイル名形式を使用
         return if (config.characterId == "Mao") {
             "${config.baseUrl}$animationType/${paddedFrameNumber}_reduced_16colors.$fileFormat"
+        } else if (config.characterId == "Haru") {
+            // Haruは8colors形式を使用
+            "${config.baseUrl}$animationType/${paddedFrameNumber}_reduced_8colors.$fileFormat"
         } else {
             // ウィジェットアニメーションが期待するファイル名形式（001.png, 002.png, ...）に合わせる
             "${config.baseUrl}$animationType/${paddedFrameNumber}.$fileFormat"
@@ -136,11 +139,34 @@ object SampleCharacterConfigs {
         )
     )
     
+    val CHARACTER_HARU = CharacterImageConfig(
+        characterId = "Haru",
+        name = "Haru",
+        baseUrl = "gs://backproject-c19a9.firebasestorage.app/Haru/State/",
+        animations = listOf(
+            AnimationConfig(
+                animationType = "Adle",
+                frameCount = 50,
+                frameDelay = 200L
+            ),
+            AnimationConfig(
+                animationType = "Flow",
+                frameCount = 50,
+                frameDelay = 200L
+            ),
+            AnimationConfig(
+                animationType = "Special",
+                frameCount = 50,
+                frameDelay = 200L
+            )
+        )
+    )
+    
     /**
      * 全キャラクター設定の取得
      */
     fun getAllCharacters(): List<CharacterImageConfig> {
-        return listOf(CHARACTER_001, CHARACTER_002, CHARACTER_MAO)
+        return listOf(CHARACTER_001, CHARACTER_002, CHARACTER_MAO, CHARACTER_HARU)
     }
     
     /**
