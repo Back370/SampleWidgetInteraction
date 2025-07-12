@@ -1,4 +1,4 @@
-package com.seo4d696b75.android.glance_widget_demo.character
+package com.seo4d696b75.android.character
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
@@ -29,11 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.seo4d696b75.android.glance_widget_demo.Button
+import com.seo4d696b75.android.Button
 import com.seo4d696b75.android.glance_widget_demo.R
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.seo4d696b75.android.glance_widget_demo.widget.AnimationStateManager
 
 
@@ -97,7 +99,7 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "Mao",
                     onClick = {
-                        android.util.Log.d("CharacterScreen", "📥 Maoキャラクター選択")
+                        Log.d("CharacterScreen", "📥 Maoキャラクター選択")
                         val animationStateManager = AnimationStateManager.getInstance(context)
                         animationStateManager.setCharacterId(AnimationStateManager.CHARACTER_ID_MAO)
                         updateWidgetAfterCharacterChange(context)
@@ -109,7 +111,7 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "Haru",
                     onClick = {
-                        android.util.Log.d("CharacterScreen", "📥 Haruキャラクター選択")
+                        Log.d("CharacterScreen", "📥 Haruキャラクター選択")
                         val animationStateManager = AnimationStateManager.getInstance(context)
                         animationStateManager.setCharacterId(AnimationStateManager.CHARACTER_ID_HARU)
                         updateWidgetAfterCharacterChange(context)
@@ -121,7 +123,7 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "キャラC",
                     onClick = {
-                        android.util.Log.d("CharacterScreen", "📥 キャラC選択（未実装）")
+                        Log.d("CharacterScreen", "📥 キャラC選択（未実装）")
                         // キャラCは未実装のためログのみ
                     }
                 )
@@ -147,7 +149,7 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "Rapid\nAdle",
                     onClick = {
-                        android.util.Log.d("CharacterScreen", "📥 Rapid Adle実行")
+                        Log.d("CharacterScreen", "📥 Rapid Adle実行")
                         val animationStateManager = AnimationStateManager.getInstance(context)
                         animationStateManager.RapidAdleState()
                         updateWidgetAfterCharacterChange(context)
@@ -159,7 +161,7 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "Rapid\nFlow",
                     onClick = {
-                        android.util.Log.d("CharacterScreen", "📥 Rapid Flow実行")
+                        Log.d("CharacterScreen", "📥 Rapid Flow実行")
                         val animationStateManager = AnimationStateManager.getInstance(context)
                         animationStateManager.RapidFlowState()
                         updateWidgetAfterCharacterChange(context)
@@ -171,7 +173,7 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "Rapid\nSpecial",
                     onClick = {
-                        android.util.Log.d("CharacterScreen", "📥 Rapid Special実行")
+                        Log.d("CharacterScreen", "📥 Rapid Special実行")
                         val animationStateManager = AnimationStateManager.getInstance(context)
                         animationStateManager.RapidSpecialState()
                         updateWidgetAfterCharacterChange(context)
@@ -184,9 +186,9 @@ fun CharacterScreen(
 }
 
 // ヘルパー関数: キャラクター変更後のウィジェット更新
-private fun updateWidgetAfterCharacterChange(context: android.content.Context) {
+private fun updateWidgetAfterCharacterChange(context: Context) {
     try {
-        android.util.Log.d("CharacterScreen", "🔄 キャラクター変更後ウィジェット更新開始")
+        Log.d("CharacterScreen", "🔄 キャラクター変更後ウィジェット更新開始")
         
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val componentName = ComponentName(
@@ -195,25 +197,25 @@ private fun updateWidgetAfterCharacterChange(context: android.content.Context) {
         )
         val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
 
-        android.util.Log.d("CharacterScreen", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
+        Log.d("CharacterScreen", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
 
         if (appWidgetIds.isNotEmpty()) {
             val intent = Intent().apply {
-                component = componentName
-                action = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
+                Intent.setComponent = componentName
+                Intent.setAction = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
                 putExtra("CHARACTER_CHANGED", true)
             }
             context.sendBroadcast(intent)
-            android.util.Log.d("CharacterScreen", "✅ キャラクター変更ブロードキャスト送信")
+            Log.d("CharacterScreen", "✅ キャラクター変更ブロードキャスト送信")
             
             // アニメーション状態を再確認
             val animationStateManager = AnimationStateManager.getInstance(context)
-            android.util.Log.d("CharacterScreen", "📊 送信後の状態確認: ${animationStateManager.getCurrentAnimationDisplayText()}")
+            Log.d("CharacterScreen", "📊 送信後の状態確認: ${animationStateManager.getCurrentAnimationDisplayText()}")
         } else {
-            android.util.Log.w("CharacterScreen", "⚠️ 更新対象のウィジェットが見つかりません")
+            Log.w("CharacterScreen", "⚠️ 更新対象のウィジェットが見つかりません")
         }
     } catch (e: Exception) {
-        android.util.Log.e("CharacterScreen", "❌ ウィジェット更新エラー", e)
+        Log.e("CharacterScreen", "❌ ウィジェット更新エラー", e)
     }
 }

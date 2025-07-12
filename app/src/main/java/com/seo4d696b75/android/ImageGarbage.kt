@@ -1,15 +1,4 @@
-package com.seo4d696b75.android.glance_widget_demo
-
-import android.content.Intent
-import android.os.Build
-import androidx.compose.runtime.Composable
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import java.io.File
+package com.seo4d696b75.android
 
 // Firebase匿名認証を行うサスペンド関数
 //private suspend fun signInAnonymouslyIfNeeded() {

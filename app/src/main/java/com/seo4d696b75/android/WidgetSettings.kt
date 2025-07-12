@@ -1,10 +1,14 @@
-package com.seo4d696b75.android.glance_widget_demo
+package com.seo4d696b75.android
 
+import android.Manifest
 import android.appwidget.AppWidgetManager
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
 import com.seo4d696b75.android.glance_widget_demo.theme.AppTheme
 import com.seo4d696b75.android.glance_widget_demo.widget.AnimationStateManager
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,16 +125,16 @@ fun WidgetSettingsScreen(
 
                             Button(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "🔄 アニメーション切り替えボタン押下")
-                                    android.util.Log.d("WidgetSettings", "📊 切り替え前: ${animationStateManager.getCurrentAnimationDisplayText()}")
+                                    Log.d("WidgetSettings", "🔄 アニメーション切り替えボタン押下")
+                                    Log.d("WidgetSettings", "📊 切り替え前: ${animationStateManager.getCurrentAnimationDisplayText()}")
                                     
                                     // アニメーション切り替え
                                     val newAnimationType = animationStateManager.toggleAnimationType()
                                     currentAnimationType = newAnimationType
                                     currentCharacterId = animationStateManager.getCurrentCharacterId()
 
-                                    android.util.Log.d("WidgetSettings", "📊 切り替え後: ${animationStateManager.getCurrentAnimationDisplayText()}")
-                                    android.util.Log.d("WidgetSettings", "🎯 新しいアニメーション種別: $newAnimationType")
+                                    Log.d("WidgetSettings", "📊 切り替え後: ${animationStateManager.getCurrentAnimationDisplayText()}")
+                                    Log.d("WidgetSettings", "🎯 新しいアニメーション種別: $newAnimationType")
 
                                     // ウィジェットを更新
                                     updateWidgetAfterToggle(context)
@@ -153,7 +158,7 @@ fun WidgetSettingsScreen(
                             // 画像ダウンロードボタン
                             OutlinedButton(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "📥 手動ダウンロード開始 (Mao)")
+                                    Log.d("WidgetSettings", "📥 手動ダウンロード開始 (Mao)")
                                     ImageDownloadService.downloadCharacterImages(context, "Mao")
                                 },
                                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -166,7 +171,7 @@ fun WidgetSettingsScreen(
 
                             OutlinedButton(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "📥 手動ダウンロード開始 (Haru)")
+                                    Log.d("WidgetSettings", "📥 手動ダウンロード開始 (Haru)")
                                     ImageDownloadService.downloadCharacterImages(context, "Haru")
                                 },
                                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -179,7 +184,7 @@ fun WidgetSettingsScreen(
 
                             OutlinedButton(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "🔧 権限チェック開始")
+                                    Log.d("WidgetSettings", "🔧 権限チェック開始")
                                     checkPermissions(context)
                                 },
                                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -192,7 +197,7 @@ fun WidgetSettingsScreen(
 
                             OutlinedButton(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "📁 画像整理開始")
+                                    Log.d("WidgetSettings", "📁 画像整理開始")
                                     organizeExistingImages(context)
                                 },
                                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -206,10 +211,10 @@ fun WidgetSettingsScreen(
                             OutlinedButton(
                                 onClick = {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                        android.util.Log.d("WidgetSettings", "📁 Android 10+ - 直接画像整理開始")
+                                        Log.d("WidgetSettings", "📁 Android 10+ - 直接画像整理開始")
                                         organizeExistingImages(context)
                                     } else {
-                                        android.util.Log.d("WidgetSettings", "🔐 権限要求開始")
+                                        Log.d("WidgetSettings", "🔐 権限要求開始")
                                         requestStoragePermission(context)
                                     }
                                 },
@@ -236,7 +241,7 @@ fun WidgetSettingsScreen(
 
                             OutlinedButton(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "📁 外部ストレージアクセス情報表示")
+                                    Log.d("WidgetSettings", "📁 外部ストレージアクセス情報表示")
                                     showExternalStorageAccess(context)
                                 },
                                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -249,7 +254,7 @@ fun WidgetSettingsScreen(
 
                             OutlinedButton(
                                 onClick = {
-                                    android.util.Log.d("WidgetSettings", "📋 パスをクリップボードにコピー")
+                                    Log.d("WidgetSettings", "📋 パスをクリップボードにコピー")
                                     copyPathToClipboard(context)
                                 },
                                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -270,7 +275,7 @@ fun WidgetSettingsScreen(
 // ヘルパー関数群
 private fun updateWidgetAfterToggle(context: Context) {
     try {
-        android.util.Log.d("WidgetSettings", "🔄 ウィジェット更新開始")
+        Log.d("WidgetSettings", "🔄 ウィジェット更新開始")
         
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val componentName = ComponentName(
@@ -279,109 +284,109 @@ private fun updateWidgetAfterToggle(context: Context) {
         )
         val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
 
-        android.util.Log.d("WidgetSettings", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
+        Log.d("WidgetSettings", "📊 見つかったウィジェットID: ${appWidgetIds.contentToString()}")
 
         if (appWidgetIds.isNotEmpty()) {
             val intent = Intent().apply {
-                component = componentName
-                action = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
+                Intent.setComponent = componentName
+                Intent.setAction = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
             }
             context.sendBroadcast(intent)
-            android.util.Log.d("WidgetSettings", "✅ アニメーション切り替えブロードキャスト送信")
+            Log.d("WidgetSettings", "✅ アニメーション切り替えブロードキャスト送信")
             
             // アニメーション状態を再確認
             val animationStateManager = AnimationStateManager.getInstance(context)
-            android.util.Log.d("WidgetSettings", "📊 送信後の状態確認: ${animationStateManager.getCurrentAnimationDisplayText()}")
+            Log.d("WidgetSettings", "📊 送信後の状態確認: ${animationStateManager.getCurrentAnimationDisplayText()}")
         } else {
-            android.util.Log.w("WidgetSettings", "⚠️ 更新対象のウィジェットが見つかりません")
+            Log.w("WidgetSettings", "⚠️ 更新対象のウィジェットが見つかりません")
         }
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ ウィジェット更新エラー", e)
+        Log.e("WidgetSettings", "❌ ウィジェット更新エラー", e)
     }
 }
 
 private fun checkPermissions(context: Context) {
     try {
-        android.util.Log.d("WidgetSettings", "=== 権限とディレクトリ確認 ===")
-        android.util.Log.d("WidgetSettings", "📱 Android API Level: ${Build.VERSION.SDK_INT}")
+        Log.d("WidgetSettings", "=== 権限とディレクトリ確認 ===")
+        Log.d("WidgetSettings", "📱 Android API Level: ${Build.VERSION.SDK_INT}")
 
         val baseDir = context.getExternalFilesDir(null)
-        android.util.Log.d("WidgetSettings", "📁 External files dir: ${baseDir?.absolutePath}")
+        Log.d("WidgetSettings", "📁 External files dir: ${baseDir?.absolutePath}")
 
         if (baseDir != null) {
-            val widgetImagesDir = java.io.File(baseDir, "WidgetImages")
-            android.util.Log.d("WidgetSettings", "📁 Widget images dir: ${widgetImagesDir.absolutePath}")
-            android.util.Log.d("WidgetSettings", "📂 Directory exists: ${widgetImagesDir.exists()}")
+            val widgetImagesDir = File(baseDir, "WidgetImages")
+            Log.d("WidgetSettings", "📁 Widget images dir: ${widgetImagesDir.absolutePath}")
+            Log.d("WidgetSettings", "📂 Directory exists: ${widgetImagesDir.exists()}")
 
             if (widgetImagesDir.exists()) {
                 val files = widgetImagesDir.listFiles()
-                android.util.Log.d("WidgetSettings", "📊 Files count: ${files?.size ?: 0}")
+                Log.d("WidgetSettings", "📊 Files count: ${files?.size ?: 0}")
                 files?.forEach { file ->
-                    android.util.Log.d("WidgetSettings", "📄 File: ${file.name} (${file.length()} bytes)")
+                    Log.d("WidgetSettings", "📄 File: ${file.name} (${file.length()} bytes)")
                 }
             } else {
-                android.util.Log.w("WidgetSettings", "⚠️ ディレクトリが存在しません")
+                Log.w("WidgetSettings", "⚠️ ディレクトリが存在しません")
             }
         } else {
-            android.util.Log.e("WidgetSettings", "❌ External files directory is null")
+            Log.e("WidgetSettings", "❌ External files directory is null")
         }
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ 権限確認エラー", e)
+        Log.e("WidgetSettings", "❌ 権限確認エラー", e)
     }
 }
 
 private fun organizeExistingImages(context: Context) {
     try {
-        android.util.Log.d("WidgetSettings", "=== 既存画像整理開始 ===")
+        Log.d("WidgetSettings", "=== 既存画像整理開始 ===")
         
         val baseDir = context.getExternalFilesDir(null) ?: return
-        val sourceDir = java.io.File(baseDir, "WidgetImages")
+        val sourceDir = File(baseDir, "WidgetImages")
         
         if (!sourceDir.exists()) {
-            android.util.Log.w("WidgetSettings", "⚠️ ソースディレクトリが存在しません")
+            Log.w("WidgetSettings", "⚠️ ソースディレクトリが存在しません")
             return
         }
 
-        android.util.Log.d("WidgetSettings", "📁 画像整理処理中...")
+        Log.d("WidgetSettings", "📁 画像整理処理中...")
         // 実際の整理処理はここに実装
-        android.util.Log.d("WidgetSettings", "✅ 画像整理完了")
+        Log.d("WidgetSettings", "✅ 画像整理完了")
         
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ 画像整理エラー", e)
+        Log.e("WidgetSettings", "❌ 画像整理エラー", e)
     }
 }
 
 private fun requestStoragePermission(context: Context) {
     try {
-        android.util.Log.d("WidgetSettings", "🔐 ストレージ権限要求")
+        Log.d("WidgetSettings", "🔐 ストレージ権限要求")
         
         if (context is ComponentActivity) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 context.requestPermissions(
                     arrayOf(
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
                     ),
                     1001
                 )
             }
         } else {
-            android.util.Log.w("WidgetSettings", "⚠️ 権限要求はActivityから実行する必要があります")
+            Log.w("WidgetSettings", "⚠️ 権限要求はActivityから実行する必要があります")
         }
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ 権限要求エラー", e)
+        Log.e("WidgetSettings", "❌ 権限要求エラー", e)
     }
 }
 
 private fun forceCleanupImages(context: Context) {
     try {
-        android.util.Log.d("WidgetSettings", "=== 強制クリーンアップ開始 ===")
+        Log.d("WidgetSettings", "=== 強制クリーンアップ開始 ===")
 
         val baseDir = context.getExternalFilesDir(null) ?: return
         val directoriesToClean = listOf(
-            java.io.File(baseDir, "WidgetImages"),
-            java.io.File(baseDir, "Mao")
+            File(baseDir, "WidgetImages"),
+            File(baseDir, "Mao")
         )
 
         var totalDeleted = 0
@@ -392,27 +397,27 @@ private fun forceCleanupImages(context: Context) {
             }
         }
 
-        android.util.Log.d("WidgetSettings", "✅ 強制クリーンアップ完了: $totalDeleted ディレクトリ削除")
+        Log.d("WidgetSettings", "✅ 強制クリーンアップ完了: $totalDeleted ディレクトリ削除")
         
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ 強制クリーンアップエラー", e)
+        Log.e("WidgetSettings", "❌ 強制クリーンアップエラー", e)
     }
 }
 
 private fun showExternalStorageAccess(context: Context) {
     try {
-        android.util.Log.d("WidgetSettings", "=== 外部ストレージアクセス情報 ===")
+        Log.d("WidgetSettings", "=== 外部ストレージアクセス情報 ===")
         
         val baseDir = context.getExternalFilesDir(null)
-        android.util.Log.d("WidgetSettings", "📁 アプリ専用ディレクトリ: ${baseDir?.absolutePath}")
+        Log.d("WidgetSettings", "📁 アプリ専用ディレクトリ: ${baseDir?.absolutePath}")
         
         if (baseDir != null) {
-            android.util.Log.d("WidgetSettings", "📂 ディレクトリ存在: ${baseDir.exists()}")
-            android.util.Log.d("WidgetSettings", "📝 書き込み可能: ${baseDir.canWrite()}")
+            Log.d("WidgetSettings", "📂 ディレクトリ存在: ${baseDir.exists()}")
+            Log.d("WidgetSettings", "📝 書き込み可能: ${baseDir.canWrite()}")
         }
         
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ 外部ストレージアクセス確認エラー", e)
+        Log.e("WidgetSettings", "❌ 外部ストレージアクセス確認エラー", e)
     }
 }
 
@@ -421,18 +426,18 @@ private fun copyPathToClipboard(context: Context) {
         val baseDir = context.getExternalFilesDir(null)
         val path = baseDir?.absolutePath ?: "パスが取得できません"
         
-        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-        val clip = android.content.ClipData.newPlainText("アプリディレクトリパス", path)
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("アプリディレクトリパス", path)
         clipboard.setPrimaryClip(clip)
         
-        android.util.Log.d("WidgetSettings", "✅ パス情報をクリップボードにコピーしました: $path")
+        Log.d("WidgetSettings", "✅ パス情報をクリップボードにコピーしました: $path")
         
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ パスコピーエラー", e)
+        Log.e("WidgetSettings", "❌ パスコピーエラー", e)
     }
 }
 
-private fun deleteDirectoryRecursively(directory: java.io.File): Boolean {
+private fun deleteDirectoryRecursively(directory: File): Boolean {
     return try {
         if (directory.isDirectory) {
             val files = directory.listFiles()
@@ -448,7 +453,7 @@ private fun deleteDirectoryRecursively(directory: java.io.File): Boolean {
         }
         directory.delete()
     } catch (e: Exception) {
-        android.util.Log.e("WidgetSettings", "❌ ディレクトリ削除エラー: ${directory.name}", e)
+        Log.e("WidgetSettings", "❌ ディレクトリ削除エラー: ${directory.name}", e)
         false
     }
 }
