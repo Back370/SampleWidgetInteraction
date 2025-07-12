@@ -3,12 +3,14 @@ package com.seo4d696b75.android.glance_widget_demo.widget
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.util.Log
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.seo4d696b75.android.glance_widget_demo.data.WidgetImageFileProvider
 import com.seo4d696b75.android.glance_widget_demo.domain.ImageCacheRepository
+import com.example.core.CharacterDisplaySettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -66,6 +68,108 @@ class WidgetImageManager @Inject constructor(
         }
         
         return@withContext null
+    }
+    
+    /**
+     * 設定値を適用してキャッシュされた画像のBitmapを取得
+     * @param context Context
+     * @param characterId キャラクターID
+     * @param animationType アニメーション種類
+     * @param frameIndex フレーム番号
+     * @return Bitmap (設定値が適用された画像、キャッシュされていない場合はnull)
+     */
+    suspend fun getCachedBitmapWithSettings(
+        context: Context,
+        characterId: String,
+        animationType: String,
+        frameIndex: Int
+    ): Bitmap? = withContext(Dispatchers.IO) {
+        try {
+            // 設定値を取得
+            val displaySettings = CharacterDisplaySettings.getInstance(context)
+            val widthScale = displaySettings.getWidthScale()
+            val heightScale = displaySettings.getHeightScale()
+            val qualityScale = displaySettings.getQualityScale()
+            
+            // 設定値を含むキャッシュキーを生成
+            val settingsKey = getCacheKeyWithSettings(characterId, animationType, frameIndex, widthScale, heightScale, qualityScale)
+            
+            // 設定値適用済みのキャッシュから確認
+            bitmapCache[settingsKey]?.let { return@withContext it }
+            
+            // 元の画像を取得
+            val originalBitmap = getCachedBitmap(context, characterId, animationType, frameIndex)
+            originalBitmap?.let { bitmap ->
+                // 設定値を適用して画像を変換
+                val scaledBitmap = applyDisplaySettings(bitmap, widthScale, heightScale, qualityScale)
+                
+                // 変換後の画像をキャッシュに保存
+                addToMemoryCache(settingsKey, scaledBitmap)
+                
+                return@withContext scaledBitmap
+            }
+            
+            return@withContext null
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get cached bitmap with settings", e)
+            return@withContext null
+        }
+    }
+    
+    /**
+     * 設定値を適用してBitmapを変換
+     * @param originalBitmap 元の画像
+     * @param widthScale 横幅の倍率
+     * @param heightScale 縦幅の倍率
+     * @param qualityScale 画質の倍率
+     * @return 変換後のBitmap
+     */
+    private fun applyDisplaySettings(
+        originalBitmap: Bitmap,
+        widthScale: Float,
+        heightScale: Float,
+        qualityScale: Float
+    ): Bitmap {
+        try {
+            val originalWidth = originalBitmap.width
+            val originalHeight = originalBitmap.height
+            
+            // 新しいサイズを計算
+            val newWidth = (originalWidth * widthScale).toInt().coerceAtLeast(1)
+            val newHeight = (originalHeight * heightScale).toInt().coerceAtLeast(1)
+            
+            // 画質設定に基づいてBitmapConfigを決定
+            val config = when {
+                qualityScale >= 0.8f -> Bitmap.Config.ARGB_8888  // 高画質
+                qualityScale >= 0.5f -> Bitmap.Config.ARGB_4444  // 中画質
+                else -> Bitmap.Config.RGB_565  // 低画質（透明度なし）
+            }
+            
+            // スケーリング行列を作成
+            val matrix = Matrix().apply {
+                setScale(widthScale, heightScale)
+            }
+            
+            // 変換後の画像を作成
+            val scaledBitmap = Bitmap.createBitmap(
+                originalBitmap, 0, 0, originalWidth, originalHeight, matrix, true
+            )
+            
+            // 画質設定を適用（必要に応じて再作成）
+            return if (scaledBitmap.config != config) {
+                val qualityBitmap = scaledBitmap.copy(config, false)
+                if (scaledBitmap != originalBitmap) {
+                    scaledBitmap.recycle()
+                }
+                qualityBitmap
+            } else {
+                scaledBitmap
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to apply display settings", e)
+            return originalBitmap
+        }
     }
     
     /**
@@ -207,6 +311,17 @@ class WidgetImageManager @Inject constructor(
         frameIndex: Int
     ): String {
         return "${characterId}_${animationType}_${frameIndex}"
+    }
+
+    private fun getCacheKeyWithSettings(
+        characterId: String,
+        animationType: String,
+        frameIndex: Int,
+        widthScale: Float,
+        heightScale: Float,
+        qualityScale: Float
+    ): String {
+        return "${characterId}_${animationType}_${frameIndex}_${widthScale}_${heightScale}_${qualityScale}"
     }
     
     private fun addToMemoryCache(key: String, bitmap: Bitmap) {

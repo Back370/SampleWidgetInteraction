@@ -18,6 +18,7 @@ import android.os.Looper
 import android.os.PowerManager
 
 import android.widget.RemoteViews
+import com.example.core.CharacterDisplaySettings
 import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -80,9 +81,15 @@ class WidgetAnimationService : Service() {
                 handleToggleAnimation()
             }
             "REBUILD_CACHE" -> {
-                android.util.Log.d("WidgetAnimationService", "🔄 Force rebuilding image cache...")
+                android.util.Log.d("WidgetAnimationService", "🔄 Force rebuilding image cache and updating FPS...")
                 Thread {
                     initializeImageCache()
+                    // FPS設定が変更された場合は、タイマーを再起動
+                    if (isServiceRunning) {
+                        scheduledExecutor?.shutdown()
+                        scheduledExecutor = null
+                        startHighFrequencyUpdates()
+                    }
                 }.start()
             }
             else -> startAnimation() // デフォルトで開始
@@ -193,15 +200,27 @@ class WidgetAnimationService : Service() {
     private fun startHighFrequencyUpdates() {
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor()
 
+        // FPS設定を取得してアニメーション間隔を計算
+        val displaySettings = CharacterDisplaySettings.getInstance(this)
+        val fpsScale = displaySettings.getFpsScale()
+        
+        // FPS設定に基づいてアニメーション間隔を調整
+        // fpsScale: 0.1-1.0 → 間隔: 1000ms-100ms (1fps-10fps)
+        val baseInterval = 1000L // 1fps基準
+        val minInterval = 100L   // 10fps上限
+        val adjustedInterval = (baseInterval - (baseInterval - minInterval) * fpsScale).toLong()
+        
+        android.util.Log.d("WidgetAnimationService", "📊 FPS settings: scale=${fpsScale}, interval=${adjustedInterval}ms")
+
         scheduledExecutor?.scheduleAtFixedRate({
             try {
                 updateWidget()
             } catch (e: Exception) {
                 android.util.Log.e("WidgetAnimationService", "❌ Error updating widget", e)
             }
-        }, 0, ANIMATION_INTERVAL_MS, TimeUnit.MILLISECONDS)
+        }, 0, adjustedInterval, TimeUnit.MILLISECONDS)
 
-        android.util.Log.d("WidgetAnimationService", "⚡ High-frequency timer started (${ANIMATION_INTERVAL_MS}ms)")
+        android.util.Log.d("WidgetAnimationService", "⚡ High-frequency timer started (${adjustedInterval}ms)")
     }
     
     private fun updateWidget() {
@@ -618,13 +637,24 @@ class WidgetAnimationService : Service() {
             try {
                 android.util.Log.d("WidgetAnimationService", "🔄 Building optimized image cache...")
 
-                                    // メモリ使用量の予測計算
-                    val optimizedSize = getOptimizedImageSize(this@WidgetAnimationService)
-                    val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
-                    val pixelsPerImage = optimizedSize * optimizedSize
-                    val bytesPerImage = pixelsPerImage * bytesPerPixel
-                    val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
+                // 設定値を取得
+                val displaySettings = CharacterDisplaySettings.getInstance(this@WidgetAnimationService)
+                val widthScale = displaySettings.getWidthScale()
+                val heightScale = displaySettings.getHeightScale()
+                val qualityScale = displaySettings.getQualityScale()
+                
+                android.util.Log.d("WidgetAnimationService", "📊 Display settings: width=${widthScale}, height=${heightScale}, quality=${qualityScale}")
+
+                // メモリ使用量の予測計算
+                val baseSize = getOptimizedImageSize(this@WidgetAnimationService)
+                val scaledWidth = (baseSize * widthScale).toInt().coerceAtLeast(1)
+                val scaledHeight = (baseSize * heightScale).toInt().coerceAtLeast(1)
+                val bytesPerPixel = 4 // ARGB_8888 (透明度サポート)
+                val pixelsPerImage = scaledWidth * scaledHeight
+                val bytesPerImage = pixelsPerImage * bytesPerPixel
+                val totalCacheSize = bytesPerImage * DEFAULT_FRAMES
                 android.util.Log.d("WidgetAnimationService", "  - Estimated cache size: ${totalCacheSize / 1024 / 1024}MB (${DEFAULT_FRAMES} images × ${bytesPerImage / 1024}KB)")
+                android.util.Log.d("WidgetAnimationService", "  - Target size: ${scaledWidth}x${scaledHeight} (base: ${baseSize}x${baseSize})")
 
                 // 同期化された操作
                 synchronized(this@WidgetAnimationService) {
@@ -656,8 +686,8 @@ class WidgetAnimationService : Service() {
                             // 透明度を保持してスケール（フィルタリングを無効化）
                             val optimizedBitmap = Bitmap.createScaledBitmap(
                                 originalBitmap,
-                                optimizedSize,
-                                optimizedSize,
+                                scaledWidth,
+                                scaledHeight,
                                 false  // フィルタリングを無効化して透明度を保持
                             )
 
@@ -668,13 +698,20 @@ class WidgetAnimationService : Service() {
                                 optimizedBitmap
                             }
                             
-                            optimizedImageCache.add(finalBitmap)
-
-                            android.util.Log.d("WidgetAnimationService", "  - Final size: ${finalBitmap.width}x${finalBitmap.height}")
-                            android.util.Log.d("WidgetAnimationService", "  - Final config: ${finalBitmap.config}")
-                            android.util.Log.d("WidgetAnimationService", "  - Final transparency: ${finalBitmap.hasAlpha()}")
+                            // 画質設定を適用
+                            val finalBitmapWithQuality = applyQualitySettings(finalBitmap, qualityScale)
+                            
+                            optimizedImageCache.add(finalBitmapWithQuality)
+                            
+                            android.util.Log.d("WidgetAnimationService", "  - Final size: ${finalBitmapWithQuality.width}x${finalBitmapWithQuality.height}")
+                            android.util.Log.d("WidgetAnimationService", "  - Final config: ${finalBitmapWithQuality.config}")
+                            android.util.Log.d("WidgetAnimationService", "  - Final transparency: ${finalBitmapWithQuality.hasAlpha()}")
+                            android.util.Log.d("WidgetAnimationService", "  - Applied quality: ${qualityScale}")
                             
                             // 処理されたビットマップのクリーンアップ
+                            if (finalBitmapWithQuality != finalBitmap) {
+                                finalBitmap.recycle()
+                            }
                             if (finalBitmap != optimizedBitmap) {
                                 optimizedBitmap.recycle()
                             }
@@ -697,8 +734,8 @@ class WidgetAnimationService : Service() {
                     actualFrameCount = optimizedImageCache.size
 
                     android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
-                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${optimizedSize}x${optimizedSize}")
-                    android.util.Log.d("WidgetAnimationService", "  - Format: ARGB_8888 (透明度サポート)")
+                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${scaledWidth}x${scaledHeight} (base: ${baseSize}x${baseSize})")
+                    android.util.Log.d("WidgetAnimationService", "  - Quality scale: ${qualityScale}")
                     android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
                     android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
                 }
@@ -709,6 +746,33 @@ class WidgetAnimationService : Service() {
         }.start()
     }
     
+    /**
+     * 画質設定を適用してBitmapを変換
+     */
+    private fun applyQualitySettings(bitmap: Bitmap, qualityScale: Float): Bitmap {
+        try {
+            // 画質設定に基づいてBitmapConfigを決定
+            val config = when {
+                qualityScale >= 0.8f -> Bitmap.Config.ARGB_8888  // 高画質
+                qualityScale >= 0.5f -> Bitmap.Config.ARGB_4444  // 中画質
+                else -> Bitmap.Config.RGB_565  // 低画質（透明度なし）
+            }
+            
+            // 画質設定を適用（必要に応じて再作成）
+            return if (bitmap.config != config) {
+                val qualityBitmap = bitmap.copy(config, false)
+                android.util.Log.d("WidgetAnimationService", "  - Quality applied: ${bitmap.config} → ${config}")
+                qualityBitmap
+            } else {
+                bitmap
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetAnimationService", "❌ Error applying quality settings", e)
+            return bitmap
+        }
+    }
+
     private fun decodeImageSafely(imagePath: String): Bitmap? {
         return try {
             // メモリ使用量をログ出力

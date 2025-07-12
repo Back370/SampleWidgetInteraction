@@ -1,5 +1,8 @@
 package com.seo4d696b75.android.glance_widget_demo
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +41,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.core.CharacterDisplaySettings
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,16 +79,46 @@ fun settingScreen(
                 .padding(8.dp)
                 .padding(innerPadding)
         ) {
-            volumeSet()         //音量設定
+            WidgetDisplaySetting()         //音量設定
             notificationSet()   //通知設定
         }
     }
 }
 
+/**
+ * ウィジェットの更新を通知する
+ */
+private fun notifyWidgetUpdate(context: android.content.Context) {
+    try {
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val componentName = ComponentName(
+            context.packageName,
+            "com.seo4d696b75.android.glance_widget_demo.widget.CounterWidgetProvider"
+        )
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+
+        if (appWidgetIds.isNotEmpty()) {
+            val intent = Intent(context, 
+                Class.forName("com.seo4d696b75.android.glance_widget_demo.widget.CounterWidgetProvider")
+            ).apply {
+                action = "com.seo4d696b75.android.glance_widget_demo.SETTINGS_CHANGED"
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+            }
+            context.sendBroadcast(intent)
+        }
+    } catch (e: Exception) {
+        // エラーログ
+        android.util.Log.e("SettingScreen", "Failed to notify widget update", e)
+    }
+}
+
 @Composable
-fun volumeSet(
-    modifier: Modifier =Modifier
+fun WidgetDisplaySetting(
+    modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val displaySettings = remember { CharacterDisplaySettings.getInstance(context) }
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -95,11 +130,17 @@ fun volumeSet(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //音のアイコンもあれば良い？
             Text(
                 text = "横幅"
             )
-            SliderUI("横幅", 0.5f, 0f..1f)
+            SliderUI(
+                initialValue = displaySettings.getWidthScale(),
+                onValueChange = { value -> 
+                    displaySettings.setWidthScale(value)
+                    notifyWidgetUpdate(context)
+                },
+                valueRange = 0.1f..1.0f
+            )
         }
         Row(
             modifier = modifier
@@ -108,11 +149,17 @@ fun volumeSet(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //音のアイコンもあれば良い？
             Text(
                 text = "縦幅"
             )
-            SliderUI("縦幅", 0.5f, 0f..1f)
+            SliderUI(
+                initialValue = displaySettings.getHeightScale(),
+                onValueChange = { value -> 
+                    displaySettings.setHeightScale(value)
+                    notifyWidgetUpdate(context)
+                },
+                valueRange = 0.1f..1.0f
+            )
         }
         Row(
             modifier = modifier
@@ -121,33 +168,66 @@ fun volumeSet(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //音のアイコンもあれば良い？
             Text(
                 text = "画質"
             )
-            SliderUI("画質", 0.5f, 0f..1f)
+            SliderUI(
+                initialValue = displaySettings.getQualityScale(),
+                onValueChange = { value -> 
+                    displaySettings.setQualityScale(value)
+                    notifyWidgetUpdate(context)
+                },
+                valueRange = 0.1f..1.0f
+            )
+        }
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(all = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "FPS"
+            )
+            SliderUI(
+                initialValue = displaySettings.getFpsScale(),
+                onValueChange = { value ->
+                    displaySettings.setFpsScale(value)
+                    notifyWidgetUpdate(context)
+                },
+                valueRange = 0.1f..1.0f
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SliderUI(range: String, sliderPosition: Float, valueRange: ClosedFloatingPointRange<Float> = 0f..1f) {
-    //音の範囲は0.0fから1.0f
-    var sliderPosition by remember { mutableFloatStateOf(0.5f) }
+fun SliderUI(
+    initialValue: Float,
+    onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f
+) {
+    // 初期値が範囲内に収まるように調整
+    val clampedInitialValue = initialValue.coerceIn(valueRange.start, valueRange.endInclusive)
+    var sliderPosition by remember { mutableFloatStateOf(clampedInitialValue) }
     val interactionSource = remember { MutableInteractionSource() }
 
     Row (
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
-        //Text (text = sliderPosition.toString())
-
         Slider(
             value = sliderPosition,
-            onValueChange = { sliderPosition = it },
-            modifier = Modifier.padding(0.dp),
-            valueRange = 0f..1f,
+            onValueChange = { newValue ->
+                // 値が範囲内に収まるように調整
+                val clampedValue = newValue.coerceIn(valueRange.start, valueRange.endInclusive)
+                sliderPosition = clampedValue
+                onValueChange(clampedValue)
+            },
+            modifier = Modifier.weight(1f),
+            valueRange = valueRange,
             interactionSource = interactionSource,
             thumb = {
                 Box (
@@ -169,9 +249,16 @@ fun SliderUI(range: String, sliderPosition: Float, valueRange: ClosedFloatingPoi
                             shape = RoundedCornerShape(2.dp)
                         )
                 ) {
+                    // 値の範囲を0.0-1.0に正規化してプログレスバーを表示
+                    val rangeSize = valueRange.endInclusive - valueRange.start
+                    val progress = if (rangeSize > 0f) {
+                        ((sliderState.value - valueRange.start) / rangeSize).coerceIn(0f, 1f)
+                    } else {
+                        0f
+                    }
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(sliderState.value)
+                            .fillMaxWidth(progress)
                             .height(4.dp)
                             .background(
                                 color = MaterialTheme.colorScheme.primary,
@@ -180,6 +267,12 @@ fun SliderUI(range: String, sliderPosition: Float, valueRange: ClosedFloatingPoi
                     )
                 }
             }
+        )
+        
+        // 現在の値を表示
+        Text(
+            text = String.format("%.1f", sliderPosition),
+            modifier = Modifier.padding(start = 8.dp)
         )
     }
 }

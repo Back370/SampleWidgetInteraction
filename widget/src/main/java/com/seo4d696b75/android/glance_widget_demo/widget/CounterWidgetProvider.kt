@@ -15,6 +15,7 @@ import android.os.SystemClock
 import android.widget.RemoteViews
 import com.example.core.Constants
 import com.example.core.SensorService
+import com.example.core.CharacterDisplaySettings
 import java.io.File
 import kotlin.jvm.java
 
@@ -27,6 +28,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
         const val ACTION_WIDGET_TAP = "com.seo4d696b75.android.glance_widget_demo.WIDGET_TAP"
 //        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
 //        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
+        const val ACTION_ANIMATION_FRAME = "com.seo4d696b75.android.glance_widget_demo.ANIMATION_FRAME"
+        const val ACTION_SETTINGS_CHANGED = "com.seo4d696b75.android.glance_widget_demo.SETTINGS_CHANGED"
         
         private const val ANIMATION_INTERVAL_MS = 50L // 2fps - AlarmManagerで実現可能な間隔
         private const val DEFAULT_FRAMES = 50 // デフォルトフレーム数（実際のフレーム数が不明な場合）
@@ -159,6 +162,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 android.util.Log.i("WidgetProvider", "  - About to execute special animation")
                 handleWidgetTap(context)
                 android.util.Log.i("WidgetProvider", "  - Special animation handling completed")
+            }
+            ACTION_SETTINGS_CHANGED -> {
+                android.util.Log.d("WidgetProvider", "🔧 Settings changed - updating widgets")
+                handleSettingsChanged(context, intent)
             }
             else -> {
                 android.util.Log.d("WidgetProvider", "🔍 Unknown action received: ${intent.action}")
@@ -667,6 +674,54 @@ class CounterWidgetProvider : AppWidgetProvider() {
 //        }
 //    }
 
+    /**
+     * 設定変更時の処理
+     */
+    private fun handleSettingsChanged(context: Context, intent: Intent) {
+        try {
+            android.util.Log.d("WidgetProvider", "🔧 Handling settings change")
+            
+            // 古いキャッシュをクリア
+            optimizedImageCache.forEach { bitmap ->
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
+            }
+            optimizedImageCache.clear()
+            isCacheReady = false
+            
+            // 画像パスを再初期化してからキャッシュを再構築
+            initializeImagePaths(context)
+            buildImageCache(context)
+            
+            // アニメーションサービスに設定変更を通知
+            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                action = "REBUILD_CACHE"
+            }
+            context.startService(serviceIntent)
+            
+            // ウィジェットを更新
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val widgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+            
+            if (widgetIds != null && widgetIds.isNotEmpty()) {
+                updateAllWidgets(context, appWidgetManager, widgetIds)
+                android.util.Log.d("WidgetProvider", "✅ Updated ${widgetIds.size} widgets with new settings")
+            } else {
+                // 全てのウィジェットを更新
+                val componentName = ComponentName(context, CounterWidgetProvider::class.java)
+                val allWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+                if (allWidgetIds.isNotEmpty()) {
+                    updateAllWidgets(context, appWidgetManager, allWidgetIds)
+                    android.util.Log.d("WidgetProvider", "✅ Updated all ${allWidgetIds.size} widgets with new settings")
+                }
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error handling settings change", e)
+        }
+    }
+
     //アニメーションを切り替え
     private fun handleToggleAnimation(context: Context, AnimType: String = "null") {
         try {
@@ -962,16 +1017,27 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 return
             }
             
-            // 密度に基づいた最適サイズの計算
-            val displayMetrics = context.resources.displayMetrics
-            val scaledSize = (WIDGET_IMAGE_SIZE * displayMetrics.density).toInt()
+            // 設定値を取得
+            val displaySettings = CharacterDisplaySettings.getInstance(context)
+            val widthScale = displaySettings.getWidthScale()
+            val heightScale = displaySettings.getHeightScale()
+            val qualityScale = displaySettings.getQualityScale()
+            val fpsScale = displaySettings.getFpsScale()
             
-            android.util.Log.d("WidgetProvider", "📏 Optimizing images to ${scaledSize}x${scaledSize} pixels")
+            android.util.Log.d("WidgetProvider", "📊 Display settings: width=${widthScale}, height=${heightScale}, quality=${qualityScale}, fps=${fpsScale}")
+            
+            // 密度に基づいた最適サイズの計算（設定値を適用）
+            val displayMetrics = context.resources.displayMetrics
+            val baseSize = (WIDGET_IMAGE_SIZE * displayMetrics.density).toInt()
+            val scaledWidth = (baseSize * widthScale).toInt().coerceAtLeast(1)
+            val scaledHeight = (baseSize * heightScale).toInt().coerceAtLeast(1)
+            
+            android.util.Log.d("WidgetProvider", "📏 Optimizing images to ${scaledWidth}x${scaledHeight} pixels")
             
             imageFilePaths.forEachIndexed { index, imagePath ->
                 val imageFile = File(imagePath)
                 if (imageFile.exists()) {
-                    val optimizedBitmap = createScaledBitmap(imagePath, scaledSize, scaledSize)
+                    val optimizedBitmap = createScaledBitmap(imagePath, scaledWidth, scaledHeight, qualityScale)
                     if (optimizedBitmap != null) {
                         optimizedImageCache.add(optimizedBitmap)
                         android.util.Log.v("WidgetProvider", "✅ Cached image $index: ${optimizedBitmap.width}x${optimizedBitmap.height}")
@@ -993,7 +1059,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
         }
     }
     
-    private fun createScaledBitmap(imagePath: String, targetWidth: Int, targetHeight: Int): Bitmap? {
+    private fun createScaledBitmap(imagePath: String, targetWidth: Int, targetHeight: Int, qualityScale: Float = 1.0f): Bitmap? {
         return try {
             // 元の画像サイズを確認
             val options = BitmapFactory.Options().apply {
@@ -1004,12 +1070,19 @@ class CounterWidgetProvider : AppWidgetProvider() {
             // サンプルサイズを計算
             val sampleSize = calculateInSampleSize(options, targetWidth, targetHeight)
             
+            // 画質設定に基づいてBitmapConfigを決定
+            val config = when {
+                qualityScale >= 0.8f -> Bitmap.Config.ARGB_8888  // 高画質
+                qualityScale >= 0.5f -> Bitmap.Config.ARGB_4444  // 中画質
+                else -> Bitmap.Config.RGB_565  // 低画質（透明度なし）
+            }
+            
             // 最適化された画像を読み込み
             val loadOptions = BitmapFactory.Options().apply {
                 inJustDecodeBounds = false
                 inSampleSize = sampleSize
-                // 透明度サポートのためARGB_8888を使用
-                inPreferredConfig = Bitmap.Config.ARGB_8888 // 透明度サポート
+                // 画質設定を適用
+                inPreferredConfig = config
             }
             
             val bitmap = BitmapFactory.decodeFile(imagePath, loadOptions)
@@ -1019,6 +1092,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 // 透明度を保持してスケール（フィルタリングを無効化）
                 Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, false).also { scaledBitmap ->
                     android.util.Log.v("WidgetProvider", "  - Scaled transparency: ${scaledBitmap.hasAlpha()}")
+                    android.util.Log.v("WidgetProvider", "  - Applied quality: ${config} (scale: ${qualityScale})")
                     if (scaledBitmap != bitmap) {
                         bitmap.recycle()
                     }

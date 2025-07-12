@@ -32,11 +32,7 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Text(
-            text = "ち ょ っ と",
-            fontSize = 55.sp
-        )
-        Text(
-            text = "か わ い い",
+            text = "Widget Kawaii",
             fontSize = 55.sp
         )
 
@@ -80,12 +76,6 @@ fun HomeScreen(
                 onClick = onSensorClicked
             )
 
-            Button(
-                modifier = Modifier.weight(1f),
-                icon = painterResource(id = R.drawable.ic_launcher_foreground),
-                text = "ボタン",
-                onClick = onWidgetSettingClicked
-            )
         }
     }
 
