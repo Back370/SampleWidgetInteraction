@@ -273,7 +273,7 @@ class WidgetAnimationService : Service() {
                                     remoteViews.setImageViewBitmap(R.id.background_image, bitmap)
                                 } else {
                                     // プレースホルダーとして背景色を設定
-                                    remoteViews.setInt(R.id.background_image, "setBackgroundColor", 0xFFE0E0E0.toInt())
+                                   // remoteViews.setInt(R.id.background_image, "setBackgroundColor", 0xFFE0E0E0.toInt())
                                 }
                                 
                                 // タップハンドラーを設定（フレーム更新のたびに削除されることを防ぐ）
