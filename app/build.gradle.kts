@@ -80,6 +80,9 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":theme"))
 
+    // coreモジュールへの依存関係を追加
+    implementation(project(":core"))
+
     implementation(libs.hilt.android)
     implementation(libs.firebase.appcheck.playintegrity)
     implementation(libs.material3)
