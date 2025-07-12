@@ -1,6 +1,7 @@
 package com.seo4d696b75.android.glance_widget_demo
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,11 +10,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -81,26 +84,45 @@ fun settingScreen(
 fun volumeSet(
     modifier: Modifier =Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(all = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        //音のアイコンもあれば良い？
-        Text(
-            text = "音量"
-        )
-        volumeSliderUI()
+    ){
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(all = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            //音のアイコンもあれば良い？
+            Text(
+                text = "横幅"
+            )
+            ImageSizeSliderUI("横幅")
+        }
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(all = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            //音のアイコンもあれば良い？
+            Text(
+                text = "縦幅"
+            )
+            ImageSizeSliderUI("縦幅")
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun volumeSliderUI() {
+fun ImageSizeSliderUI(range: String) {
     //音の範囲は0.0fから1.0f
     var sliderPosition by remember { mutableFloatStateOf(0.5f) }
+    val interactionSource = remember { MutableInteractionSource() }
 
     Row (
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -111,13 +133,12 @@ fun volumeSliderUI() {
         Slider(
             value = sliderPosition,
             onValueChange = { sliderPosition = it },
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(0.dp),
             valueRange = 0f..1f,
-
+            interactionSource = interactionSource,
             thumb = {
                 Box (
                     modifier = Modifier
-                        .padding(0.dp)
                         .size(24.dp)
                         .background(
                             color = MaterialTheme.colorScheme.primary,
@@ -125,10 +146,28 @@ fun volumeSliderUI() {
                         )
                 )
             },
+            track = { sliderState ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(sliderState.value)
+                            .height(4.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(2.dp)
+                            )
+                    )
+                }
+            }
         )
-
-
-
     }
 }
 
