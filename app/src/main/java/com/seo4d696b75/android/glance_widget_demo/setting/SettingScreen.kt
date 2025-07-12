@@ -99,7 +99,7 @@ fun volumeSet(
             Text(
                 text = "横幅"
             )
-            ImageSizeSliderUI("横幅")
+            SliderUI("横幅", 0.5f, 0f..1f)
         }
         Row(
             modifier = modifier
@@ -112,14 +112,27 @@ fun volumeSet(
             Text(
                 text = "縦幅"
             )
-            ImageSizeSliderUI("縦幅")
+            SliderUI("縦幅", 0.5f, 0f..1f)
+        }
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(all = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            //音のアイコンもあれば良い？
+            Text(
+                text = "画質"
+            )
+            SliderUI("画質", 0.5f, 0f..1f)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageSizeSliderUI(range: String) {
+fun SliderUI(range: String, sliderPosition: Float, valueRange: ClosedFloatingPointRange<Float> = 0f..1f) {
     //音の範囲は0.0fから1.0f
     var sliderPosition by remember { mutableFloatStateOf(0.5f) }
     val interactionSource = remember { MutableInteractionSource() }
