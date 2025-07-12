@@ -433,45 +433,55 @@ class WidgetAnimationService : Service() {
         try {
             android.util.Log.d("WidgetAnimationService", "🔄 Handling animation toggle")
             
-            // アニメーション状態管理から最新の状態を取得
-            val animationStateManager = AnimationStateManager.getInstance(this)
+            // 状態更新を確実に待つため、少し遅延を入れる
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                                // アニメーション状態管理から最新の状態を取得
+            val animationStateManager = AnimationStateManager.getInstance(this@WidgetAnimationService)
             val currentAnimationType = animationStateManager.getCurrentAnimationType()
             val currentCharacterId = animationStateManager.getCurrentCharacterId()
             android.util.Log.d("WidgetAnimationService", "🎯 Current character: $currentCharacterId")
             android.util.Log.d("WidgetAnimationService", "🎯 Current animation type: $currentAnimationType")
             android.util.Log.d("WidgetAnimationService", "📊 Full animation state: ${animationStateManager.getCurrentAnimationDisplayText()}")
-            
-            // 現在のアニメーションを停止
-            val wasRunning = isServiceRunning
-            if (wasRunning) {
-                // タイマーを停止（但し、サービスは続行）
-                scheduledExecutor?.shutdown()
-                scheduledExecutor = null
-                isServiceRunning = false
-                
-                android.util.Log.d("WidgetAnimationService", "⏸️ Animation temporarily stopped for cache rebuild")
-            }
-            
-            // 画像キャッシュを再構築
-            Thread {
-                try {
-                    android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding image cache with character: $currentCharacterId, animation: $currentAnimationType")
-                    initializeImageCache()
+            android.util.Log.d("WidgetAnimationService", "🔍 Is temporary animation: ${animationStateManager.isInTemporaryAnimation()}")
+            android.util.Log.d("WidgetAnimationService", "🔍 Previous animation type: ${animationStateManager.getPreviousAnimationType()}")
                     
-                    // アニメーションを再開
+                    // 現在のアニメーションを停止
+                    val wasRunning = isServiceRunning
                     if (wasRunning) {
-                        Handler(Looper.getMainLooper()).post {
-                            currentFrame = 0 // フレームをリセット
-                            isServiceRunning = true
-                            startHighFrequencyUpdates()
-                            android.util.Log.d("WidgetAnimationService", "▶️ Animation resumed with character: $currentCharacterId")
-                        }
+                        // タイマーを停止（但し、サービスは続行）
+                        scheduledExecutor?.shutdown()
+                        scheduledExecutor = null
+                        isServiceRunning = false
+                        
+                        android.util.Log.d("WidgetAnimationService", "⏸️ Animation temporarily stopped for cache rebuild")
                     }
                     
+                    // 画像キャッシュを再構築
+                    Thread {
+                        try {
+                            android.util.Log.d("WidgetAnimationService", "🔄 Rebuilding image cache with character: $currentCharacterId, animation: $currentAnimationType")
+                            initializeImageCache()
+                            
+                            // アニメーションを再開
+                            if (wasRunning) {
+                                Handler(Looper.getMainLooper()).post {
+                                    currentFrame = 0 // フレームをリセット
+                                    isServiceRunning = true
+                                    startHighFrequencyUpdates()
+                                    android.util.Log.d("WidgetAnimationService", "▶️ Animation resumed with character: $currentCharacterId")
+                                }
+                            }
+                            
+                        } catch (e: Exception) {
+                            android.util.Log.e("WidgetAnimationService", "❌ Error rebuilding cache for animation toggle", e)
+                        }
+                    }.start()
+                    
                 } catch (e: Exception) {
-                    android.util.Log.e("WidgetAnimationService", "❌ Error rebuilding cache for animation toggle", e)
+                    android.util.Log.e("WidgetAnimationService", "❌ Error in delayed animation toggle", e)
                 }
-            }.start()
+            }, 100L) // 100ms遅延
             
         } catch (e: Exception) {
             android.util.Log.e("WidgetAnimationService", "❌ Error handling animation toggle", e)
@@ -733,11 +743,20 @@ class WidgetAnimationService : Service() {
                     isCacheReady = optimizedImageCache.isNotEmpty()
                     actualFrameCount = optimizedImageCache.size
 
-                    android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
-                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${scaledWidth}x${scaledHeight} (base: ${baseSize}x${baseSize})")
-                    android.util.Log.d("WidgetAnimationService", "  - Quality scale: ${qualityScale}")
-                    android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
-                    android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
+                                android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
+            android.util.Log.d("WidgetAnimationService", "  - Image size: ${scaledWidth}x${scaledHeight} (base: ${baseSize}x${baseSize})")
+            android.util.Log.d("WidgetAnimationService", "  - Quality scale: ${qualityScale}")
+            android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
+            android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
+            
+            // 読み込まれた画像の最初の数枚のファイル名をログ出力
+            if (imageFilePaths.isNotEmpty()) {
+                android.util.Log.d("WidgetAnimationService", "  - First 5 loaded images:")
+                imageFilePaths.take(5).forEachIndexed { index, path ->
+                    val fileName = java.io.File(path).name
+                    android.util.Log.d("WidgetAnimationService", "    ${index + 1}. $fileName")
+                }
+            }
                 }
 
             } catch (e: Exception) {

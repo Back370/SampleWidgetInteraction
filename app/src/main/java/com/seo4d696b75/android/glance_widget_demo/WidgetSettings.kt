@@ -127,6 +127,8 @@ fun WidgetSettingsScreen(
                                 onClick = {
                                     Log.d("WidgetSettings", "🔄 アニメーション切り替えボタン押下")
                                     Log.d("WidgetSettings", "📊 切り替え前: ${animationStateManager.getCurrentAnimationDisplayText()}")
+                                    Log.d("WidgetSettings", "🔍 一時的アニメーション中: ${animationStateManager.isInTemporaryAnimation()}")
+                                    Log.d("WidgetSettings", "🔍 前のアニメーション: ${animationStateManager.getPreviousAnimationType()}")
                                     
                                     // アニメーション切り替え
                                     val newAnimationType = animationStateManager.toggleAnimationType()
@@ -135,6 +137,8 @@ fun WidgetSettingsScreen(
 
                                     Log.d("WidgetSettings", "📊 切り替え後: ${animationStateManager.getCurrentAnimationDisplayText()}")
                                     Log.d("WidgetSettings", "🎯 新しいアニメーション種別: $newAnimationType")
+                                    Log.d("WidgetSettings", "🔍 一時的アニメーション中: ${animationStateManager.isInTemporaryAnimation()}")
+                                    Log.d("WidgetSettings", "🔍 前のアニメーション: ${animationStateManager.getPreviousAnimationType()}")
 
                                     // ウィジェットを更新
                                     updateWidgetAfterToggle(context)
@@ -178,6 +182,18 @@ fun WidgetSettingsScreen(
                             ) {
                                 Text(
                                     text = "Haru画像をダウンロード",
+                                    fontSize = 14.sp
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    Log.d("WidgetSettings", "📁 外部ストレージアクセス情報表示")
+                                    showExternalStorageAccess(context)
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            ) {
+                                Text(
+                                    text = "外部ストレージを手動で開く",
                                     fontSize = 14.sp
                                 )
                             }
@@ -239,18 +255,6 @@ fun WidgetSettingsScreen(
 //                                )
 //                            }
 
-                            OutlinedButton(
-                                onClick = {
-                                    Log.d("WidgetSettings", "📁 外部ストレージアクセス情報表示")
-                                    showExternalStorageAccess(context)
-                                },
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            ) {
-                                Text(
-                                    text = "外部ストレージを手動で開く",
-                                    fontSize = 14.sp
-                                )
-                            }
 
                             OutlinedButton(
                                 onClick = {
@@ -413,10 +417,98 @@ private fun showExternalStorageAccess(context: Context) {
         if (baseDir != null) {
             Log.d("WidgetSettings", "📂 ディレクトリ存在: ${baseDir.exists()}")
             Log.d("WidgetSettings", "📝 書き込み可能: ${baseDir.canWrite()}")
+            
+            // ディレクトリ構造を詳細に表示
+            Log.d("WidgetSettings", "=== ディレクトリ構造詳細 ===")
+            scanDirectoryStructure(baseDir, 0)
+            
+        } else {
+            Log.e("WidgetSettings", "❌ ベースディレクトリがnullです")
         }
         
     } catch (e: Exception) {
         Log.e("WidgetSettings", "❌ 外部ストレージアクセス確認エラー", e)
+    }
+}
+
+private fun scanDirectoryStructure(directory: File, depth: Int) {
+    try {
+        val indent = "  ".repeat(depth)
+        
+        if (!directory.exists()) {
+            Log.d("WidgetSettings", "${indent}❌ ディレクトリが存在しません: ${directory.name}")
+            return
+        }
+        
+        if (!directory.isDirectory) {
+            Log.d("WidgetSettings", "${indent}📄 ファイル: ${directory.name} (${directory.length()} bytes)")
+            return
+        }
+        
+        Log.d("WidgetSettings", "${indent}📁 ディレクトリ: ${directory.name}/")
+        
+        val files = directory.listFiles()
+        if (files == null || files.isEmpty()) {
+            Log.d("WidgetSettings", "${indent}  📭 空のディレクトリ")
+            return
+        }
+        
+        // ディレクトリとファイルを分けて表示
+        val subDirectories = files.filter { it.isDirectory }.sortedBy { it.name }
+        val imageFiles = files.filter { 
+            it.isFile && it.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp") 
+        }.sortedBy { it.name }
+        val otherFiles = files.filter { 
+            it.isFile && it.extension.lowercase() !in listOf("png", "jpg", "jpeg", "webp") 
+        }.sortedBy { it.name }
+        
+        // サブディレクトリを表示
+        subDirectories.forEach { subDir ->
+            scanDirectoryStructure(subDir, depth + 1)
+        }
+        
+        // 画像ファイルを表示
+        if (imageFiles.isNotEmpty()) {
+            Log.d("WidgetSettings", "${indent}  🖼️ 画像ファイル (${imageFiles.size}個):")
+            imageFiles.take(10).forEach { file ->
+                Log.d("WidgetSettings", "${indent}    📸 ${file.name} (${file.length()} bytes)")
+            }
+            if (imageFiles.size > 10) {
+                Log.d("WidgetSettings", "${indent}    ... 他${imageFiles.size - 10}個の画像ファイル")
+            }
+        }
+        
+        // その他のファイルを表示
+        if (otherFiles.isNotEmpty()) {
+            Log.d("WidgetSettings", "${indent}  📄 その他のファイル (${otherFiles.size}個):")
+            otherFiles.take(5).forEach { file ->
+                Log.d("WidgetSettings", "${indent}    📄 ${file.name} (${file.length()} bytes)")
+            }
+            if (otherFiles.size > 5) {
+                Log.d("WidgetSettings", "${indent}    ... 他${otherFiles.size - 5}個のファイル")
+            }
+        }
+        
+        // 特定のアニメーションディレクトリの詳細情報
+        if (directory.name in listOf("Mao", "Haru")) {
+            Log.d("WidgetSettings", "${indent}  🎭 キャラクターディレクトリ詳細:")
+            val stateDir = File(directory, "State")
+            if (stateDir.exists()) {
+                Log.d("WidgetSettings", "${indent}    📁 State/ ディレクトリ存在: ${stateDir.exists()}")
+                val animationDirs = stateDir.listFiles()?.filter { it.isDirectory }?.sortedBy { it.name } ?: emptyList()
+                animationDirs.forEach { animDir ->
+                    val imageCount = animDir.listFiles()?.filter { 
+                        it.isFile && it.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp") 
+                    }?.size ?: 0
+                    Log.d("WidgetSettings", "${indent}      🎬 ${animDir.name}/: ${imageCount}個の画像")
+                }
+            } else {
+                Log.d("WidgetSettings", "${indent}    ❌ State/ ディレクトリが存在しません")
+            }
+        }
+        
+    } catch (e: Exception) {
+        Log.e("WidgetSettings", "❌ ディレクトリ構造スキャンエラー: ${directory.name}", e)
     }
 }
 

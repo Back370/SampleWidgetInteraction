@@ -725,21 +725,30 @@ class CounterWidgetProvider : AppWidgetProvider() {
     //アニメーションを切り替え
     private fun handleToggleAnimation(context: Context, AnimType: String = "null") {
         try {
-            android.util.Log.d("WidgetProvider", "🔄 Handling animation toggle")
+            android.util.Log.d("WidgetProvider", "🔄 === ANIMATION TOGGLE START ===")
             
-            // アニメーション状態を切り替え
+            // アニメーション状態を取得（切り替えは行わない）
             val animationStateManager = AnimationStateManager.getInstance(context);
 
-            val newAnimationType =
-            when(AnimType){
-                "FlowState" -> animationStateManager.setFlowState()
-                "AdleState" -> animationStateManager.setAdleState()
-                "SpecialState" -> animationStateManager.setSpecialState()
-                else -> animationStateManager.toggleAnimationType()
+            // 現在の状態を記録
+            val currentAnimationType = animationStateManager.getCurrentAnimationType()
+            val currentCharacterId = animationStateManager.getCurrentCharacterId()
+            android.util.Log.d("WidgetProvider", "📊 CURRENT: $currentCharacterId/State/$currentAnimationType")
+
+            // AnimTypeが指定されている場合のみアニメーションを切り替え
+            val newAnimationType = if (AnimType != "null") {
+                when(AnimType){
+                    "FlowState" -> animationStateManager.setFlowState()
+                    "AdleState" -> animationStateManager.setAdleState()
+                    "SpecialState" -> animationStateManager.setSpecialState()
+                    else -> currentAnimationType
+                }
+            } else {
+                // AnimTypeが指定されていない場合は現在の状態をそのまま使用
+                currentAnimationType
             }
 
-
-            android.util.Log.d("WidgetProvider", "✅ Animation switched to: $newAnimationType")
+            android.util.Log.d("WidgetProvider", "🎯 USING ANIMATION: $newAnimationType")
             
             // 古いキャッシュをクリア
             optimizedImageCache.forEach { bitmap ->
@@ -759,13 +768,23 @@ class CounterWidgetProvider : AppWidgetProvider() {
             currentFrame = 0
             android.util.Log.d("WidgetProvider", "🔄 Frame reset to 0 for new animation")
             
-            // アニメーションサービスに切り替えを通知
-            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
-                action = "TOGGLE_ANIMATION"
-            }
-            
-            // TOGGLE_ANIMATIONは通常のサービスとして開始（フォアグラウンドサービスではない）
-            context.startService(serviceIntent)
+            // 状態更新を確実にするため、少し遅延してからサービスに通知
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                try {
+                    // アニメーションサービスに切り替えを通知
+                    val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                        action = "TOGGLE_ANIMATION"
+                    }
+                    
+                    // TOGGLE_ANIMATIONは通常のサービスとして開始（フォアグラウンドサービスではない）
+                    context.startService(serviceIntent)
+                    
+                    android.util.Log.d("WidgetProvider", "📡 Service notification sent after delay")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("WidgetProvider", "❌ Error sending service notification", e)
+                }
+            }, 50L) // 50ms遅延
             
             // ウィジェットの表示を更新
             val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -773,6 +792,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             updateAllWidgets(context, appWidgetManager, widgetIds)
             
             android.util.Log.d("WidgetProvider", "✅ Animation toggle complete - Cache status: ${if (isCacheReady) "READY" else "NOT READY"}, Images: ${optimizedImageCache.size}")
+            android.util.Log.d("WidgetProvider", "🔄 === ANIMATION TOGGLE END ===")
             
         } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error handling animation toggle", e)
@@ -888,7 +908,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
     }
     
     private fun initializeImagePaths(context: Context) {
-        android.util.Log.d("WidgetProvider", "🔍 Initializing image paths")
+        android.util.Log.d("WidgetProvider", "🔍 === INITIALIZING IMAGE PATHS ===")
         
         try {
             imageFilePaths.clear()
@@ -898,7 +918,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
             val currentAnimationType = animationStateManager.getCurrentAnimationType()
             val currentCharacterId = animationStateManager.getCurrentCharacterId()
             
+            android.util.Log.d("WidgetProvider", "🎯 TARGET ANIMATION: $currentCharacterId/State/$currentAnimationType")
+            
             val baseDir = context.getExternalFilesDir(null)
+            android.util.Log.d("WidgetProvider", "📁 BASE DIR: ${baseDir?.absolutePath}")
             
             // 複数のパスパターンを試行
             val pathPatterns = listOf(
@@ -912,37 +935,50 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 currentAnimationType.lowercase()                                 // 小文字版単体
             )
             
-            android.util.Log.d("WidgetProvider", "🎯 Looking for animation: $currentCharacterId/State/$currentAnimationType")
+            android.util.Log.d("WidgetProvider", "🔍 SEARCHING PATTERNS:")
+            pathPatterns.forEachIndexed { index, pattern ->
+                android.util.Log.d("WidgetProvider", "  ${index + 1}. $pattern")
+            }
             
             var externalFilesDir: File? = null
             var foundPath: String? = null
             
             if (baseDir != null) {
-                for (pattern in pathPatterns) {
+                for ((index, pattern) in pathPatterns.withIndex()) {
                     val testDir = File(baseDir, pattern)
-                    android.util.Log.d("WidgetProvider", "🔍 Testing path: $pattern -> ${testDir.absolutePath}")
+                    android.util.Log.d("WidgetProvider", "🔍 [${index + 1}/${pathPatterns.size}] Testing: $pattern")
+                    android.util.Log.d("WidgetProvider", "   📂 Full path: ${testDir.absolutePath}")
+                    android.util.Log.d("WidgetProvider", "   📁 Exists: ${testDir.exists()}")
                     
                     if (testDir.exists()) {
                         val imageFiles = testDir.listFiles { file ->
                             file.isFile && file.extension.lowercase() in listOf("png", "jpg", "jpeg", "webp")
                         }
                         
-                        android.util.Log.d("WidgetProvider", "  - Directory exists: ${testDir.exists()}")
-                        android.util.Log.d("WidgetProvider", "  - Image files found: ${imageFiles?.size ?: 0}")
+                        android.util.Log.d("WidgetProvider", "   🖼️ Image files: ${imageFiles?.size ?: 0}")
                         
                         // ディレクトリが存在するが画像がない場合、全ファイルを確認
-                        if (testDir.exists() && imageFiles.isNullOrEmpty()) {
+                        if (imageFiles.isNullOrEmpty()) {
                             val allFiles = testDir.listFiles()
-                            android.util.Log.d("WidgetProvider", "  - All files in directory: ${allFiles?.size ?: 0}")
+                            android.util.Log.d("WidgetProvider", "   📋 All files: ${allFiles?.size ?: 0}")
                             allFiles?.take(5)?.forEach { file ->
-                                android.util.Log.d("WidgetProvider", "    - ${file.name} (${if (file.isDirectory) "DIR" else "FILE"}, ext: ${file.extension})")
+                                android.util.Log.d("WidgetProvider", "     - ${file.name} (${if (file.isDirectory) "DIR" else "FILE"}, ext: ${file.extension})")
+                            }
+                        } else {
+                            // 画像ファイルが見つかった場合、最初の数個のファイル名を表示
+                            android.util.Log.d("WidgetProvider", "   🎯 Found images:")
+                            imageFiles.take(5).forEach { file ->
+                                android.util.Log.d("WidgetProvider", "     - ${file.name}")
+                            }
+                            if (imageFiles.size > 5) {
+                                android.util.Log.d("WidgetProvider", "     - ... and ${imageFiles.size - 5} more")
                             }
                         }
                         
                         if (!imageFiles.isNullOrEmpty()) {
                             externalFilesDir = testDir
                             foundPath = pattern
-                            android.util.Log.d("WidgetProvider", "✅ Found images in: $pattern (${imageFiles.size} files)")
+                            android.util.Log.d("WidgetProvider", "✅ SUCCESS: Found ${imageFiles.size} images using pattern: $pattern")
                             
                             // 特にWidgetImagesディレクトリの場合、ファイル名を詳細に確認
                             if (pattern == "WidgetImages") {
@@ -957,6 +993,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
                             
                             break
                         }
+                    } else {
+                        android.util.Log.d("WidgetProvider", "   ❌ Directory does not exist")
                     }
                 }
             }
@@ -970,14 +1008,30 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     imageFilePaths.add(file.absolutePath)
                 }
                 
-                android.util.Log.d("WidgetProvider", "✅ Found ${imageFilePaths.size} image files for $currentAnimationType using pattern: $foundPath")
+                android.util.Log.d("WidgetProvider", "✅ FINAL RESULT: Found ${imageFilePaths.size} image files")
+                android.util.Log.d("WidgetProvider", "   🎯 Target animation: $currentAnimationType")
+                android.util.Log.d("WidgetProvider", "   📂 Used pattern: $foundPath")
+                android.util.Log.d("WidgetProvider", "   📁 Source directory: ${externalFilesDir.absolutePath}")
+                
+                // 最初の数個のファイル名を表示
+                if (imageFilePaths.isNotEmpty()) {
+                    android.util.Log.d("WidgetProvider", "   📋 Image files:")
+                    imageFilePaths.take(5).forEach { path ->
+                        val fileName = File(path).name
+                        android.util.Log.d("WidgetProvider", "     - $fileName")
+                    }
+                    if (imageFilePaths.size > 5) {
+                        android.util.Log.d("WidgetProvider", "     - ... and ${imageFilePaths.size - 5} more")
+                    }
+                }
                 
                 // 画像パスが見つかったら、最適化キャッシュを構築
                 if (imageFilePaths.isNotEmpty()) {
                     buildImageCache(context)
                 }
             } else {
-                android.util.Log.w("WidgetProvider", "⚠️ No images found in any path pattern for: $currentAnimationType")
+                android.util.Log.w("WidgetProvider", "⚠️ FAILED: No images found for animation: $currentAnimationType")
+                android.util.Log.d("WidgetProvider", "   🎯 Searched patterns: ${pathPatterns.joinToString(", ")}")
                 
                 // 利用可能なディレクトリを全てログ出力
                 android.util.Log.d("WidgetProvider", "📁 Available directories in base:")
@@ -996,6 +1050,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
         } catch (e: Exception) {
             android.util.Log.e("WidgetProvider", "❌ Error initializing image paths", e)
         }
+        
+        android.util.Log.d("WidgetProvider", "🔍 === IMAGE PATHS INITIALIZATION END ===")
     }
     
     private fun buildImageCache(context: Context) {

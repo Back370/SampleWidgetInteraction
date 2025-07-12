@@ -57,7 +57,7 @@ class AnimationStateManager private constructor(context: Context) {
     fun setAnimationType(animationType: String) {
         sharedPreferences.edit()
             .putString(KEY_ANIMATION_TYPE, animationType)
-            .apply()
+            .commit() // 同期的に保存して確実に更新されるようにする
         
         android.util.Log.d("AnimationStateManager", "Animation type set to: $animationType")
     }
@@ -68,7 +68,7 @@ class AnimationStateManager private constructor(context: Context) {
     fun setCharacterId(characterId: String) {
         sharedPreferences.edit()
             .putString(KEY_CHARACTER_ID, characterId)
-            .apply()
+            .commit() // 同期的に保存して確実に更新されるようにする
 
         android.util.Log.d("AnimationStateManager", "Character ID set to: $characterId")
     }
@@ -155,7 +155,7 @@ class AnimationStateManager private constructor(context: Context) {
         sharedPreferences.edit()
             .putString(KEY_PREVIOUS_ANIMATION_TYPE, currentType)
             .putBoolean(KEY_IS_TEMPORARY_ANIMATION, true)
-            .apply()
+            .commit() // 同期的に保存して確実に更新されるようにする
         
         // 指定されたアニメーションに切り替え
         setAnimationType(targetAnimationType)
@@ -177,7 +177,7 @@ class AnimationStateManager private constructor(context: Context) {
         sharedPreferences.edit()
             .remove(KEY_PREVIOUS_ANIMATION_TYPE)
             .remove(KEY_IS_TEMPORARY_ANIMATION)
-            .apply()
+            .commit() // 同期的に保存して確実に更新されるようにする
         
         android.util.Log.d("AnimationStateManager", "Restored previous animation: $previousType")
         return previousType
@@ -195,6 +195,13 @@ class AnimationStateManager private constructor(context: Context) {
      */
     fun isInTemporaryAnimation(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_TEMPORARY_ANIMATION, false)
+    }
+    
+    /**
+     * 保存されている前のアニメーション種別を取得（デバッグ用）
+     */
+    fun getPreviousAnimationType(): String {
+        return sharedPreferences.getString(KEY_PREVIOUS_ANIMATION_TYPE, "N/A") ?: "N/A"
     }
     
     //１アニメーションだけアイドル状態にする関数

@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.core.SensorRepository
 import com.example.core.SensorUiState
+import com.seo4d696b75.android.glance_widget_demo.widget.AnimationStateManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,9 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
     val uiState: StateFlow<SensorScreenUiState> = _uiState.asStateFlow()
 
     private var realSensorJob: Job? = null
+    
+    // 60度を超えたかどうかのフラグ（一度だけ実行するため）
+    private var hasTriggeredRapidFlow = false
 
     init {
         // 最初は本物のセンサーを起動
@@ -43,6 +47,14 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
     fun onDebugXzAngleChanged(angle: Float) {
         _uiState.update { it.copy(debugXzAngle = angle) }
         updateUiWithDebugValues()
+        
+        // デバッグモードで60度を超えた場合の処理
+        if (angle > 60f && !hasTriggeredRapidFlow) {
+            triggerRapidFlowState()
+        } else if (angle <= 60f) {
+            // 60度以下に戻ったらフラグをリセット
+            hasTriggeredRapidFlow = false
+        }
     }
 
     fun onDebugYzAngleChanged(angle: Float) {
@@ -72,6 +84,14 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
                     // デバッグモードがOFFの時だけ、本物の値でUIを更新
                     if (!_uiState.value.isDebugMode) {
                         _uiState.update { it.copy(currentSensorValue = realSensorValue) }
+                        
+                        // 60度を超えた場合の処理
+                        if (realSensorValue.xzAngle > 60f && !hasTriggeredRapidFlow) {
+                            triggerRapidFlowState()
+                        } else if (realSensorValue.xzAngle <= 60f) {
+                            // 60度以下に戻ったらフラグをリセット
+                            hasTriggeredRapidFlow = false
+                        }
                     }
                 }
         }
@@ -92,6 +112,42 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
                 isAngleExceeded = kotlin.math.abs(currentState.debugXzAngle) > 30f
             )
             _uiState.update { it.copy(currentSensorValue = debugSensorValue) }
+        }
+    }
+    
+    /**
+     * RapidFlowStateを実行する
+     */
+    private fun triggerRapidFlowState() {
+        try {
+            val animationStateManager = AnimationStateManager.getInstance(getApplication())
+            val newAnimationType = animationStateManager.RapidFlowState()
+            
+            android.util.Log.d("SensorViewModel", "🎯 XZ Angle exceeded 60°, triggered RapidFlowState: $newAnimationType")
+            
+            // フラグを設定して一度だけ実行されるようにする
+            hasTriggeredRapidFlow = true
+            
+            // ウィジェットに通知を送信
+            sendWidgetUpdateBroadcast()
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SensorViewModel", "❌ Error triggering RapidFlowState", e)
+        }
+    }
+    
+    /**
+     * ウィジェットに更新通知を送信
+     */
+    private fun sendWidgetUpdateBroadcast() {
+        try {
+            val intent = android.content.Intent("com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION").apply {
+                setPackage(getApplication<Application>().packageName)
+            }
+            getApplication<Application>().sendBroadcast(intent)
+            android.util.Log.d("SensorViewModel", "📡 Widget update broadcast sent")
+        } catch (e: Exception) {
+            android.util.Log.e("SensorViewModel", "❌ Error sending widget update broadcast", e)
         }
     }
 }
