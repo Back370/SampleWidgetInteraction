@@ -10,9 +10,9 @@ plugins {
     id("com.google.gms.google-services" )
 
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    //alias(libs.plugins.android.application)
+    //alias(libs.plugins.kotlin.android)
+    //alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -118,7 +118,7 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
+    //androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
