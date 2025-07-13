@@ -116,4 +116,8 @@ dependencies {
 
     implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
 
+    implementation("androidx.work:work-rxjava2:2.10.2")
+
+    implementation("com.google.code.gson:gson:2.10.1")
+
 }

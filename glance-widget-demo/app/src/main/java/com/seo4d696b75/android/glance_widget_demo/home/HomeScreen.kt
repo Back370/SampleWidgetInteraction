@@ -1,5 +1,6 @@
 package com.seo4d696b75.android.glance_widget_demo.home
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seo4d696b75.android.glance_widget_demo.Button
 import com.seo4d696b75.android.glance_widget_demo.R
 //import com.seo4d696b75.android.glance_widget_demo.notification.FloatingAdd
@@ -26,13 +29,16 @@ import com.seo4d696b75.android.glance_widget_demo.notification.FloatingNotificat
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList.notificationList
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationScreen
+import com.seo4d696b75.android.glance_widget_demo.response.GeminiModel
 
 //@Preview(showBackground = true)
 @Composable
 fun HomeScreen(
     onCharacterClicked: () -> Unit = {},
     onSettingsClicked: () -> Unit = {},
-    onWidgetSettingClicked: () -> Unit = {}
+    onWidgetSettingClicked: () -> Unit = {},
+    geminiModel: GeminiModel = viewModel(),
+    input: String = "絵文字を使わないで可愛くて自然な挨拶をして！"
 ){
     Column(
         modifier = Modifier
@@ -81,8 +87,11 @@ fun HomeScreen(
     //FloatingAdd(onAddClicked = { NotificationList.Add("test") } )
     FloatingNotification(
         onNotificationClicked = {screen.value = true},
-        onWidgetSettingClicked = onWidgetSettingClicked
+        onWidgetSettingClicked = onWidgetSettingClicked,
+        onRunGeminiClicked = { geminiModel.startGeminiProcess(input) }
     )
+
+
 
     if (screen.value) {
         NotificationScreen(
