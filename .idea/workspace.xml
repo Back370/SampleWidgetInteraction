@@ -22,18 +22,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/response/Response.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/setting/SettingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/setting/SettingScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glance-widget-demo/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/time/Time.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/local.properties" beforeDir="false" afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/WidgetAnimationService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/WidgetAnimationService.kt" afterDir="false" />
-    </list>
+    <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -227,6 +216,17 @@
       <updated>1751078887638</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <ignored-roots>
