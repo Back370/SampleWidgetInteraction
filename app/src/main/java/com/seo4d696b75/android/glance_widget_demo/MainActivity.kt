@@ -19,7 +19,10 @@ import androidx.navigation.compose.rememberNavController
 import com.seo4d696b75.android.glance_widget_demo.ui.MainScreen
 import com.seo4d696b75.android.glance_widget_demo.theme.AppTheme
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.appcheck.FirebaseAppCheck
@@ -27,15 +30,33 @@ import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderF
 import kotlinx.coroutines.delay
 import android.util.Log
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.delay
+import android.content.Intent
+import android.widget.Button
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seo4d696b75.android.glance_widget_demo.character.CharacterScreen
+import androidx.activity.viewModels
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.google.gson.Gson
+
 import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
 import com.seo4d696b75.android.glance_widget_demo.ui.theme.ChottoKawaiiTheme
 import com.seo4d696b75.android.glance_widget_demo.home.HomeScreen
 import com.seo4d696b75.android.glance_widget_demo.sensor.SensorScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import com.seo4d696b75.android.glance_widget_demo.character.CharacterScreen
+import com.seo4d696b75.android.glance_widget_demo.response.GeminiModel
+import com.seo4d696b75.android.glance_widget_demo.time.UploadWorker
+import java.util.concurrent.TimeUnit
+
+import com.seo4d696b75.android.glance_widget_demo.time.GeminiData
 
 
 class MainActivity : ComponentActivity() {
@@ -48,16 +69,39 @@ class MainActivity : ComponentActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
         firebaseStorage = FirebaseStorage.getInstance()
 
+        val geminiModel: GeminiModel by viewModels()
+
         // App Check初期化（セキュリティ強化）
         try {
             val firebaseAppCheck = FirebaseAppCheck.getInstance()
             firebaseAppCheck.installAppCheckProviderFactory(
                 PlayIntegrityAppCheckProviderFactory.getInstance()
             )
-            Log.d("MainActivity", "✅ Firebase App Check initialized")
+            android.util.Log.d("MainActivity", "✅ Firebase App Check initialized")
+            android.util.Log.d("gemini", BuildConfig.apiKey)
         } catch (e: Exception) {
             Log.w("MainActivity", "⚠️ Firebase App Check initialization failed (optional)", e)
         }
+
+
+
+        val myData = GeminiData(geminiModel)
+        val gson = Gson()
+        val GeminiJsonData = gson.toJson(myData)
+
+            // ここでWorkRequestを作成し、WorkManagerに依頼する
+        val myUploadWork = PeriodicWorkRequestBuilder<UploadWorker>(
+            1, TimeUnit.HOURS, // repeatInterval (the period cycle)
+            15, TimeUnit.MINUTES) // flexInterval
+            .setInputData(
+                workDataOf(
+                    "gemini_json_data" to GeminiJsonData
+                )
+            )
+            .build()
+        WorkManager.getInstance(this).enqueue(myUploadWork) // これで依頼完了！
+        Toast.makeText(this, "バックグラウンドタスクをスケジュールしました", Toast.LENGTH_SHORT).show()
+
 
         setContent {
             ChottoKawaiiTheme {
@@ -76,7 +120,8 @@ class MainActivity : ComponentActivity() {
                                 onCharacterClicked = { navController.navigate("Character") },
                                 onSettingsClicked = { navController.navigate("Settings") },
                                 onWidgetSettingClicked = { navController.navigate("WidgetSettings") },
-                                onSensorClicked = { navController.navigate("Sensor") }
+                                onSensorClicked = { navController.navigate("Sensor") },
+                                geminiModel = geminiModel
                             )
                         }
                         composable("Settings") {
@@ -286,7 +331,7 @@ class MainActivity : ComponentActivity() {
             ImageDownloadService.downloadCharacterImages(this, "Mao")
             ImageDownloadService.downloadCharacterImages(this, "Haru")
 
-            
+
             Log.d("MainActivity", "✅ Image download service started for Mao character")
             
             // 5秒後にダウンロード状況を再確認

@@ -1,10 +1,18 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    id("com.google.gms.google-services")
+    id("com.google.gms.google-services" )
+
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -22,7 +30,20 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val properties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties") // project.rootProject.file() もOK
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { input ->
+                properties.load(input)
+            }
+        }
+
+        val apiKey = properties["apiKey"] as String? ?: "DEFAULT_API_KEY_IF_NOT_FOUND"
+        buildConfigField ("String", "apiKey", "\"$apiKey\"")
     }
+
+
 
     buildTypes {
         release {
@@ -42,6 +63,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
@@ -96,6 +118,13 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
+
+    implementation("androidx.work:work-rxjava2:2.10.2")
+
+    implementation("com.google.code.gson:gson:2.10.1")
 
 }
