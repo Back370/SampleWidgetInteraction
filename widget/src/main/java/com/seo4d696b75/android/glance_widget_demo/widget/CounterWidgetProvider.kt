@@ -133,16 +133,47 @@ class CounterWidgetProvider : AppWidgetProvider() {
             Constants.ACTION_SHAKE_DETECTED -> {
                 android.util.Log.d("WidgetProvider", "📳 Shake detected!")
 
-                // TODO: 振動したときの関数の呼び出し
-
+                // 振動したときの処理
+                try {
+                    val animationStateManager = AnimationStateManager.getInstance(context)
+                    val newAnimationType = animationStateManager.RapidSpecialState()
+                    
+                    android.util.Log.d("WidgetProvider", "🎯 Shake detected, triggered RapidSpecialState: $newAnimationType")
+                    
+                    // アニメーションサービスに通知を送信
+                    val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                        action = "TOGGLE_ANIMATION"
+                    }
+                    context.startService(serviceIntent)
+                    
+                    android.util.Log.d("WidgetProvider", "📡 Sent animation toggle notification to service")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("WidgetProvider", "❌ Error handling shake detected", e)
+                }
             }
 
             Constants.ACTION_ANGLE_EXCEEDED -> {
                 android.util.Log.d("WidgetProvider", "📐 Angle exceeded!")
 
-                // TODO: 傾きが閾値を超えたときの関数の呼び出し
-                //なお、閾値はcore内のSensorRepositoryで定義
-
+                // 傾きが閾値を超えたときの処理
+                try {
+                    val animationStateManager = AnimationStateManager.getInstance(context)
+                    val newAnimationType = animationStateManager.RapidFlowState()
+                    
+                    android.util.Log.d("WidgetProvider", "🎯 Angle exceeded, triggered RapidFlowState: $newAnimationType")
+                    
+                    // アニメーションサービスに通知を送信
+                    val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                        action = "TOGGLE_ANIMATION"
+                    }
+                    context.startService(serviceIntent)
+                    
+                    android.util.Log.d("WidgetProvider", "📡 Sent animation toggle notification to service")
+                    
+                } catch (e: Exception) {
+                    android.util.Log.e("WidgetProvider", "❌ Error handling angle exceeded", e)
+                }
             }
 
             // --- ここまで ---

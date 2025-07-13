@@ -30,7 +30,6 @@ object SensorRepository {
                 if (event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) return
 
                 val currentTime = System.currentTimeMillis()
-                var isShaking = false
                 if ((currentTime - lastUpdate) > 100) {
                     val diffTime = (currentTime - lastUpdate)
                     lastUpdate = currentTime
@@ -40,17 +39,24 @@ object SensorRepository {
                     val z = event.values[2]
 
                     val speed = abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000
-                    isShaking = speed > SHAKE_THRESHOLD
+                    val isShaking = speed > SHAKE_THRESHOLD
 
                     val xzAngle = Math.toDegrees(atan2(x.toDouble(), z.toDouble())).toFloat()
                     val yzAngle = Math.toDegrees(atan2(y.toDouble(), z.toDouble())).toFloat()
 
+                    val isAngleExceeded = abs(xzAngle) > 60f
                     val uiState = SensorUiState(
                         xzAngle = xzAngle,
                         yzAngle = yzAngle, // yzAngleをセット
-                        isAngleExceeded = abs(xzAngle) > 30f,
+                        isAngleExceeded = isAngleExceeded, // 60度に変更してSensorViewModelと統一
                         isShaking = isShaking // isShakingをセット
                     )
+                    
+                    // デバッグログを追加
+                    if (isShaking || isAngleExceeded) {
+                        android.util.Log.d("SensorRepository", "🎯 Sensor event: xzAngle=${xzAngle.toInt()}°, isShaking=$isShaking, isAngleExceeded=$isAngleExceeded")
+                    }
+                    
                     trySend(uiState)
 
                     lastX = x

@@ -62,7 +62,8 @@
             android:name="com.example.core.SensorService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse"
+            tools:replace="android:foregroundServiceType" />
 
         <receiver
             android:name=".widget.CounterWidgetProvider"
@@ -75,6 +76,9 @@
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION" />
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK" />
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION" />
+                <action android:name="com.seo4d696b75.android.SENSOR_TRIGGERED_UPDATE" />
+                <action android:name="com.seo4d696b75.android.SHAKE_DETECTED" />
+                <action android:name="com.seo4d696b75.android.ANGLE_EXCEEDED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

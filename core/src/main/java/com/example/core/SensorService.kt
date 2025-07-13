@@ -17,6 +17,10 @@ class SensorService : Service() {
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
+    
+    // フラグ管理
+    private var isAngleExceededTriggered = false
+    private var isShakeTriggered = false
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "SensorServiceChannel"
@@ -27,13 +31,29 @@ class SensorService : Service() {
 
         scope.launch {
             SensorRepository.getSensorData(applicationContext).collect { state ->
-                // 揺れを検知したら、専用の合言葉を送信
-                if (state.isShaking) {
+                // デバッグログを追加
+                android.util.Log.d("SensorService", "📊 Sensor data: xzAngle=${state.xzAngle}°, yzAngle=${state.yzAngle}°, isShaking=${state.isShaking}, isAngleExceeded=${state.isAngleExceeded}")
+                
+                // 揺れを検知したら、専用の合言葉を送信（フラグで制御）
+                if (state.isShaking && !isShakeTriggered) {
+                    android.util.Log.d("SensorService", "📳 Shake detected! Sending broadcast")
                     sendBroadcastFor(Constants.ACTION_SHAKE_DETECTED)
+                    isShakeTriggered = true
+                } else if (!state.isShaking && isShakeTriggered) {
+                    // 振動が止まったらフラグをリセット
+                    android.util.Log.d("SensorService", "📳 Shake stopped, resetting flag")
+                    isShakeTriggered = false
                 }
-                // 角度のしきい値を超えたら、専用の合言葉を送信
-                if (state.isAngleExceeded) {
+                
+                // 角度のしきい値を超えたら、専用の合言葉を送信（フラグで制御）
+                if (state.isAngleExceeded && !isAngleExceededTriggered) {
+                    android.util.Log.d("SensorService", "📐 Angle exceeded! Sending broadcast")
                     sendBroadcastFor(Constants.ACTION_ANGLE_EXCEEDED)
+                    isAngleExceededTriggered = true
+                } else if (!state.isAngleExceeded && isAngleExceededTriggered) {
+                    // 角度が閾値以下に戻ったらフラグをリセット
+                    android.util.Log.d("SensorService", "📐 Angle back to normal, resetting flag")
+                    isAngleExceededTriggered = false
                 }
             }
         }
