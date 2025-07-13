@@ -14,9 +14,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +37,10 @@ import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList.
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationScreen
 import com.seo4d696b75.android.glance_widget_demo.response.GeminiModel
 
-//@Preview(showBackground = true)
+val MyCustomFontFamily = FontFamily(
+    Font(R.font.futuralightbt))
+
+@Preview(showBackground = true)
 @Composable
 fun HomeScreen(
     onCharacterClicked: () -> Unit = {},
@@ -44,13 +53,19 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .paint(
+                painter = painterResource(R.drawable.okumono_game40) ,
+                contentScale = ContentScale.Crop
+            )
             .padding(10.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Text(
             text = "Widget Kawaii",
-            fontSize = 55.sp
+            fontSize = 55.sp,
+            fontFamily = MyCustomFontFamily,
+            color = Color(120,50,250)
         )
 
         Spacer(modifier = Modifier.height(50.dp))
