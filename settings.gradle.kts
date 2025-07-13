@@ -1,12 +1,6 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
     }
@@ -19,6 +13,11 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Sensor"
+rootProject.name = "glance-widget-demo"
 include(":app")
- 
+include(":theme")
+include(":ui")
+include(":widget")
+include(":domain")
+include(":data")
+include(":core")

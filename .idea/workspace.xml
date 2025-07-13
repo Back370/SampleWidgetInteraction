@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AndroidLayouts">
+    <shared>
+      <config />
+    </shared>
+    <layouts>
+      <layout url="file://$PROJECT_DIR$/widget/src/main/res/layout/widget_layout.xml">
+        <config>
+          <theme>@android:style/Theme.Material.Light</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/widget/src/main/res/layout/widget_layout_wall.xml">
+        <config>
+          <state>Landscape</state>
+          <theme>@android:style/Theme.Material.Light</theme>
+        </config>
+      </layout>
+    </layouts>
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="261ae674-0ac8-4483-ab47-2db2fb7e6228" name="Changes" comment="" />
+    <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,7 +31,43 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=00156253Q000382)]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="glance-widget-demo" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin File" />
+        <option value="Kotlin Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$/.." value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -25,32 +79,62 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/Back370/SampleWidgetInteraction.git&quot;,
-    &quot;accountId&quot;: &quot;b5d8b3f3-d5b3-44bf-b237-b2f0b646fcca&quot;
+    &quot;accountId&quot;: &quot;86ef7fd3-7d05-4146-a172-cef56da7ff4e&quot;
   }
 }</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
-  <component name="ProjectId" id="2z5WT3CaVdSHIQEMdedKdJdReDf" />
+  <component name="ProjectId" id="2z7Ox2q0wmjkWnm14DUB5m6j7MF" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/PCUSER/VScode-project/SampleWidgetInteraction/glance-widget-demo&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Android App.app.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "git-widget-placeholder": "response2",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/VScodeFiles/GitHub/SampleWidgetInteraction/glance-widget-demo",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo" />
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction\app\src\main\res\drawable" />
+      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\ui\src\main\java\com\seo4d696b75\android\glance_widget_demo\ui" />
+      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\widget\src\main\res\drawable" />
+      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\widget\src\main\res\layout" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction" />
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction\app\src\main\java\com\seo4d696b75\android" />
+      <recent name="C:\Users\ID-No\AndroidStudioProjects\SampleWidgetInteraction\app\src\main\java\com\seo4d696b75\android\glance_widget_demo" />
+      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\app\src\main\res\drawable" />
+      <recent name="C:\VScodeFiles\GitHub\SampleWidgetInteraction\glance-widget-demo\app\src\main\java\com\seo4d696b75\android\glance_widget_demo" />
+    </key>
+    <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="com.seo4d696b75.android.glance_widget_demo" />
+      <recent name="com.seo4d696b75.android.glance_widget_demo.character" />
+      <recent name="com.seo4d696b75.android" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
-      <module name="Sensor.app" />
+      <module name="glance-widget-demo.app" />
       <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
       <option name="DEPLOY" value="true" />
       <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
@@ -125,12 +209,61 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="261ae674-0ac8-4483-ab47-2db2fb7e6228" name="Changes" comment="" />
-      <created>1751021418504</created>
+      <changelist id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="" />
+      <created>1751078887638</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1751021418504</updated>
+      <updated>1751078887638</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/.." />
+    </ignored-roots>
+    <MESSAGE value="gitignoreの変更" />
+    <option name="LAST_COMMIT_MESSAGE" value="gitignoreの変更" />
+  </component>
+  <component name="play_dynamic_filters_status">
+    <option name="appIdToCheckInfo">
+      <map>
+        <entry key="com.seo4d696b75.android.glance_widget_demo">
+          <value>
+            <CheckInfo lastCheckTimestamp="1752282028619" />
+          </value>
+        </entry>
+        <entry key="com.seo4d696b75.android.glance_widget_demo.data.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1751649661471" />
+          </value>
+        </entry>
+        <entry key="com.seo4d696b75.android.glance_widget_demo.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1752282028628" />
+          </value>
+        </entry>
+        <entry key="com.seo4d696b75.android.glance_widget_demo.ui.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1751992773571" />
+          </value>
+        </entry>
+        <entry key="com.seo4d696b75.android.glance_widget_demo.widget.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1752282034405" />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
