@@ -743,11 +743,11 @@ class WidgetAnimationService : Service() {
                     isCacheReady = optimizedImageCache.isNotEmpty()
                     actualFrameCount = optimizedImageCache.size
 
-                                android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
-            android.util.Log.d("WidgetAnimationService", "  - Image size: ${scaledWidth}x${scaledHeight} (base: ${baseSize}x${baseSize})")
-            android.util.Log.d("WidgetAnimationService", "  - Quality scale: ${qualityScale}")
-            android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
-            android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
+                    android.util.Log.d("WidgetAnimationService", "✅ Image cache built: ${optimizedImageCache.size} images")
+                    android.util.Log.d("WidgetAnimationService", "  - Image size: ${scaledWidth}x${scaledHeight} (base: ${baseSize}x${baseSize})")
+                    android.util.Log.d("WidgetAnimationService", "  - Quality scale: ${qualityScale}")
+                    android.util.Log.d("WidgetAnimationService", "  - Cache ready: $isCacheReady")
+                    android.util.Log.d("WidgetAnimationService", "  - Actual frame count: $actualFrameCount (vs DEFAULT_FRAMES: $DEFAULT_FRAMES)")
             
             // 読み込まれた画像の最初の数枚のファイル名をログ出力
             if (imageFilePaths.isNotEmpty()) {

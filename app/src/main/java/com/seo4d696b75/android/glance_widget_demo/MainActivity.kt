@@ -49,8 +49,6 @@ import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
 import com.seo4d696b75.android.glance_widget_demo.ui.theme.ChottoKawaiiTheme
 import com.seo4d696b75.android.glance_widget_demo.home.HomeScreen
 import com.seo4d696b75.android.glance_widget_demo.sensor.SensorScreen
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import com.seo4d696b75.android.glance_widget_demo.character.CharacterScreen
 import com.seo4d696b75.android.glance_widget_demo.response.GeminiModel
 import com.seo4d696b75.android.glance_widget_demo.time.UploadWorker

@@ -51,6 +51,6 @@ class GeminiModel : ViewModel() {
     }
 
     fun WeatherByGemini(input: String) {
-        startGeminiProcess("絵文字を使わないで可愛く自然に今日と明日の名古屋の天気予報をして！")
+        startGeminiProcess("絵文字を使わないで可愛く自然に、WEB検索して今日と明日の名古屋中区の天気予報をして！")
     }
-}
+} 
