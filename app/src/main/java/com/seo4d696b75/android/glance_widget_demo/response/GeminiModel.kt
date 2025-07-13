@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class GeminiModel : ViewModel() {
 
-    fun startGeminiProcess(input: String = "絵文字を使わないで可愛くて自然な挨拶をして！"){
+    fun startGeminiProcess(input: String = "女の子のように３行以内で絵文字を使わないで可愛くて自然な挨拶をしてほしいな"){
 
         Log.d("MyTag", "startGeminiProcess called with input: $input")
         // viewModelScope は ViewModel のライフサイクルに紐づくコルーチンスコープ
@@ -26,7 +26,7 @@ class GeminiModel : ViewModel() {
     }
 
     suspend fun RunGemini(
-        input: String = "絵文字を使わないで可愛くて自然な挨拶をして！"
+        input: String = "女の子のように３行以内で絵文字を使わないで可愛くて自然な挨拶をしてほしいな"
     ) : String {
         var response : String = ""
         try {
@@ -47,7 +47,7 @@ class GeminiModel : ViewModel() {
     }
 
     fun GreetingByGemini(input: String) {
-        startGeminiProcess("現在の時刻は${input}です。絵文字を使わないで可愛くて自然な挨拶をして！")
+        startGeminiProcess("現在の時刻は${input}です。女の子のように３行以内で絵文字を使わないで可愛くて自然な挨拶をしてほしいな")
     }
 
     fun WeatherByGemini(input: String) {

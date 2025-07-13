@@ -38,7 +38,7 @@ fun HomeScreen(
     onSettingsClicked: () -> Unit = {},
     onWidgetSettingClicked: () -> Unit = {},
     geminiModel: GeminiModel = viewModel(),
-    input: String = "絵文字を使わないで可愛くて自然な挨拶をして！",
+    input: String = "女の子のように３行以内で絵文字を使わないで可愛くて自然な挨拶をしてほしいな、あと今日の名古屋の天気もあなたがweb検索して教えて～",
     onSensorClicked: () -> Unit = {}
 ){
     Column(
