@@ -55,6 +55,7 @@ import com.seo4d696b75.android.glance_widget_demo.time.UploadWorker
 import java.util.concurrent.TimeUnit
 
 import com.seo4d696b75.android.glance_widget_demo.time.GeminiData
+import com.seo4d696b75.android.glance_widget_demo.videoprocess.VideoProcessScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -119,6 +120,7 @@ class MainActivity : ComponentActivity() {
                                 onSettingsClicked = { navController.navigate("Settings") },
                                 onWidgetSettingClicked = { navController.navigate("WidgetSettings") },
                                 onSensorClicked = { navController.navigate("Sensor") },
+                                onVideoProcessClicked = { navController.navigate("VideoProcess") },
                                 geminiModel = geminiModel
                             )
                         }
@@ -143,6 +145,9 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel(),
                                 modifier = Modifier.fillMaxSize()
                             )
+                        }
+                        composable("VideoProcess") {
+                            VideoProcessScreen()
                         }
                     }
                 }

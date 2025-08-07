@@ -48,7 +48,8 @@ fun HomeScreen(
     onWidgetSettingClicked: () -> Unit = {},
     geminiModel: GeminiModel = viewModel(),
     input: String = "女の子のように３行以内で絵文字を使わないで可愛くて自然な挨拶をしてほしいな、あと今日の名古屋の天気もあなたがweb検索して教えて～",
-    onSensorClicked: () -> Unit = {}
+    onSensorClicked: () -> Unit = {},
+    onVideoProcessClicked: () -> Unit = {}
 ){
     Column(
         modifier = Modifier
@@ -106,6 +107,13 @@ fun HomeScreen(
                 icon = painterResource(id = R.drawable.baseline_notifications_24),
                 text = "センサー",
                 onClick = onSensorClicked
+            )
+
+            Button(
+                modifier = Modifier.weight(1f),
+                icon = painterResource(id = R.drawable.baseline_video_file_24),
+                text = "動画処理",
+                onClick = onVideoProcessClicked
             )
 
         }
