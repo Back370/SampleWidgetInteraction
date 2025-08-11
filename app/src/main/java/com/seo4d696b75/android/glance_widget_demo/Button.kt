@@ -30,7 +30,7 @@ fun Button(
         modifier = modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
             .clip(RoundedCornerShape(30.dp))
-            .background(Color.Cyan.copy(alpha = 0.1f))
+            .background(Color.White.copy(alpha = 0.7f))
             .clickable(onClick = onClick)
             .padding(5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
