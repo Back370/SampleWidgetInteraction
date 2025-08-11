@@ -55,6 +55,7 @@ import com.seo4d696b75.android.glance_widget_demo.time.UploadWorker
 import java.util.concurrent.TimeUnit
 
 import com.seo4d696b75.android.glance_widget_demo.time.GeminiData
+import com.seo4d696b75.android.glance_widget_demo.time.setDailyAlarm
 
 
 class MainActivity : ComponentActivity() {
@@ -98,6 +99,9 @@ class MainActivity : ComponentActivity() {
             )
             .build()
         WorkManager.getInstance(this).enqueue(myUploadWork) // これで依頼完了！
+
+        setDailyAlarm(this) //アラーム設定
+        Log.d("MyAlarmReceiver", "アラーム設定")
         Toast.makeText(this, "バックグラウンドタスクをスケジュールしました", Toast.LENGTH_SHORT).show()
 
 

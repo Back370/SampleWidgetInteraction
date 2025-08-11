@@ -56,6 +56,18 @@ object NotificationList : ViewModel() {
         notificationList.remove(text)
     }
 
+    fun Clear() {
+        notificationList.clear()
+    }
+
+    fun IsEmpty() : Boolean {
+        if (notificationList.isEmpty()) {
+            return true
+        } else {
+            return false
+        }
+    }
+
 
 }
 

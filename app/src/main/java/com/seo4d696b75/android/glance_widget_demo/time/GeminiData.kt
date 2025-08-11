@@ -40,12 +40,7 @@ class UploadWorker(appContext: Context, workerParams: WorkerParameters):
         val random = (0..10).random()
 
         if (Gemini_Data != null) {
-            if (random % 2 == 0) {
                 Gemini_Data.geminiModel.GreetingByGemini(formattedDateTime)
-            } else {
-                Gemini_Data.geminiModel.WeatherByGemini(formattedDateTime)
-            }
-
         }
 
     }
