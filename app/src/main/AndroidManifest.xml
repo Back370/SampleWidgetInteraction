@@ -14,6 +14,12 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    
+    <!-- Google Calendar permissions -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
     <application
         android:name=".AppApplication"
@@ -79,6 +85,7 @@
                 <action android:name="com.seo4d696b75.android.SENSOR_TRIGGERED_UPDATE" />
                 <action android:name="com.seo4d696b75.android.SHAKE_DETECTED" />
                 <action android:name="com.seo4d696b75.android.ANGLE_EXCEEDED" />
+                <action android:name="com.seo4d696b75.android.glance_widget_demo.VOICE_INPUT_RESULT" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

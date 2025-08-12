@@ -1,4 +1,3 @@
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.library)
     alias(libs.plugins.org.jetbrains.kotlin.android)
@@ -33,7 +32,15 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+        }
+    }
 }
 kotlin {
     jvmToolchain(17) // Specify the desired Java version for the toolchain
@@ -47,7 +54,11 @@ dependencies {
     
     // Hilt for dependency injection
     implementation(libs.hilt.android)
+    implementation(libs.play.services.basement)
     ksp(libs.hilt.android.compiler)
+
+    // Google Sign-In for calendar integration
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 
     implementation(project(":domain"))
     implementation(project(":data"))

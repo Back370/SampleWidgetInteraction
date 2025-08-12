@@ -6,7 +6,18 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     
+    <!-- 音声入力用パーミッション -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    
     <application>
+        <activity
+            android:name=".VoiceInputActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Material.Light.Dialog"
+            android:label="音声入力"
+            android:launchMode="singleTop" />
+            
         <receiver
             android:name=".CounterWidgetProvider"
             android:exported="true"
@@ -19,6 +30,7 @@
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK" />
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION" />
                 <action android:name="com.seo4d696b75.android.glance_widget_demo.WIDGET_TAP" />
+                <action android:name="com.seo4d696b75.android.glance_widget_demo.VOICE_INPUT_RESULT" />
 
                 <action android:name="com.seo4d696b75.android.SENSOR_TRIGGERED_UPDATE" />
                 <action android:name="com.seo4d696b75.android.SHAKE_DETECTED" />

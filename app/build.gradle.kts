@@ -43,15 +43,38 @@ android {
         buildConfigField ("String", "apiKey", "\"$apiKey\"")
     }
 
+    // キーストア設定の読み込み
+    val keystoreProperties = Properties()
+    val keystorePropertiesFile = rootProject.file("local.properties")
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
 
+    signingConfigs {
+        getByName("debug") {
+            // デバッグ用のデフォルトキーストアを使用
+        }
+        create("release") {
+            // カスタムキーストアを使用
+            storeFile = keystoreProperties["STORE_FILE"]?.let { file(it) }
+                ?: file(System.getProperty("user.home") + "/.android/debug.keystore") // フォールバック
+            storePassword = keystoreProperties["STORE_PASSWORD"] as String? ?: "android"
+            keyAlias = keystoreProperties["KEY_ALIAS"] as String? ?: "androiddebugkey"
+            keyPassword = keystoreProperties["KEY_PASSWORD"] as String? ?: "android"
+        }
+    }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -72,6 +95,11 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/androidx.compose.material3_material3.version"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
         }
     }
 }

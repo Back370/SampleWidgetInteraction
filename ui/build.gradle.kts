@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.seo4d696b75.android.glance_widget_demo.ui"
-    compileSdk = 35
+    compileSdk = 34 // Use 34 if 35 is not supported by your AGP version
 
     defaultConfig {
         minSdk = 27
@@ -36,6 +36,15 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
+    }
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+        }
     }
 }
 kotlin {

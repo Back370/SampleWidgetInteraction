@@ -26,6 +26,8 @@ class CounterWidgetProvider : AppWidgetProvider() {
         const val ACTION_START_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.START_ANIMATION"
         const val ACTION_TOGGLE_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
         const val ACTION_WIDGET_TAP = "com.seo4d696b75.android.glance_widget_demo.WIDGET_TAP"
+        const val ACTION_WIDGET_DOUBLE_TAP = "com.seo4d696b75.android.glance_widget_demo.WIDGET_DOUBLE_TAP"
+        const val ACTION_VOICE_INPUT_RESULT = "com.seo4d696b75.android.glance_widget_demo.VOICE_INPUT_RESULT"
 //        const val ACTION_STOP_ANIMATION = "com.seo4d696b75.android.glance_widget_demo.STOP_ANIMATION"
 //        const val ACTION_AUTO_RESTART_CHECK = "com.seo4d696b75.android.glance_widget_demo.AUTO_RESTART_CHECK"
         const val ACTION_ANIMATION_FRAME = "com.seo4d696b75.android.glance_widget_demo.ANIMATION_FRAME"
@@ -37,6 +39,10 @@ class CounterWidgetProvider : AppWidgetProvider() {
         // ウィジェットに最適化されたサイズ
         private const val WIDGET_IMAGE_SIZE = 120 // dpに基づく最適サイズ
         
+        // ダブルタップ検出用の定数
+        private const val DOUBLE_TAP_TIMEOUT_MS = 300L // ダブルタップ検出のタイムアウト時間
+        private const val DOUBLE_TAP_DELAY_MS = 100L // ダブルタップ処理の遅延時間
+        
         private var isAnimationRunning = false
         private var currentFrame = 0
         private var currentTotalFrames = DEFAULT_FRAMES // 動的に決定される実際のフレーム数
@@ -47,6 +53,11 @@ class CounterWidgetProvider : AppWidgetProvider() {
         private var averageFrameTime = 0L
         private var maxFrameTime = 0L
         private var minFrameTime = Long.MAX_VALUE
+        
+        // ダブルタップ検出用の変数
+        private var lastTapTime = 0L
+        private var tapCount = 0
+        private var doubleTapPendingIntent: PendingIntent? = null
         
         // 2fpsタイマーシステム（AlarmManagerベース）
         private var expectedTriggerTime = 0L
@@ -109,26 +120,18 @@ class CounterWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         
-        android.util.Log.i("WidgetProvider", "🎯 === INTENT RECEIVED ===")
-        android.util.Log.i("WidgetProvider", "  - Action: ${intent.action}")
-        android.util.Log.i("WidgetProvider", "  - Package: ${intent.getPackage()}")
-        android.util.Log.i("WidgetProvider", "  - Extras: ${intent.extras}")
-        
         when (intent.action) {
             ACTION_WIDGET_UPDATE -> {
                 android.util.Log.d("WidgetProvider", "📡 AlarmManager triggered update")
                 handleAlarmManagerUpdate(context)
             }
 
-            // --- ここにcaseを追記 ---
             Constants.ACTION_SENSOR_TRIGGERED_UPDATE -> {
                 android.util.Log.d("WidgetProvider", "📐 Sensor triggered update command received")
                 // 既存の更新処理を呼び出すなど、ここで行いたい処理を記述
                 // 例えば、アニメーションを切り替えたり、特定のフレームを表示したり
                 handleToggleAnimation(context, "SpecialState") // 例: 特別なアニメーションに切り替え
             }
-
-            // --- ここからが呼び出し部分 ---
 
             Constants.ACTION_SHAKE_DETECTED -> {
                 android.util.Log.d("WidgetProvider", "📳 Shake detected!")
@@ -169,8 +172,6 @@ class CounterWidgetProvider : AppWidgetProvider() {
                     }
                     context.startService(serviceIntent)
                     
-                    android.util.Log.d("WidgetProvider", "📡 Sent animation toggle notification to service")
-                    
                 } catch (e: Exception) {
                     android.util.Log.e("WidgetProvider", "❌ Error handling angle exceeded", e)
                 }
@@ -189,14 +190,110 @@ class CounterWidgetProvider : AppWidgetProvider() {
                 handleToggleAnimation(context)
             }
             ACTION_WIDGET_TAP -> {
-                android.util.Log.i("WidgetProvider", "👆 === WIDGET TAP CONFIRMED ===")
-                android.util.Log.i("WidgetProvider", "  - About to execute special animation")
-                handleWidgetTap(context)
-                android.util.Log.i("WidgetProvider", "  - Special animation handling completed")
+                // タイムアウト後のシングルタップ処理かどうかをチェック
+                val requestCode = intent.getIntExtra("requestCode", 0)
+                if (requestCode == 101) {
+                    // タイムアウト後のシングルタップ処理
+                    android.util.Log.d("WidgetProvider", "⏰ Timeout reached, executing single tap action")
+                    executeSingleTapAction(context)
+                } else {
+                    // 通常のタップ処理
+                    android.util.Log.i("WidgetProvider", "👆 === WIDGET TAP CONFIRMED ===")
+                    android.util.Log.i("WidgetProvider", "  - About to execute special animation")
+                    handleWidgetTap(context)
+                    android.util.Log.i("WidgetProvider", "  - Special animation handling completed")
+                }
+            }
+            ACTION_WIDGET_DOUBLE_TAP -> {
+                android.util.Log.i("WidgetProvider", "👆👆 === WIDGET DOUBLE TAP CONFIRMED ===")
+                android.util.Log.i("WidgetProvider", "  - About to execute double tap action")
+                handleWidgetDoubleTap(context)
+                android.util.Log.i("WidgetProvider", "  - Double tap action completed")
             }
             ACTION_SETTINGS_CHANGED -> {
                 android.util.Log.d("WidgetProvider", "🔧 Settings changed - updating widgets")
                 handleSettingsChanged(context, intent)
+            }
+            ACTION_VOICE_INPUT_RESULT -> {
+                android.util.Log.d("WidgetProvider", "🎤 Voice input result received: ${intent.getStringExtra(Intent.EXTRA_TEXT)}")
+                
+                // 音声入力結果をウィジェットに反映
+                val voiceInputText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (voiceInputText?.isNotEmpty() == true) {
+                    
+                    // Googleカレンダー結果をチェック
+                    val calendarResult = intent.getStringExtra("calendar_result")
+                    if (calendarResult == "success") {
+                        val eventTitle = intent.getStringExtra("event_title") ?: "予定"
+                        android.util.Log.d("WidgetProvider", "📅 Calendar event added successfully: $eventTitle")
+                        
+                        // カレンダー成功時のアニメーション
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        val newAnimationType = animationStateManager.setSpecialState("カレンダーに予定を追加しました")
+                        android.util.Log.d("WidgetProvider", "🎯 Calendar success animation: $newAnimationType")
+                        
+                    } else if (calendarResult == "error") {
+                        val errorMessage = intent.getStringExtra("error_message") ?: "エラー"
+                        android.util.Log.e("WidgetProvider", "❌ Calendar error: $errorMessage")
+                        
+                        // カレンダーエラー時のアニメーション
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        val newAnimationType = animationStateManager.setSpecialState("カレンダーエラー")
+                        android.util.Log.d("WidgetProvider", "🎯 Calendar error animation: $newAnimationType")
+                        
+                    } else {
+                        // 通常の音声入力処理
+                        val animationStateManager = AnimationStateManager.getInstance(context)
+                        val newAnimationType = animationStateManager.setSpecialState(voiceInputText)
+                        android.util.Log.d("WidgetProvider", "🎯 Voice input result: $voiceInputText, triggered animation: $newAnimationType")
+                    }
+                    
+                    // 古いキャッシュをクリア
+                    optimizedImageCache.forEach { bitmap ->
+                        if (!bitmap.isRecycled) {
+                            bitmap.recycle()
+                        }
+                    }
+                    optimizedImageCache.clear()
+                    imageFilePaths.clear()
+                    isCacheReady = false
+                    
+                    // 新しいアニメーション種類の画像パスを取得
+                    android.util.Log.d("WidgetProvider", "🔄 Rebuilding image cache for new animation type")
+                    initializeImagePaths(context)
+                    
+                    // フレームをリセット
+                    currentFrame = 0
+                    android.util.Log.d("WidgetProvider", "🔄 Frame reset to 0 for new animation")
+                    
+                    // 状態更新を確実にするため、少し遅延してからサービスに通知
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        try {
+                            // アニメーションサービスに切り替えを通知
+                            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
+                                action = "TOGGLE_ANIMATION"
+                            }
+                            
+                            // TOGGLE_ANIMATIONは通常のサービスとして開始（フォアグラウンドサービスではない）
+                            context.startService(serviceIntent)
+                            
+                            android.util.Log.d("WidgetProvider", "📡 Service notification sent after delay")
+                            
+                        } catch (e: Exception) {
+                            android.util.Log.e("WidgetProvider", "❌ Error sending service notification", e)
+                        }
+                    }, 50L) // 50ms遅延
+                    
+                    // ウィジェットの表示を更新
+                    val appWidgetManager = AppWidgetManager.getInstance(context)
+                    val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, CounterWidgetProvider::class.java))
+                    updateAllWidgets(context, appWidgetManager, widgetIds)
+                    
+                    android.util.Log.d("WidgetProvider", "✅ Voice input animation started, will auto-restore when animation cycle completes")
+                    
+                } else {
+                    android.util.Log.d("WidgetProvider", "🎤 Voice input result is empty, no action taken.")
+                }
             }
             else -> {
                 android.util.Log.d("WidgetProvider", "🔍 Unknown action received: ${intent.action}")
@@ -829,11 +926,143 @@ class CounterWidgetProvider : AppWidgetProvider() {
             android.util.Log.e("WidgetProvider", "❌ Error handling animation toggle", e)
         }
     }
+
+    //ウィジェットをダブルタップ
+    private fun handleWidgetDoubleTap(context: Context){
+        try{
+            android.util.Log.d("WidgetProvider", "🔧 Handling widget double tap - Starting voice input")
+            
+            // 音声入力アクティビティを開始
+            val voiceIntent = Intent(context, com.seo4d696b75.android.glance_widget_demo.widget.VoiceInputActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            
+            try {
+                context.startActivity(voiceIntent)
+                android.util.Log.d("WidgetProvider", "🎤 Voice input activity started successfully")
+            } catch (e: Exception) {
+                android.util.Log.e("WidgetProvider", "❌ Failed to start voice input activity", e)
+                // フォールバック: 音声認識インテントを直接開始
+                startVoiceRecognitionDirectly(context)
+            }
+            
+        }catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error handling widget double tap", e)
+        }
+    }
+    
+    // フォールバック用の直接音声認識開始
+    private fun startVoiceRecognitionDirectly(context: Context) {
+        try {
+            android.util.Log.d("WidgetProvider", "🎤 Starting voice recognition directly")
+            
+            val intent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.JAPANESE.toString())
+                putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, "何かお話しください...")
+                putExtra(android.speech.RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            
+            context.startActivity(intent)
+            android.util.Log.d("WidgetProvider", "🎤 Direct voice recognition started")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Failed to start direct voice recognition", e)
+        }
+    }
     
     // ウィジェットタップ処理
     private fun handleWidgetTap(context: Context) {
         try {
             android.util.Log.d("WidgetProvider", "👆 === WIDGET TAP DETECTED ===")
+            
+            val currentTime = System.currentTimeMillis()
+            
+            // ダブルタップ検出ロジック
+            if (currentTime - lastTapTime < DOUBLE_TAP_TIMEOUT_MS) {
+                // ダブルタップ検出
+                tapCount++
+                android.util.Log.d("WidgetProvider", "👆👆 Double tap detected! Tap count: $tapCount")
+                
+                // 既存のダブルタップ処理をキャンセル
+                doubleTapPendingIntent?.let { pendingIntent ->
+                    alarmManager?.cancel(pendingIntent)
+                    pendingIntent.cancel()
+                }
+                
+                // ダブルタップアクションを即座に実行
+                handleWidgetDoubleTap(context)
+                
+                // カウンターをリセット
+                tapCount = 0
+                lastTapTime = 0L
+                
+            } else {
+                // シングルタップの可能性
+                tapCount = 1
+                lastTapTime = currentTime
+                
+                // ダブルタップの可能性があるため、少し待機
+                scheduleDoubleTapCheck(context)
+
+                executeSingleTapAction(context)
+                
+                android.util.Log.d("WidgetProvider", "👆 Single tap detected, waiting for potential double tap...")
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error handling widget tap", e)
+        }
+    }
+    
+    // ダブルタップチェックをスケジュール
+    private fun scheduleDoubleTapCheck(context: Context) {
+        try {
+            // 既存のダブルタップ処理をキャンセル
+            doubleTapPendingIntent?.let { pendingIntent ->
+                alarmManager?.cancel(pendingIntent)
+                pendingIntent.cancel()
+            }
+            
+            // 新しいダブルタップチェックをスケジュール
+            val doubleTapIntent = Intent(context, CounterWidgetProvider::class.java).apply {
+                action = ACTION_WIDGET_TAP
+            }
+            
+            doubleTapPendingIntent = PendingIntent.getBroadcast(
+                context,
+                101, // ダブルタップチェック用の固有リクエストコード
+                doubleTapIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // タイムアウト後にシングルタップ処理を実行
+            val timeoutTime = SystemClock.elapsedRealtime() + DOUBLE_TAP_TIMEOUT_MS
+            
+            if (alarmManager == null) {
+                alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            }
+            
+            alarmManager?.setExactAndAllowWhileIdle(
+                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                timeoutTime,
+                doubleTapPendingIntent!!
+            )
+            
+            android.util.Log.d("WidgetProvider", "⏰ Scheduled single tap check in ${DOUBLE_TAP_TIMEOUT_MS}ms")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("WidgetProvider", "❌ Error scheduling double tap check", e)
+            // エラーが発生した場合は即座にシングルタップ処理を実行
+            executeSingleTapAction(context)
+        }
+    }
+    
+    // シングルタップアクションを実行
+    private fun executeSingleTapAction(context: Context) {
+        try {
+            android.util.Log.d("WidgetProvider", "👆 === EXECUTING SINGLE TAP ACTION ===")
             
             val animationStateManager = AnimationStateManager.getInstance(context)
             
@@ -882,59 +1111,7 @@ class CounterWidgetProvider : AppWidgetProvider() {
             android.util.Log.d("WidgetProvider", "✅ Special animation started, will auto-restore when animation cycle completes")
             
         } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error handling widget tap", e)
-        }
-    }
-    
-    // 元のアニメーションに復元する処理
-    private fun handleRestoreAnimation(context: Context) {
-        try {
-            android.util.Log.d("WidgetProvider", "🔄 === RESTORING PREVIOUS ANIMATION ===")
-            
-            val animationStateManager = AnimationStateManager.getInstance(context)
-            
-            // 現在Specialアニメーション中でない場合は何もしない
-            if (!animationStateManager.isInTemporarySpecial()) {
-                android.util.Log.d("WidgetProvider", "⚠️ Not in temporary Special animation, nothing to restore")
-                return
-            }
-            
-            // 元のアニメーションに復元
-            val restoredAnimationType = animationStateManager.restorePreviousAnimation()
-            android.util.Log.d("WidgetProvider", "✅ Restored to animation: $restoredAnimationType")
-            
-            // 古いキャッシュをクリア
-            optimizedImageCache.forEach { bitmap ->
-                if (!bitmap.isRecycled) {
-                    bitmap.recycle()
-                }
-            }
-            optimizedImageCache.clear()
-            imageFilePaths.clear()
-            isCacheReady = false
-            
-            // 復元されたアニメーション用の画像パスを取得
-            android.util.Log.d("WidgetProvider", "🔄 Building cache for restored animation: $restoredAnimationType")
-            initializeImagePaths(context)
-            
-            // フレームをリセット
-            currentFrame = 0
-            
-            // アニメーションサービスに切り替えを通知
-            val serviceIntent = Intent(context, WidgetAnimationService::class.java).apply {
-                action = "TOGGLE_ANIMATION"
-            }
-            context.startService(serviceIntent)
-            
-            // ウィジェットの表示を更新
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, CounterWidgetProvider::class.java))
-            updateAllWidgets(context, appWidgetManager, widgetIds)
-            
-            android.util.Log.d("WidgetProvider", "✅ Animation restoration complete")
-            
-        } catch (e: Exception) {
-            android.util.Log.e("WidgetProvider", "❌ Error restoring animation", e)
+            android.util.Log.e("WidgetProvider", "❌ Error executing single tap action", e)
         }
     }
     

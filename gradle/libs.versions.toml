@@ -21,6 +21,7 @@ glide = "4.16.0"
 coroutines = "1.7.3"
 firebase-appcheck-playintegrity = "18.0.0"
 material = "1.10.0"
+play-services-basement = "18.7.1"
 
 [libraries]
 androidx-core = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -67,6 +68,7 @@ glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", versi
 coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 firebase-appcheck-playintegrity = { group = "com.google.firebase", name = "firebase-appcheck-playintegrity", version.ref = "firebase-appcheck-playintegrity" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+play-services-basement = { group = "com.google.android.gms", name = "play-services-basement", version.ref = "play-services-basement" }
 
 [plugins]
 com-android-application = { id = "com.android.application", version.ref = "agp" }

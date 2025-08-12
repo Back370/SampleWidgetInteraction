@@ -31,8 +31,7 @@ class SensorService : Service() {
 
         scope.launch {
             SensorRepository.getSensorData(applicationContext).collect { state ->
-                // デバッグログを追加
-                android.util.Log.d("SensorService", "📊 Sensor data: xzAngle=${state.xzAngle}°, yzAngle=${state.yzAngle}°, isShaking=${state.isShaking}, isAngleExceeded=${state.isAngleExceeded}")
+             
                 
                 // 揺れを検知したら、専用の合言葉を送信（フラグで制御）
                 if (state.isShaking && !isShakeTriggered) {

@@ -33,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
-
 import com.seo4d696b75.android.glance_widget_demo.theme.AppTheme
 import com.seo4d696b75.android.glance_widget_demo.widget.AnimationStateManager
 
@@ -144,19 +143,6 @@ fun MainScreen(
                             )
                         }
                         
-//                        OutlinedButton(
-//                            onClick = {
-//                                android.util.Log.d("MainScreen", "🔧 権限チェック開始")
-//                                checkPermissions(context)
-//                            },
-//                            modifier = Modifier.padding(horizontal = 16.dp)
-//                        ) {
-//                            Text(
-//                                text = "権限とディレクトリ確認",
-//                                fontSize = 14.sp
-//                            )
-//                        }
-                        
                         OutlinedButton(
                             onClick = {
                                 android.util.Log.d("MainScreen", "📁 画像整理開始")
@@ -238,19 +224,13 @@ fun MainScreen(
 private fun updateWidgetAfterToggle(context: Context) {
     try {
         android.util.Log.d("MainScreen", "🔄 Updating widget after animation toggle")
-        
-        // ウィジェットプロバイダーにアニメーション切り替えを通知
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val componentName = ComponentName(
             "com.seo4d696b75.android.glance_widget_demo",
             "com.seo4d696b75.android.glance_widget_demo.widget.CounterWidgetProvider"
         )
         val widgetIds = appWidgetManager.getAppWidgetIds(componentName)
-        
-        android.util.Log.d("MainScreen", "Found ${widgetIds.size} widgets to update")
-        
         if (widgetIds.isNotEmpty()) {
-            // ウィジェットプロバイダーに切り替え通知を送信
             val toggleIntent = Intent().apply {
                 component = componentName
                 action = "com.seo4d696b75.android.glance_widget_demo.TOGGLE_ANIMATION"
@@ -258,10 +238,6 @@ private fun updateWidgetAfterToggle(context: Context) {
                 putExtra("TOGGLE_TIME", System.currentTimeMillis())
             }
             context.sendBroadcast(toggleIntent)
-            
-            android.util.Log.d("MainScreen", "✅ Widget toggle broadcast sent to ${widgetIds.size} widgets")
-            
-            // 追加の確実性のため、少し遅延してもう一度送信
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 try {
                     val retryIntent = Intent().apply {
@@ -272,16 +248,11 @@ private fun updateWidgetAfterToggle(context: Context) {
                         putExtra("TOGGLE_TIME", System.currentTimeMillis())
                     }
                     context.sendBroadcast(retryIntent)
-                    android.util.Log.d("MainScreen", "🔄 Retry toggle broadcast sent")
                 } catch (e: Exception) {
                     android.util.Log.e("MainScreen", "❌ Error in retry toggle", e)
                 }
             }, 500L)
-            
-        } else {
-            android.util.Log.w("MainScreen", "⚠️ No widgets found to update")
         }
-        
     } catch (e: Exception) {
         android.util.Log.e("MainScreen", "❌ Error updating widget after toggle", e)
     }

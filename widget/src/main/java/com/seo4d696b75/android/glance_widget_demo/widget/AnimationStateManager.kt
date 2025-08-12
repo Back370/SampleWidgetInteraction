@@ -1,5 +1,6 @@
 package com.seo4d696b75.android.glance_widget_demo.widget
 
+
 import android.content.Context
 import android.content.SharedPreferences
 
@@ -89,6 +90,57 @@ class AnimationStateManager private constructor(context: Context) {
     fun setSpecialState(): String {
         setAnimationType(ANIMATION_TYPE_SPECIAL)
         return ANIMATION_TYPE_SPECIAL
+    }
+    
+    //音声入力結果に基づいてアニメーション状態を設定する関数
+    fun setSpecialState(voiceInput: String): String {
+        // 音声入力の内容に基づいてアニメーションを決定
+        val normalizedInput = voiceInput.lowercase().trim()
+        
+        val animationType = when {
+            // アイドル状態のキーワード
+            normalizedInput.contains("アイドル") || 
+            normalizedInput.contains("待機") || 
+            normalizedInput.contains("休憩") ||
+            normalizedInput.contains("待って") ||
+            normalizedInput.contains("おやすみ") ||
+            normalizedInput.contains("じっと") ||
+            normalizedInput.contains("静止") -> ANIMATION_TYPE_ADLE
+            
+            // フロー状態のキーワード
+            normalizedInput.contains("フロー") || 
+            normalizedInput.contains("ふらふら") || 
+            normalizedInput.contains("揺れる") ||
+            normalizedInput.contains("ゆれる") ||
+            normalizedInput.contains("動く") ||
+            normalizedInput.contains("うごく") ||
+            normalizedInput.contains("歩く") ||
+            normalizedInput.contains("あるく") ||
+            normalizedInput.contains("踊る") ||
+            normalizedInput.contains("おどる") -> ANIMATION_TYPE_FLOW
+            
+            // スペシャル状態のキーワード
+            normalizedInput.contains("スペシャル") || 
+            normalizedInput.contains("特別") || 
+            normalizedInput.contains("喜び") || 
+            normalizedInput.contains("楽しい") ||
+            normalizedInput.contains("うれしい") ||
+            normalizedInput.contains("たのしい") ||
+            normalizedInput.contains("笑う") ||
+            normalizedInput.contains("わらう") ||
+            normalizedInput.contains("ハッピー") ||
+            normalizedInput.contains("はっぴー") ||
+            normalizedInput.contains("最高") ||
+            normalizedInput.contains("さいこう") ||
+            normalizedInput.contains("素晴らしい") ||
+            normalizedInput.contains("すばらしい") -> ANIMATION_TYPE_SPECIAL
+            
+            else -> ANIMATION_TYPE_SPECIAL // デフォルトはスペシャル
+        }
+        
+        setAnimationType(animationType)
+        android.util.Log.d("AnimationStateManager", "🎤 日本語音声入力: '$voiceInput' → アニメーション: $animationType")
+        return animationType
     }
 
     
