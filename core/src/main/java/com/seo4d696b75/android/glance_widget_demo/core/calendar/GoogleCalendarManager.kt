@@ -295,7 +295,7 @@ class GoogleCalendarManager(private val context: Context) {
         var title = input
         val removalPatterns = listOf(
             // 例: 午後3時, 午前10時, 15:30, 3時半, 三時半
-            Regex("(今日|明日|明後日|来週|来月)"),
+            Regex("(今日|明日|明後日|明々後日|来週|来月)"),
             Regex("(午前|午後)?\\d{1,2}:\\d{2}"),
             Regex("(午前|午後)?\\d{1,2}時半"),
             Regex("(午前|午後)?\\d{1,2}時"),
