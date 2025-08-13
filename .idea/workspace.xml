@@ -86,12 +86,12 @@
     &quot;assignee&quot;: &quot;Back370&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Back370/SampleWidgetInteraction.git",
-    "accountId": "86ef7fd3-7d05-4146-a172-cef56da7ff4e"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Back370/SampleWidgetInteraction.git&quot;,
+    &quot;accountId&quot;: &quot;86ef7fd3-7d05-4146-a172-cef56da7ff4e&quot;
   }
-}]]></component>
+}</component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -119,7 +119,7 @@
     "com.google.services.firebase.aqiPopupShown": "true",
     "git-widget-placeholder": "Dev",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/VScodeFiles/GitHub/JetTodoApp",
+    "last_opened_file_path": "C:/Users/PCUSER/VScode-project/SampleWidgetInteraction",
     "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
   },
   "keyToStringList": {
