@@ -79,11 +79,11 @@ fun CharacterScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_face_24),
-                contentDescription = null,
-                modifier = Modifier.size(300.dp)
-            )
+//            Icon(
+//                painter = painterResource(id = R.drawable.baseline_face_24),
+//                contentDescription = null,
+//                modifier = Modifier.size(300.dp)
+//            )
 
             Spacer(modifier = Modifier.height(50.dp))
 
@@ -99,7 +99,7 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "Mao",
                     onClick = {
-                        Log.d("CharacterScreen", "📥 Maoキャラクター選択")
+                        Log.d("CharacterScreen", " Maoキャラクター選択")
                         val animationStateManager = AnimationStateManager.getInstance(context)
                         animationStateManager.setCharacterId(AnimationStateManager.CHARACTER_ID_MAO)
                         updateWidgetAfterCharacterChange(context)
@@ -111,76 +111,76 @@ fun CharacterScreen(
                     icon = painterResource(id = R.drawable.baseline_face_24),
                     text = "Haru",
                     onClick = {
-                        Log.d("CharacterScreen", "📥 Haruキャラクター選択")
+                        Log.d("CharacterScreen", " Haruキャラクター選択")
                         val animationStateManager = AnimationStateManager.getInstance(context)
                         animationStateManager.setCharacterId(AnimationStateManager.CHARACTER_ID_HARU)
                         updateWidgetAfterCharacterChange(context)
                     }
                 )
 
-                Button(
-                    modifier = Modifier.weight(1f),
-                    icon = painterResource(id = R.drawable.baseline_face_24),
-                    text = "キャラC",
-                    onClick = {
-                        Log.d("CharacterScreen", "📥 キャラC選択（未実装）")
-                        // キャラCは未実装のためログのみ
-                    }
-                )
+//                Button(
+//                    modifier = Modifier.weight(1f),
+//                    icon = painterResource(id = R.drawable.baseline_face_24),
+//                    text = "キャラC",
+//                    onClick = {
+//                        Log.d("CharacterScreen", "📥 キャラC選択（未実装）")
+//                        // キャラCは未実装のためログのみ
+//                    }
+//                )
 
             }
             
             Spacer(modifier = Modifier.height(30.dp))
             
-            Text(
-                text = "Rapidアニメーション（1回のみ実行）",
-                modifier = Modifier.padding(10.dp)
-            )
+//            Text(
+//                text = "Rapidアニメーション（1回のみ実行）",
+//                modifier = Modifier.padding(10.dp)
+//            )
             
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    icon = painterResource(id = R.drawable.baseline_face_24),
-                    text = "Rapid\nAdle",
-                    onClick = {
-                        Log.d("CharacterScreen", "📥 Rapid Adle実行")
-                        val animationStateManager = AnimationStateManager.getInstance(context)
-                        animationStateManager.RapidAdleState()
-                        updateWidgetAfterCharacterChange(context)
-                    }
-                )
-
-                Button(
-                    modifier = Modifier.weight(1f),
-                    icon = painterResource(id = R.drawable.baseline_face_24),
-                    text = "Rapid\nFlow",
-                    onClick = {
-                        Log.d("CharacterScreen", "📥 Rapid Flow実行")
-                        val animationStateManager = AnimationStateManager.getInstance(context)
-                        animationStateManager.RapidFlowState()
-                        updateWidgetAfterCharacterChange(context)
-                    }
-                )
-
-                Button(
-                    modifier = Modifier.weight(1f),
-                    icon = painterResource(id = R.drawable.baseline_face_24),
-                    text = "Rapid\nSpecial",
-                    onClick = {
-                        Log.d("CharacterScreen", "📥 Rapid Special実行")
-                        val animationStateManager = AnimationStateManager.getInstance(context)
-                        animationStateManager.RapidSpecialState()
-                        updateWidgetAfterCharacterChange(context)
-                    }
-                )
-
-            }
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(10.dp),
+//                horizontalArrangement = Arrangement.SpaceEvenly,
+//                verticalAlignment = Alignment.CenterVertically,
+//            ) {
+//                Button(
+//                    modifier = Modifier.weight(1f),
+//                    icon = painterResource(id = R.drawable.baseline_face_24),
+//                    text = "Rapid\nAdle",
+//                    onClick = {
+//                        Log.d("CharacterScreen", "📥 Rapid Adle実行")
+//                        val animationStateManager = AnimationStateManager.getInstance(context)
+//                        animationStateManager.RapidAdleState()
+//                        updateWidgetAfterCharacterChange(context)
+//                    }
+//                )
+//
+//                Button(
+//                    modifier = Modifier.weight(1f),
+//                    icon = painterResource(id = R.drawable.baseline_face_24),
+//                    text = "Rapid\nFlow",
+//                    onClick = {
+//                        Log.d("CharacterScreen", "📥 Rapid Flow実行")
+//                        val animationStateManager = AnimationStateManager.getInstance(context)
+//                        animationStateManager.RapidFlowState()
+//                        updateWidgetAfterCharacterChange(context)
+//                    }
+//                )
+//
+//                Button(
+//                    modifier = Modifier.weight(1f),
+//                    icon = painterResource(id = R.drawable.baseline_face_24),
+//                    text = "Rapid\nSpecial",
+//                    onClick = {
+//                        Log.d("CharacterScreen", "📥 Rapid Special実行")
+//                        val animationStateManager = AnimationStateManager.getInstance(context)
+//                        animationStateManager.RapidSpecialState()
+//                        updateWidgetAfterCharacterChange(context)
+//                    }
+//                )
+//
+//            }
         }
     }
 }

@@ -141,13 +141,13 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.navigate("Home") }
                             )
                         }
-                        composable("Sensor"){
-                            SensorScreen(
-                                onBackClick = { navController.navigate("Home") },
-                                viewModel = viewModel(),
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
+//                        composable("Sensor"){
+//                            SensorScreen(
+//                                onBackClick = { navController.navigate("Home") },
+//                                viewModel = viewModel(),
+//                                modifier = Modifier.fillMaxSize()
+//                            )
+//                        }
                     }
                 }
             }
