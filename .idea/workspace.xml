@@ -22,9 +22,11 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="gitignoreの変更">
+    <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="UIの改善">
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/appInsightsSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/appInsightsSettings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,12 +86,12 @@
     &quot;assignee&quot;: &quot;Back370&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Back370/SampleWidgetInteraction.git",
-    "accountId": "b5d8b3f3-d5b3-44bf-b237-b2f0b646fcca"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Back370/SampleWidgetInteraction.git&quot;,
+    &quot;accountId&quot;: &quot;b5d8b3f3-d5b3-44bf-b237-b2f0b646fcca&quot;
   }
-}]]></component>
+}</component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -230,6 +232,15 @@
       <option name="presentableId" value="Default" />
       <updated>1751078887638</updated>
     </task>
+    <task id="LOCAL-00001" summary="UIの改善">
+      <option name="closed" value="true" />
+      <created>1755252193175</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1755252193175</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -260,7 +271,8 @@
       <path value="$PROJECT_DIR$/.." />
     </ignored-roots>
     <MESSAGE value="gitignoreの変更" />
-    <option name="LAST_COMMIT_MESSAGE" value="gitignoreの変更" />
+    <MESSAGE value="UIの改善" />
+    <option name="LAST_COMMIT_MESSAGE" value="UIの改善" />
   </component>
   <component name="play_dynamic_filters_status">
     <option name="appIdToCheckInfo">
