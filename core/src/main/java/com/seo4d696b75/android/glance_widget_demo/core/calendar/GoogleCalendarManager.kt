@@ -48,6 +48,7 @@ class GoogleCalendarManager(private val context: Context) {
             
             Log.d(TAG, "🔐 GoogleSignInOptions built successfully")
             Log.d(TAG, "  - Requested scopes: ${gso.scopeArray?.joinToString()}")
+            Log.d(TAG, "  - Package name: ${context.packageName}")
             
             googleSignInClient = GoogleSignIn.getClient(context, gso)
             Log.d(TAG, "🔐 Google Sign-In client initialized successfully")
@@ -57,12 +58,18 @@ class GoogleCalendarManager(private val context: Context) {
             if (currentAccount != null) {
                 Log.d(TAG, "✅ User already signed in: ${currentAccount.email}")
                 Log.d(TAG, "  - Granted scopes: ${currentAccount.grantedScopes.joinToString()}")
+                Log.d(TAG, "  - Account ID: ${currentAccount.id}")
             } else {
                 Log.d(TAG, "⚠️ No user currently signed in")
             }
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error initializing Google Sign-In", e)
+            Log.e(TAG, "  - Exception type: ${e.javaClass.simpleName}")
+            Log.e(TAG, "  - Exception message: ${e.message}")
+            if (e.cause != null) {
+                Log.e(TAG, "  - Cause: ${e.cause?.message}")
+            }
         }
     }
     
@@ -91,8 +98,13 @@ class GoogleCalendarManager(private val context: Context) {
             val account = getCurrentAccount()
             if (!hasCalendarScope(account)) {
                 Log.e(TAG, "❌ Calendar scope not granted or user not signed in")
+                Log.e(TAG, "  - Account: ${account?.email ?: "null"}")
+                Log.e(TAG, "  - Has scope: ${hasCalendarScope(account)}")
                 return@withContext false
             }
+            
+            Log.d(TAG, "  - Using account: ${account?.email}")
+            Log.d(TAG, "  - Account ID: ${account?.id}")
             
             // ユーザーのGoogleアカウントでOAuth2資格情報を作成
             val credential = GoogleAccountCredential.usingOAuth2(
@@ -103,6 +115,9 @@ class GoogleCalendarManager(private val context: Context) {
                 selectedAccount = account?.account
                 selectedAccountName = account?.email
             }
+            
+            Log.d(TAG, "  - OAuth2 credential created successfully")
+            Log.d(TAG, "  - Selected account: ${credential.selectedAccountName}")
             
             calendarService = Calendar.Builder(
                 NetHttpTransport(),
@@ -117,6 +132,11 @@ class GoogleCalendarManager(private val context: Context) {
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error initializing calendar service", e)
+            Log.e(TAG, "  - Exception type: ${e.javaClass.simpleName}")
+            Log.e(TAG, "  - Exception message: ${e.message}")
+            if (e.cause != null) {
+                Log.e(TAG, "  - Cause: ${e.cause?.message}")
+            }
             return@withContext false
         }
     }

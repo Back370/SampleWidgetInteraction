@@ -24,9 +24,16 @@
   <component name="ChangeListManager">
     <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="UIの改善">
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/appInsightsSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/appInsightsSettings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/google-services.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/google-services.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/release/app-release.aab" beforeDir="false" afterPath="$PROJECT_DIR$/app/release/app-release.aab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/AppApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/AppApplication.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/home/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/seo4d696b75/android/glance_widget_demo/core/calendar/GoogleCalendarManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/seo4d696b75/android/glance_widget_demo/core/calendar/GoogleCalendarManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/VoiceInputActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/VoiceInputActivity.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,7 +75,7 @@
     </option>
   </component>
   <component name="GenerateSignedApkSettings">
-    <option name="KEY_STORE_PATH" value="C:\VScodeFiles\GitHub\SampleWidgetInteraction\PackageApp.jks" />
+    <option name="KEY_STORE_PATH" value="C:\Users\PCUSER\Downloads\PackageApp.jks" />
     <option name="KEY_ALIAS" value="key0" />
     <option name="REMEMBER_PASSWORDS" value="true" />
   </component>
@@ -107,8 +114,10 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;Android App.app.executor&quot;: &quot;Run&quot;,
+    &quot;ApkExportedModule&quot;: &quot;glance-widget-demo.app&quot;,
     &quot;BundleExportedModule&quot;: &quot;glance-widget-demo.app&quot;,
-    &quot;ExportBundle.BundlePathForglance-widget-demo.app&quot;: &quot;C:\\VScodeFiles\\GitHub\\SampleWidgetInteraction\\glance-widget-demo\\app&quot;,
+    &quot;ExportApk.ApkPathForglance-widget-demo.app&quot;: &quot;C:\\Users\\PCUSER\\VScode-project\\SampleWidgetInteraction\\app&quot;,
+    &quot;ExportBundle.BundlePathForglance-widget-demo.app&quot;: &quot;C:\\Users\\PCUSER\\VScode-project\\SampleWidgetInteraction\\app&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
@@ -117,9 +126,9 @@
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Dev&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/PCUSER/VScode-project/SampleWidgetInteraction&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/PCUSER/VScode-project/SampleWidgetInteraction/app&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -279,7 +288,7 @@
       <map>
         <entry key="com.seo4d696b75.android.glance_widget_demo">
           <value>
-            <CheckInfo lastCheckTimestamp="1755041670787" />
+            <CheckInfo lastCheckTimestamp="1755446502929" />
           </value>
         </entry>
         <entry key="com.seo4d696b75.android.glance_widget_demo.data.test">
@@ -289,7 +298,7 @@
         </entry>
         <entry key="com.seo4d696b75.android.glance_widget_demo.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1755041670790" />
+            <CheckInfo lastCheckTimestamp="1755446502929" />
           </value>
         </entry>
         <entry key="com.seo4d696b75.android.glance_widget_demo.ui.test">

@@ -9,6 +9,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -30,6 +32,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seo4d696b75.android.glance_widget_demo.Button
 import com.seo4d696b75.android.glance_widget_demo.R
+import com.seo4d696b75.android.glance_widget_demo.data.ImageDownloadService
 //import com.seo4d696b75.android.glance_widget_demo.notification.FloatingAdd
 import com.seo4d696b75.android.glance_widget_demo.notification.FloatingNotification
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList
@@ -50,6 +53,17 @@ fun HomeScreen(
     input: String = "女の子のように３行以内で絵文字を使わないで可愛くて自然な挨拶をしてほしいな、あと今日の名古屋の天気もあなたがweb検索して教えて～",
     onSensorClicked: () -> Unit = {}
 ){
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE) }
+    val initialShow = remember { prefs.getBoolean("is_first_launch", true) }
+    val showFirstLaunchDownload = remember { mutableStateOf(initialShow) }
+
+    // 初回起動であれば、このセッション中は表示し続け、次回以降は表示しないようにフラグだけ落としておく
+    LaunchedEffect(initialShow) {
+        if (initialShow) {
+            prefs.edit().putBoolean("is_first_launch", false).apply()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -92,6 +106,28 @@ fun HomeScreen(
                 onClick = onSettingsClicked
             )
         }
+
+        // 初回起動時のみ表示される「画像をダウンロードする」ボタン
+            Spacer(modifier = Modifier.height(20.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ){
+                Button(
+                    modifier = Modifier.weight(1f),
+                    icon = painterResource(id = R.drawable.baseline_notifications_24),
+                    text = "画像をダウンロードする",
+                    onClick = {
+                        ImageDownloadService.downloadCharacterImages(context, "Mao")
+                        ImageDownloadService.downloadCharacterImages(context, "Haru")
+                        showFirstLaunchDownload.value = false
+                    }
+                )
+            }
+
 
 //        Row(
 //            modifier = Modifier

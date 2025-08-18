@@ -11,6 +11,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.seo4d696b75.android.glance_widget_demo.core.calendar.GoogleCalendarManager
 import com.seo4d696b75.android.glance_widget_demo.core.calendar.CalendarResult
+import com.seo4d696b75.android.glance_widget_demo.core.calendar.GoogleCalendarConfigChecker
+import com.seo4d696b75.android.glance_widget_demo.core.calendar.DiagnosisStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,6 +33,7 @@ class VoiceInputActivity : Activity() {
     }
 
     private lateinit var calendarManager: GoogleCalendarManager
+    private lateinit var configChecker: GoogleCalendarConfigChecker
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +41,11 @@ class VoiceInputActivity : Activity() {
         android.util.Log.d("VoiceInputActivity", " Voice input activity started")
 
         calendarManager = GoogleCalendarManager(this)
+        configChecker = GoogleCalendarConfigChecker(this)
         calendarManager.initializeGoogleSignIn()
+        
+        // 設定の診断を実行
+        runConfigurationDiagnosis()
 
         logSystemLanguageSettings()
 
@@ -141,6 +148,19 @@ class VoiceInputActivity : Activity() {
             try {
                 android.util.Log.d("VoiceInputActivity", "Adding event to Google Calendar: '$spokenText'")
                 Toast.makeText(this@VoiceInputActivity, "カレンダーに予定を追加中...", Toast.LENGTH_SHORT).show()
+                
+                // 設定の診断を実行
+                val diagnosis = configChecker.diagnoseConfiguration()
+                if (!diagnosis.allPassed) {
+                    android.util.Log.w("VoiceInputActivity", "⚠️ Configuration issues detected:")
+                    diagnosis.criticalIssues.forEach { issue ->
+                        android.util.Log.w("VoiceInputActivity", "  - ${issue.name}: ${issue.message}")
+                    }
+                    diagnosis.recommendations.forEach { recommendation ->
+                        android.util.Log.i("VoiceInputActivity", "  - Recommendation: $recommendation")
+                    }
+                }
+                
                 val result = calendarManager.addEventFromVoiceInput(spokenText)
                 when (result) {
                     is CalendarResult.Success -> {
@@ -167,7 +187,15 @@ class VoiceInputActivity : Activity() {
                             putExtra("error_message", result.message)
                         }
                         setResult(Activity.RESULT_OK, resultIntent)
-                        Toast.makeText(this@VoiceInputActivity, "予定の追加に失敗しました: ${result.message}", Toast.LENGTH_LONG).show()
+                        
+                        // エラーメッセージをより詳細に
+                        val detailedMessage = if (result.message.contains("認可")) {
+                            "Googleアカウントの認可が必要です。設定を確認してください。"
+                        } else {
+                            result.message
+                        }
+                        
+                        Toast.makeText(this@VoiceInputActivity, "予定の追加に失敗しました: $detailedMessage", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
@@ -242,6 +270,38 @@ class VoiceInputActivity : Activity() {
                     finish()
                 }
             }
+        }
+    }
+
+    private fun runConfigurationDiagnosis() {
+        try {
+            android.util.Log.d("VoiceInputActivity", "🔍 Running configuration diagnosis...")
+            val diagnosis = configChecker.diagnoseConfiguration()
+            
+            android.util.Log.d("VoiceInputActivity", "📊 Diagnosis Results:")
+            diagnosis.items.forEach { item ->
+                val statusIcon = when (item.status) {
+                    DiagnosisStatus.PASS -> "✅"
+                    DiagnosisStatus.WARNING -> "⚠️"
+                    DiagnosisStatus.CRITICAL -> "❌"
+                }
+                android.util.Log.d("VoiceInputActivity", "  $statusIcon ${item.name}: ${item.message}")
+            }
+            
+            if (!diagnosis.allPassed) {
+                android.util.Log.w("VoiceInputActivity", "⚠️ Configuration issues found:")
+                diagnosis.criticalIssues.forEach { issue ->
+                    android.util.Log.w("VoiceInputActivity", "  ❌ ${issue.name}: ${issue.message}")
+                }
+                android.util.Log.i("VoiceInputActivity", "💡 Recommendations:")
+                diagnosis.recommendations.forEach { recommendation ->
+                    android.util.Log.i("VoiceInputActivity", "  - $recommendation")
+                }
+            } else {
+                android.util.Log.d("VoiceInputActivity", "✅ All configuration checks passed")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("VoiceInputActivity", "❌ Error during configuration diagnosis", e)
         }
     }
 

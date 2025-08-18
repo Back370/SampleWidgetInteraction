@@ -38,6 +38,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.seo4d696b75.android.glance_widget_demo.character.CharacterScreen
 import androidx.activity.viewModels
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
@@ -136,6 +137,7 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.navigate("Home") }
                             )
                         }
+
 //                        composable("WidgetSettings"){
 //                            WidgetSettingsScreen(
 //                                onBackClick = { navController.navigate("Home") }
@@ -155,7 +157,6 @@ class MainActivity : ComponentActivity() {
         // 権限チェックと初期化は並行して実行
         checkAndRequestStoragePermission()
 
-        Log.d("MainActivity", "MainActivity setup completed")
     }
     
     // Firebase匿名認証を行うサスペンド関数
@@ -195,6 +196,13 @@ class MainActivity : ComponentActivity() {
             Log.w("MainActivity", "Storage permissions denied")
             // 必要なら説明ダイアログなど出す
         }
+    }
+
+    @Composable
+    fun setUpImage(){
+        val context = LocalContext.current
+        ImageDownloadService.downloadCharacterImages(context, "Haru")
+        ImageDownloadService.downloadCharacterImages(context, "Mao")
     }
 
     @Composable

@@ -22,9 +22,9 @@ android {
     defaultConfig {
         applicationId = "com.seo4d696b75.android.glance_widget_demo"
         minSdk = 27
-        targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 34
+        versionCode = 3
+        versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
