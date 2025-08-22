@@ -16,6 +16,8 @@ class DailyAlarmReceiver : BroadcastReceiver() {
         Log.d("MyAlarmReceiver", "アラーム実行")
         Clear()
         Log.d("MyAlarmReceiver", "通知の削除" + IsEmpty().toString())
+        setDailyAlarm(context)
+        Log.d("MyAlarmReceiver", "アラーム再設定")
     }
 }
 
@@ -29,16 +31,16 @@ fun setDailyAlarm(context: Context) {
         set(Calendar.HOUR_OF_DAY, 6)  // 6時
         set(Calendar.MINUTE, 0)      // 0分
         set(Calendar.SECOND, 0)      // 0秒
-        set(Calendar.DAY_OF_MONTH, 12)
-        Log.d("date", "現在の日付：" + get(Calendar.DAY_OF_MONTH))
-        Log.d("date", "現在の時間：" + Calendar.HOUR_OF_DAY)
 
         // もし設定時間が現在時刻より前なら、翌日の朝8時に設定する
-        /*
-        if (timeInMillis <= System.currentTimeMillis()) {
+
+        while (timeInMillis <= System.currentTimeMillis()) {
             add(Calendar.DAY_OF_YEAR, 1)
         }
-        */
+
+        Log.d("date", "設定された日付：" + get(Calendar.DAY_OF_MONTH))
+        Log.d("date", "設定された時間：" + get(Calendar.HOUR_OF_DAY))
+
     }
 
     // 処理を実行するためのPendingIntentを作成
@@ -52,10 +54,9 @@ fun setDailyAlarm(context: Context) {
 
     // アラームを設定
     // setRepeatingは、指定した間隔でアラームを繰り返す
-    alarmManager.setRepeating(
+    alarmManager.setExactAndAllowWhileIdle(
         AlarmManager.RTC_WAKEUP,
         calendar.timeInMillis,
-        AlarmManager.INTERVAL_DAY, // 1日（24時間）ごとに繰り返す
         pendingIntent
     )
 }

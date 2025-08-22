@@ -91,6 +91,9 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/appwidget_info" /> </receiver>
 
+        <receiver android:name=".time.DailyAlarmReceiver"
+            android:exported="false"/>
+
     </application>
 
 </manifest>
