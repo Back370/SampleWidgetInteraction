@@ -136,18 +136,18 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.navigate("Home") }
                             )
                         }
-                        composable("WidgetSettings"){
-                            WidgetSettingsScreen(
-                                onBackClick = { navController.navigate("Home") }
-                            )
-                        }
-                        composable("Sensor"){
-                            SensorScreen(
-                                onBackClick = { navController.navigate("Home") },
-                                viewModel = viewModel(),
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
+//                        composable("WidgetSettings"){
+//                            WidgetSettingsScreen(
+//                                onBackClick = { navController.navigate("Home") }
+//                            )
+//                        }
+//                        composable("Sensor"){
+//                            SensorScreen(
+//                                onBackClick = { navController.navigate("Home") },
+//                                viewModel = viewModel(),
+//                                modifier = Modifier.fillMaxSize()
+//                            )
+//                        }
                     }
                 }
             }
@@ -161,17 +161,17 @@ class MainActivity : ComponentActivity() {
     // Firebase匿名認証を行うサスペンド関数
     private suspend fun signInAnonymouslyIfNeeded() {
         try {
-            Log.d("MainActivity", "🔐 Attempting Firebase anonymous authentication...")
+            Log.d("MainActivity", "Attempting Firebase anonymous authentication...")
             
             val auth = FirebaseAuth.getInstance()
             if (auth.currentUser == null) {
                 auth.signInAnonymously().await()
-                Log.d("MainActivity", "✅ Anonymous authentication successful")
+                Log.d("MainActivity", "Anonymous authentication successful")
             } else {
-                Log.d("MainActivity", "ℹ️ User already authenticated")
+                Log.d("MainActivity", "User already authenticated")
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Firebase authentication failed", e)
+            Log.e("MainActivity", " Firebase authentication failed", e)
         }
     }
     
@@ -285,15 +285,6 @@ class MainActivity : ComponentActivity() {
                     Log.d("MainActivity", "WidgetImages folder already exists")
                 }
 
-                // フォルダの存在と権限を確認
-                Log.d("MainActivity", "Folder exists: ${widgetImagesDir.exists()}")
-                Log.d(
-                    "MainActivity",
-                    "Folder is directory: ${widgetImagesDir.isDirectory}"
-                )
-                Log.d("MainActivity", "Folder readable: ${widgetImagesDir.canRead()}")
-                Log.d("MainActivity", "Folder writable: ${widgetImagesDir.canWrite()}")
-
             } else {
                 Log.e("MainActivity", "External files directory is null")
             }
@@ -327,14 +318,14 @@ class MainActivity : ComponentActivity() {
             Log.d("MainActivity", "  - Flow: exists=${flowDir.exists()}, files=${flowDir.listFiles()?.size ?: 0}")
             
             // Maoキャラクターの画像をダウンロード
-            Log.d("MainActivity", "🚀 Starting download for Mao character")
+            Log.d("MainActivity", " Starting download for Mao character")
             
             // 全てのアニメーションタイプをダウンロード
             ImageDownloadService.downloadCharacterImages(this, "Mao")
             ImageDownloadService.downloadCharacterImages(this, "Haru")
 
 
-            Log.d("MainActivity", "✅ Image download service started for Mao character")
+            Log.d("MainActivity", " Image download service started for Mao character")
             
             // 5秒後にダウンロード状況を再確認
             CoroutineScope(Dispatchers.Main).launch {
@@ -343,7 +334,7 @@ class MainActivity : ComponentActivity() {
             }
             
         } catch (e: Exception) {
-            Log.e("MainActivity", "❌ Error starting image downloads", e)
+            Log.e("MainActivity", "Error starting image downloads", e)
         }
     }
     
@@ -354,7 +345,7 @@ class MainActivity : ComponentActivity() {
         val adleDir = File(baseDir, "Mao/State/Adle")
         val flowDir = File(baseDir, "Mao/State/Flow")
         
-        Log.d("MainActivity", "📊 Download results:")
+        Log.d("MainActivity", "Download results:")
         Log.d("MainActivity", "  - Adle images: ${adleDir.listFiles()?.count { it.isFile && it.extension.lowercase() == "png" } ?: 0}")
         Log.d("MainActivity", "  - Flow images: ${flowDir.listFiles()?.count { it.isFile && it.extension.lowercase() == "png" } ?: 0}")
         

@@ -93,22 +93,22 @@ fun HomeScreen(
             )
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ){
-
-            Button(
-                modifier = Modifier.weight(1f),
-                icon = painterResource(id = R.drawable.baseline_notifications_24),
-                text = "センサー",
-                onClick = onSensorClicked
-            )
-
-        }
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(10.dp),
+//            horizontalArrangement = Arrangement.SpaceEvenly,
+//            verticalAlignment = Alignment.CenterVertically,
+//        ){
+//
+//            Button(
+//                modifier = Modifier.weight(1f),
+//                icon = painterResource(id = R.drawable.baseline_notifications_24),
+//                text = "センサー",
+//                onClick = onSensorClicked
+//            )
+//
+//        }
     }
 
     val screen = remember { mutableStateOf(false) }
