@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.seo4d696b75.android.glance_widget_demo.domain.CharacterImageConfig
+import com.seo4d696b75.android.glance_widget_demo.domain.AnimationConfig
 import com.seo4d696b75.android.glance_widget_demo.domain.ImageCacheRepository
 import com.seo4d696b75.android.glance_widget_demo.domain.ImageUrlGenerator
 import com.seo4d696b75.android.glance_widget_demo.domain.SampleCharacterConfigs
@@ -29,16 +30,25 @@ class ImageDownloadService : Service() {
     @Inject
     lateinit var imageCacheRepository: ImageCacheRepository
     
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    // 重いI/O処理を行うためIOディスパッチャを使用
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
     companion object {
         private const val TAG = "ImageDownloadService"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "image_download_channel"
+    // 全体の想定総枚数（ユーザー指定）
+    private const val TOTAL_EXPECTED_IMAGES = 300
         
         const val ACTION_DOWNLOAD_CHARACTER = "download_character"
         const val ACTION_DOWNLOAD_ALL = "download_all"
         const val ACTION_CLEAR_CACHE = "clear_cache"
+    // 進捗ブロードキャスト用
+    const val ACTION_PROGRESS_UPDATE = "image_download_progress_update"
+    const val EXTRA_PROGRESS_CURRENT = "progress_current"
+    const val EXTRA_PROGRESS_TOTAL = "progress_total"
+    const val EXTRA_PROGRESS_PERCENT = "progress_percent"
+    const val EXTRA_PROGRESS_DONE = "progress_done"
         
         const val EXTRA_CHARACTER_ID = "character_id"
         const val EXTRA_ANIMATION_TYPE = "animation_type"
@@ -166,8 +176,20 @@ class ImageDownloadService : Service() {
                 
                 Log.d(TAG, "📋 Animations to download: ${animationsToDownload.map { it.animationType }}")
                 
+                // 既存キャッシュ分を成功済みとしてカウント開始
                 var totalDownloaded = 0
                 var totalFailed = 0
+                // ユーザー指定の300枚を分母とする
+                val totalPlannedFrames = TOTAL_EXPECTED_IMAGES
+                // 既存キャッシュを起点に分子初期値を決定
+                var processedFrames = countExistingCachedFrames(config.characterId, animationsToDownload)
+                totalDownloaded = processedFrames
+
+                sendProgressBroadcast(totalDownloaded, totalPlannedFrames, if (totalPlannedFrames>0) (totalDownloaded * 100 / totalPlannedFrames) else 0, false)
+                updateNotification(
+                    "画像ダウンロード中",
+                    "${if (totalPlannedFrames>0) (totalDownloaded * 100 / totalPlannedFrames) else 0}% (${totalDownloaded}/${totalPlannedFrames})"
+                )
                 
                 for (animation in animationsToDownload) {
                     Log.d(TAG, "🎬 Downloading animation: ${animation.animationType} (${animation.frameCount} frames)")
@@ -218,11 +240,12 @@ class ImageDownloadService : Service() {
                                 }
                             }
                             
-                            // 進捗通知を更新
-                            updateNotification(
-                                "画像ダウンロード中",
-                                "${animation.animationType} ${frameIndex + 1}/${animation.frameCount}"
-                            )
+                            processedFrames++ // 試行数
+                            if (result.isSuccess) totalDownloaded++
+                            val percent = if (totalPlannedFrames > 0) (totalDownloaded * 100 / totalPlannedFrames).coerceAtMost(100) else 0
+                            Log.d(TAG, "🧮 Progress update: success=$totalDownloaded attempts=$processedFrames percent=$percent")
+                            sendProgressBroadcast(totalDownloaded, totalPlannedFrames, percent, false)
+                            updateNotification("画像ダウンロード中", "${percent}% (${totalDownloaded}/${totalPlannedFrames})")
                             
                         } catch (e: Exception) {
                             totalFailed++
@@ -237,6 +260,12 @@ class ImageDownloadService : Service() {
                 showNotification(
                     "ダウンロード完了",
                     "成功: $totalDownloaded, 失敗: $totalFailed"
+                )
+                sendProgressBroadcast(
+                    current = totalDownloaded,
+                    total = totalPlannedFrames,
+                    percent = (totalDownloaded * 100 / totalPlannedFrames).coerceAtMost(100),
+                    done = true
                 )
                 
                 Log.d(TAG, "🎯 Download completed: $totalDownloaded successful, $totalFailed failed")
@@ -258,6 +287,12 @@ class ImageDownloadService : Service() {
                 val allCharacters = SampleCharacterConfigs.getAllCharacters()
                 var totalDownloaded = 0
                 var totalFailed = 0
+                val totalPlannedFrames = TOTAL_EXPECTED_IMAGES
+                var processedFrames = allCharacters.sumOf { c -> countExistingCachedFrames(c.characterId, c.animations) }
+                totalDownloaded = processedFrames
+
+                sendProgressBroadcast(totalDownloaded, totalPlannedFrames, if (totalPlannedFrames>0) (totalDownloaded * 100 / totalPlannedFrames) else 0, false)
+                updateNotification("全画像ダウンロード中", "${if (totalPlannedFrames>0) (totalDownloaded * 100 / totalPlannedFrames) else 0}% (${totalDownloaded}/${totalPlannedFrames})")
                 
                 for (character in allCharacters) {
                     Log.d(TAG, "Downloading character: ${character.characterId}")
@@ -283,12 +318,12 @@ class ImageDownloadService : Service() {
                                 } else {
                                     totalFailed++
                                 }
-                                
-                                // 進捗通知を更新
-                                updateNotification(
-                                    "全画像ダウンロード中",
-                                    "${character.characterId} ${animation.animationType}"
-                                )
+                                processedFrames++
+                                if (result.isSuccess) totalDownloaded++
+                                val percent = if (totalPlannedFrames > 0) (totalDownloaded * 100 / totalPlannedFrames).coerceAtMost(100) else 0
+                                Log.d(TAG, "🧮 Progress update (all): success=$totalDownloaded attempts=$processedFrames percent=$percent")
+                                sendProgressBroadcast(totalDownloaded, totalPlannedFrames, percent, false)
+                                updateNotification("全画像ダウンロード中", "${percent}% (${totalDownloaded}/${totalPlannedFrames})")
                                 
                             } catch (e: Exception) {
                                 totalFailed++
@@ -301,6 +336,12 @@ class ImageDownloadService : Service() {
                 showNotification(
                     "全ダウンロード完了",
                     "成功: $totalDownloaded, 失敗: $totalFailed"
+                )
+                sendProgressBroadcast(
+                    current = totalDownloaded,
+                    total = totalPlannedFrames,
+                    percent = (totalDownloaded * 100 / totalPlannedFrames).coerceAtMost(100),
+                    done = true
                 )
                 
                 Log.d(TAG, "All download completed: $totalDownloaded successful, $totalFailed failed")
@@ -371,6 +412,18 @@ class ImageDownloadService : Service() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, notification)
     }
+    /** 進捗をブロードキャストしてUIに通知 */
+    private fun sendProgressBroadcast(current: Int, total: Int, percent: Int, done: Boolean) {
+    val intent = Intent(ACTION_PROGRESS_UPDATE).apply {
+            putExtra(EXTRA_PROGRESS_CURRENT, current)
+            putExtra(EXTRA_PROGRESS_TOTAL, total)
+            putExtra(EXTRA_PROGRESS_PERCENT, percent)
+            putExtra(EXTRA_PROGRESS_DONE, done)
+        }
+    intent.`package` = packageName
+    Log.d(TAG, "📡 Progress broadcast: current=$current total=$total percent=$percent done=$done")
+        sendBroadcast(intent)
+    }
     
     /**
      * 実際のフレーム数をSharedPreferencesに保存
@@ -400,5 +453,21 @@ class ImageDownloadService : Service() {
             Log.e(TAG, "❌ Error retrieving actual frame count", e)
             defaultCount
         }
+    }
+
+    /** 既に存在するキャッシュ画像枚数を数える */
+    private fun countExistingCachedFrames(characterId: String, animations: List<AnimationConfig>): Int {
+        var count = 0
+        try {
+            for (anim in animations) {
+                for (i in 0 until anim.frameCount) {
+                    val file = imageCacheRepository.getCachedImageFile(characterId, anim.animationType, i)
+                    if (file != null) count++ else break
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "countExistingCachedFrames error", e)
+        }
+        return count
     }
 } 

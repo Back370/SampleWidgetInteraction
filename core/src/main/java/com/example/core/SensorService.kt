@@ -27,6 +27,8 @@ class SensorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Android 14 以降で specialUse 型を要求しない通常の FOREGROUND_SERVICE として起動
+        // 必要なら Manifest で foregroundServiceType を location / media など適切なものに限定
         startForeground(1, createNotification())
 
         scope.launch {
