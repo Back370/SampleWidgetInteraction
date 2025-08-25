@@ -24,16 +24,9 @@
   <component name="ChangeListManager">
     <list default="true" id="6448584c-750e-42bc-b19b-41291cb34fe6" name="Changes" comment="UIの改善">
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/google-services.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/google-services.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/release/app-release.aab" beforeDir="false" afterPath="$PROJECT_DIR$/app/release/app-release.aab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/AppApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/AppApplication.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/MainActivity.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/home/HomeScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/src/main/java/com/seo4d696b75/android/glance_widget_demo/core/calendar/GoogleCalendarManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/core/src/main/java/com/seo4d696b75/android/glance_widget_demo/core/calendar/GoogleCalendarManager.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/VoiceInputActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/widget/src/main/java/com/seo4d696b75/android/glance_widget_demo/widget/VoiceInputActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/notification/notificationScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/seo4d696b75/android/glance_widget_demo/notification/notificationScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/local.properties" beforeDir="false" afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +36,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\PCUSER\.android\avd\Medium_Phone.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\a7p7p\.android\avd\Medium_Phone.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />

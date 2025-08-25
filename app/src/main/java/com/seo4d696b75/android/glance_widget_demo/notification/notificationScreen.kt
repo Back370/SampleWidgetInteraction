@@ -172,24 +172,24 @@ fun FloatingNotification(
                     contentDescription = "Notification"
                 )
             }
-            FloatingActionButton(
-                onClick = onWidgetSettingClicked,
-                modifier = Modifier
-            ) {
-                Icon(
-                    Icons.Default.Tab,
-                    contentDescription = "GoToWidgetSetting"
-                )
-            }
-            FloatingActionButton(
-                onClick = onRunGeminiClicked,
-                modifier = Modifier
-            ) {
-                Icon(
-                    Icons.Default.Api,
-                    contentDescription = "RunGeminiAPI"
-                )
-            }
+//            FloatingActionButton(
+//                onClick = onWidgetSettingClicked,
+//                modifier = Modifier
+//            ) {
+//                Icon(
+//                    Icons.Default.Tab,
+//                    contentDescription = "GoToWidgetSetting"
+//                )
+//            }
+//            FloatingActionButton(
+//                onClick = onRunGeminiClicked,
+//                modifier = Modifier
+//            ) {
+//                Icon(
+//                    Icons.Default.Api,
+//                    contentDescription = "RunGeminiAPI"
+//                )
+//            }
         }
     }
 }

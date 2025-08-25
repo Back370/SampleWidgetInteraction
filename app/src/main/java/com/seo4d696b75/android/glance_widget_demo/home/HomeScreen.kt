@@ -4,7 +4,12 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,6 +43,7 @@ import com.seo4d696b75.android.glance_widget_demo.notification.FloatingNotificat
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationList.notificationList
 import com.seo4d696b75.android.glance_widget_demo.notification.NotificationScreen
+import com.seo4d696b75.android.glance_widget_demo.notification.TextBox
 import com.seo4d696b75.android.glance_widget_demo.response.GeminiModel
 
 val MyCustomFontFamily = FontFamily(
@@ -124,6 +130,7 @@ fun HomeScreen(
                         ImageDownloadService.downloadCharacterImages(context, "Mao")
                         ImageDownloadService.downloadCharacterImages(context, "Haru")
                         showFirstLaunchDownload.value = false
+                        WaitDownLoadScreen(onBackClicked = { showFirstLaunchDownload.value = false })
                     }
                 )
             }
@@ -163,6 +170,46 @@ fun HomeScreen(
             notificationList = notificationList,
             onBackClicked = { screen.value = false }
         )
+    }
+}
+
+@Composable
+fun WaitDownLoadScreen(
+    onBackClicked: () -> Unit = {},
+) {
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Box {
+            FloatingActionButton(
+                onClick = {},
+                modifier = Modifier
+                    .fillMaxWidth(0.75f)
+            ) {
+                FloatingActionButton (
+                    onClick = onBackClicked,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .size(24.dp),
+                ){
+                    Icon(
+                        Icons.Default.Close,
+                        "close",
+                    )
+                }
+
+                Text(
+                    text = "画像をダウンロード中...",
+                    fontSize = 20.sp,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(12.dp)
+                )
+            }
+        }
     }
 }
 
